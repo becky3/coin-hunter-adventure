@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>コインハンター アドベンチャー</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="ui-container">
+            <div class="score-display">
+                <span>スコア: </span><span id="score">0</span>
+            </div>
+            <div class="lives-display">
+                <span>ライフ: </span><span id="lives">3</span>
+            </div>
+            <div class="coins-display">
+                <span>コイン: </span><span id="coins">0</span>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+        
+        <div class="game-over-screen" id="gameOverScreen" style="display: none;">
+            <h1>ゲームオーバー</h1>
+            <p>最終スコア: <span id="finalScore">0</span></p>
+            <button onclick="restartGame()">もう一度プレイ</button>
+            <button onclick="backToTitle()">タイトルに戻る</button>
+        </div>
+        
+        <div class="game-clear-screen" id="gameClearScreen" style="display: none;">
+            <h1>ゲームクリア！</h1>
+            <p>おめでとうございます！</p>
+            <p>最終スコア: <span id="clearScore">0</span></p>
+            <button onclick="restartGame()">もう一度プレイ</button>
+            <button onclick="backToTitle()">タイトルに戻る</button>
+        </div>
+        
+        <div class="start-screen" id="startScreen">
+            <h1>コインハンター<br>アドベンチャー</h1>
+            <div class="controls">
+                <p>操作方法:</p>
+                <p>← → または A D : 移動</p>
+                <p>スペース または W : ジャンプ</p>
+            </div>
+            <button onclick="startGame()">ゲーム開始</button>
+        </div>
+    </div>
+
+    <!-- Audio files -->
+    <audio id="bgm" loop preload="auto"></audio>
+    <audio id="jumpSound" preload="auto"></audio>
+    <audio id="coinSound" preload="auto"></audio>
+    <audio id="enemySound" preload="auto"></audio>
+    <audio id="gameOverSound" preload="auto"></audio>
+    <audio id="levelCompleteSound" preload="auto"></audio>
+
+    <script src="game.js"></script>
+</body>
+</html>
