@@ -10,19 +10,48 @@ title: 技術仕様
 ## システムアーキテクチャ
 
 ### 全体構成図
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   HTML5 Canvas  │    │   Web Audio API │    │  JavaScript ES6 │
-│   (描画エンジン)  │◄──►│   (音響システム)  │◄──►│  (ゲームロジック) │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         ▲                        ▲                        ▲
-         │                        │                        │
-         ▼                        ▼                        ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   CSS3 Styling  │    │   Event System  │    │   Game State    │
-│   (UI/UXデザイン) │    │  (キー入力処理)   │    │   (状態管理)     │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+
+<table style="width: 100%; text-align: center; border-collapse: collapse;">
+  <tr>
+    <td style="border: 2px solid #333; padding: 20px; background-color: #f0f0f0;">
+      <strong>HTML5 Canvas</strong><br>
+      (描画エンジン)
+    </td>
+    <td style="padding: 10px;">↔</td>
+    <td style="border: 2px solid #333; padding: 20px; background-color: #f0f0f0;">
+      <strong>Web Audio API</strong><br>
+      (音響システム)
+    </td>
+    <td style="padding: 10px;">↔</td>
+    <td style="border: 2px solid #333; padding: 20px; background-color: #f0f0f0;">
+      <strong>JavaScript ES6</strong><br>
+      (ゲームロジック)
+    </td>
+  </tr>
+  <tr>
+    <td style="padding: 10px;">↕</td>
+    <td></td>
+    <td style="padding: 10px;">↕</td>
+    <td></td>
+    <td style="padding: 10px;">↕</td>
+  </tr>
+  <tr>
+    <td style="border: 2px solid #333; padding: 20px; background-color: #e8e8e8;">
+      <strong>CSS3 Styling</strong><br>
+      (UI/UXデザイン)
+    </td>
+    <td></td>
+    <td style="border: 2px solid #333; padding: 20px; background-color: #e8e8e8;">
+      <strong>Event System</strong><br>
+      (キー入力処理)
+    </td>
+    <td></td>
+    <td style="border: 2px solid #333; padding: 20px; background-color: #e8e8e8;">
+      <strong>Game State</strong><br>
+      (状態管理)
+    </td>
+  </tr>
+</table>
 
 ### 技術スタック
 
