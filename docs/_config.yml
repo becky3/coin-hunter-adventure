@@ -1,0 +1,33 @@
+title: コインハンター アドベンチャー
+description: オリジナル2Dプラットフォームゲームの開発記録とドキュメント
+theme: minima
+author: becky3
+url: https://becky3.github.io/coin-hunter-adventure
+
+# GitHub Pages設定
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# ナビゲーション設定
+header_pages:
+  - index.md
+  - development-log.md
+  - technical-specifications.md
+  - conversation-history.md
+
+# Markdown設定
+markdown: kramdown
+highlighter: rouge
+
+# SEO設定
+lang: ja
+twitter:
+  username: beckyJPN
+
+# GitHub設定
+github:
+  repository_url: https://github.com/becky3/coin-hunter-adventure
+  
+# Google Analytics（必要に応じて設定）
+# google_analytics: UA-NNNNNNNN-N
