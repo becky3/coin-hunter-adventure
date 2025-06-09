@@ -1,107 +1,130 @@
+// ===== ゲーム初期化とキャンバス設定 =====
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const CANVAS_WIDTH = 1024;
-const CANVAS_HEIGHT = 576;
-const GRAVITY = 0.8;
-const GROUND_Y = CANVAS_HEIGHT - 100;
+// ゲーム画面の定数
+const CANVAS_WIDTH = 1024;  // キャンバス幅
+const CANVAS_HEIGHT = 576;  // キャンバス高さ
+const GRAVITY = 0.8;        // 重力の強さ
+const GROUND_Y = CANVAS_HEIGHT - 100;  // 地面のY座標
 
-let gameState = 'start';
-let camera = { x: 0, y: 0 };
-let gameSpeed = 2;
+// ゲーム状態管理
+let gameState = 'start';  // 'start', 'playing', 'gameOver', 'levelComplete'
+let camera = { x: 0, y: 0 };  // カメラの位置
+let gameSpeed = 2;  // ゲーム全体の速度
 
+// ゲーム情報オブジェクト
 const game = {
-    score: 0,
-    lives: 3,
-    coins: 0,
-    level: 1,
-    time: 400
+    score: 0,    // スコア
+    lives: 3,    // 残りライフ
+    coins: 0,    // 収集したコイン数
+    level: 1,    // 現在のレベル
+    time: 400    // 残り時間
 };
 
+// キー入力状態を管理するオブジェクト
 const keys = {};
 
+// プレイヤーキャラクターの設定
 const player = {
-    x: 100,
-    y: GROUND_Y - 64,
-    width: 32,
-    height: 64,
-    velX: 0,
-    velY: 0,
-    speed: 5,
-    jumpPower: 18,
-    onGround: false,
-    direction: 1,
-    invulnerable: false,
-    invulnerabilityTime: 0,
-    color: '#FF0000',
-    animFrame: 0,
-    animTimer: 0
+    x: 100,                   // X座標
+    y: GROUND_Y - 64,         // Y座標
+    width: 32,                // 幅
+    height: 64,               // 高さ
+    velX: 0,                  // X方向の速度
+    velY: 0,                  // Y方向の速度
+    speed: 5,                 // 移動速度
+    jumpPower: 18,            // ジャンプ力
+    onGround: false,          // 地面に触れているか
+    direction: 1,             // 向き（1:右, -1:左）
+    invulnerable: false,      // 無敵状態かどうか
+    invulnerabilityTime: 0,   // 無敵時間のカウンター
+    color: '#FF0000',         // プレイヤーの色
+    animFrame: 0,             // アニメーションフレーム
+    animTimer: 0              // アニメーションタイマー
 };
 
+// プラットフォーム（足場）の配置
 const platforms = [
-    { x: 0, y: GROUND_Y, width: CANVAS_WIDTH * 3, height: 100 },
-    { x: 300, y: GROUND_Y - 150, width: 200, height: 20 },
-    { x: 600, y: GROUND_Y - 100, width: 150, height: 20 },
-    { x: 900, y: GROUND_Y - 200, width: 180, height: 20 },
-    { x: 1200, y: GROUND_Y - 120, width: 120, height: 20 },
-    { x: 1500, y: GROUND_Y - 180, width: 200, height: 20 },
-    { x: 1800, y: GROUND_Y - 80, width: 160, height: 20 },
-    { x: 2100, y: GROUND_Y - 160, width: 140, height: 20 },
-    { x: 2400, y: GROUND_Y - 220, width: 300, height: 20 }
+    { x: 0, y: GROUND_Y, width: CANVAS_WIDTH * 3, height: 100 },      // メイン地面
+    { x: 300, y: GROUND_Y - 150, width: 200, height: 20 },             // 浮き足吴1
+    { x: 600, y: GROUND_Y - 100, width: 150, height: 20 },             // 浮き足吴2
+    { x: 900, y: GROUND_Y - 200, width: 180, height: 20 },             // 浮き足吴3
+    { x: 1200, y: GROUND_Y - 120, width: 120, height: 20 },            // 浮き足吴4
+    { x: 1500, y: GROUND_Y - 180, width: 200, height: 20 },            // 浮き足吴5
+    { x: 1800, y: GROUND_Y - 80, width: 160, height: 20 },             // 浮き足吴6
+    { x: 2100, y: GROUND_Y - 160, width: 140, height: 20 },            // 浮き足吴7
+    { x: 2400, y: GROUND_Y - 220, width: 300, height: 20 }             // 浮き足吴8
 ];
 
+// 敵キャラクターの配置
 const enemies = [
-    { x: 400, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },
-    { x: 700, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },
-    { x: 1000, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },
-    { x: 1300, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },
-    { x: 1600, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },
-    { x: 1900, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },
-    { x: 2200, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true }
+    { x: 400, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },   // 敵1
+    { x: 700, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true },   // 敵2
+    { x: 1000, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true }, // 敵3
+    { x: 1300, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true }, // 敵4
+    { x: 1600, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true }, // 敵5
+    { x: 1900, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true }, // 敵6
+    { x: 2200, y: GROUND_Y - 40, width: 32, height: 32, velX: -1, type: 'goomba', alive: true }  // 敵7
 ];
 
+// コインの配置（コンプリートには8枚収集が必要）
 const coins = [
-    { x: 350, y: GROUND_Y - 200, width: 24, height: 24, collected: false },
-    { x: 650, y: GROUND_Y - 150, width: 24, height: 24, collected: false },
-    { x: 950, y: GROUND_Y - 250, width: 24, height: 24, collected: false },
-    { x: 1250, y: GROUND_Y - 170, width: 24, height: 24, collected: false },
-    { x: 1550, y: GROUND_Y - 230, width: 24, height: 24, collected: false },
-    { x: 1850, y: GROUND_Y - 130, width: 24, height: 24, collected: false },
-    { x: 2150, y: GROUND_Y - 210, width: 24, height: 24, collected: false },
-    { x: 2450, y: GROUND_Y - 270, width: 24, height: 24, collected: false }
+    { x: 350, y: GROUND_Y - 200, width: 24, height: 24, collected: false },   // コイン1
+    { x: 650, y: GROUND_Y - 150, width: 24, height: 24, collected: false },   // コイン2
+    { x: 950, y: GROUND_Y - 250, width: 24, height: 24, collected: false },   // コイン3
+    { x: 1250, y: GROUND_Y - 170, width: 24, height: 24, collected: false },  // コイン4
+    { x: 1550, y: GROUND_Y - 230, width: 24, height: 24, collected: false },  // コイン5
+    { x: 1850, y: GROUND_Y - 130, width: 24, height: 24, collected: false },  // コイン6
+    { x: 2150, y: GROUND_Y - 210, width: 24, height: 24, collected: false },  // コイン7
+    { x: 2450, y: GROUND_Y - 270, width: 24, height: 24, collected: false }   // コイン8
 ];
 
+// ゴールフラッグ
 const flag = { x: 2600, y: GROUND_Y - 200, width: 20, height: 200 };
 
-// Audio Context and Web Audio API for better sounds
-let audioContext;
-let sounds = {};
+// ===== 音響システム =====
+// Web Audio APIを使用した高品質なサウンド処理
+let audioContext;  // 音声コンテキスト
+let sounds = {};   // サウンドバッファーを格納するオブジェクト
 
+/**
+ * 音声システムを初期化する
+ * Web Audio APIを使用してBGMと効果音を作成
+ */
 function initAudio() {
     try {
+        // ブラウザ互換性を考慮したAudio Contextの作成
         audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        createBGM();
-        createSoundEffects();
+        createBGM();           // BGMを作成
+        createSoundEffects();  // 効果音を作成
     } catch (e) {
         console.log('Web Audio API not supported');
     }
 }
 
+/**
+ * BGM（バックグラウンドミュージック）を作成
+ * 冷険テーマのオリジナル楽曲を生成
+ */
 function createBGM() {
-    // Create a cheerful Mario-style BGM
+    // オリジナルの冷険テーマのBGMデータを生成
     const bgmData = generateBGM();
     const audioBuffer = audioContext.createBuffer(1, bgmData.length, audioContext.sampleRate);
     audioBuffer.getChannelData(0).set(bgmData);
     
+    // BGMオブジェクトを作成（再生、停止機能付き）
     sounds.bgm = {
         buffer: audioBuffer,
         play() {
+            // 既に再生中の場合は停止
             if (this.source) {
                 this.source.stop();
             }
+            // 新しいソースを作成してループ再生
             this.source = audioContext.createBufferSource();
             this.source.buffer = this.buffer;
-            this.source.loop = true;
+            this.source.loop = true;  // ループ再生を有効化
             this.source.connect(audioContext.destination);
             this.source.start();
         },
@@ -190,34 +213,37 @@ function generateBGM() {
     return data;
 }
 
+/**
+ * ゲーム内のすべての効果音を作成
+ */
 function createSoundEffects() {
-    // Jump sound
+    // ジャンプ音（スクエア波で弾むような音）
     sounds.jump = createSoundEffect([
         {freq: 220, duration: 0.1, type: 'square'},
         {freq: 330, duration: 0.1, type: 'square'}
     ]);
     
-    // Coin sound
+    // コイン収集音（高音で明るいサイン波）
     sounds.coin = createSoundEffect([
         {freq: 523, duration: 0.1, type: 'sine'},
         {freq: 659, duration: 0.1, type: 'sine'},
         {freq: 784, duration: 0.2, type: 'sine'}
     ]);
     
-    // Enemy defeat sound
+    // 敵を倒した時の音（サコハ波で重い音）
     sounds.enemy = createSoundEffect([
         {freq: 150, duration: 0.1, type: 'sawtooth'},
         {freq: 100, duration: 0.2, type: 'sawtooth'}
     ]);
     
-    // Game over sound
+    // ゲームオーバー音（三角波で沈んだ音）
     sounds.gameOver = createSoundEffect([
         {freq: 220, duration: 0.3, type: 'triangle'},
         {freq: 196, duration: 0.3, type: 'triangle'},
         {freq: 174, duration: 0.5, type: 'triangle'}
     ]);
     
-    // Level complete sound
+    // レベルクリア音（上昇する音階）
     sounds.levelComplete = createSoundEffect([
         {freq: 523, duration: 0.2, type: 'sine'},
         {freq: 659, duration: 0.2, type: 'sine'},
@@ -350,13 +376,22 @@ function playBGM() {
     }
 }
 
+// ===== キー入力イベントリスナー =====
+/**
+ * キー押下イベントリスナー
+ * ユーザーがゲームで使うキーで、フォーカスを失わないようにする
+ */
 document.addEventListener('keydown', (e) => {
     keys[e.code] = true;
+    // スペースキーとWキーのデフォルト動作を無効化（スクロール防止）
     if (e.code === 'Space' || e.code === 'KeyW') {
         e.preventDefault();
     }
 });
 
+/**
+ * キーリリースイベントリスナー
+ */
 document.addEventListener('keyup', (e) => {
     keys[e.code] = false;
 });
@@ -695,17 +730,23 @@ function render() {
     drawFlag();
 }
 
+/**
+ * メインゲームループ
+ * ゲーム状態の更新、描画、アニメーションを毎フレーム実行
+ */
 function gameLoop() {
     if (gameState !== 'playing') return;
     
-    updatePlayer();
-    updateEnemies();
-    updateCoins();
-    checkFlag();
-    updateCamera();
-    updateUI();
-    render();
+    // ゲームオブジェクトの更新
+    updatePlayer();   // プレイヤーの状態更新
+    updateEnemies();  // 敵の状態更新
+    updateCoins();    // コインの当たり判定
+    checkFlag();      // ゴールフラッグのチェック
+    updateCamera();   // カメラの追従
+    updateUI();       // UIの更新
+    render();         // 画面描画
     
+    // 次のフレームをスケジュール
     requestAnimationFrame(gameLoop);
 }
 
