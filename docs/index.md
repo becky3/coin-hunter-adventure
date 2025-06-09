@@ -43,7 +43,7 @@ title: コインハンター アドベンチャー
 | **開発期間** | 1日（2-3時間） |
 | **実装機能** | 12項目完了 |
 | **コード行数** | 984行（JavaScript） |
-| **技術スタック** | HTML5, CSS3, JavaScript (ES6+), Web Audio API |
+| **技術スタック** | HTML5, CSS3, JavaScript, Web Audio API |
 | **開発手法** | AI協働開発（Claude Code） |
 
 ---
