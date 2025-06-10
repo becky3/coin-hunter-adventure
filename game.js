@@ -449,11 +449,33 @@ class Game {
         
         // 敵との衝突
         if (!this.player.invulnerable) {
-            this.enemies.forEach(enemy => {
+            this.enemies.forEach((enemy, enemyIndex) => {
                 if (this.checkCollision(this.player.getBounds(), enemy)) {
-                    console.log('敵との衝突を検出');
-                    this.loseLife();
-                    return; // 一度の衝突で複数回呼ばれるのを防ぐ
+                    const playerBounds = this.player.getBounds();
+                    
+                    // 踏みつけ判定：プレイヤーが敵の上から落下している場合
+                    if (this.player.velY > 0 && // 下向きに移動中
+                        playerBounds.y < enemy.y && // プレイヤーが敵より上にいる
+                        playerBounds.y + playerBounds.height < enemy.y + enemy.height * 0.7) { // プレイヤーの足が敵の上部にある
+                        
+                        console.log('敵を踏みつけました！');
+                        
+                        // 敵を撃破
+                        this.enemies.splice(enemyIndex, 1);
+                        
+                        // プレイヤーにバウンス効果
+                        this.player.velY = -10;
+                        
+                        // スコア加算
+                        this.gameState.addScore(100);
+                        
+                        return; // 踏みつけ成功時はダメージを受けない
+                    } else {
+                        // 通常の衝突（横から当たった場合）
+                        console.log('敵との衝突を検出');
+                        this.loseLife();
+                        return; // 一度の衝突で複数回呼ばれるのを防ぐ
+                    }
                 }
             });
         }
