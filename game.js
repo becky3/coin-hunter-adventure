@@ -7,6 +7,240 @@
 console.log('game.js loaded, CANVAS_WIDTH:', CANVAS_WIDTH);
 console.log('game.js loaded, levelData platforms count:', levelData.platforms.length);
 
+// ===== SVGグラフィックシステム =====
+class SVGGraphics {
+    constructor(ctx) {
+        this.ctx = ctx;
+        this.cache = new Map(); // パスキャッシュ
+    }
+    
+    // SVGパスを描画する汎用メソッド
+    drawSVGPath(pathData, x, y, width, height, fillStyle = '#000', strokeStyle = null, strokeWidth = 1) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        this.ctx.scale(width / 100, height / 100); // 100x100を基準サイズとする
+        
+        const path = new Path2D(pathData);
+        
+        if (fillStyle) {
+            this.ctx.fillStyle = fillStyle;
+            this.ctx.fill(path);
+        }
+        
+        if (strokeStyle) {
+            this.ctx.strokeStyle = strokeStyle;
+            this.ctx.lineWidth = strokeWidth;
+            this.ctx.stroke(path);
+        }
+        
+        this.ctx.restore();
+    }
+    
+    // プレイヤーキャラクターのSVG（マリオ風）
+    drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame) {
+        // HP状態による色とサイズの調整
+        let fillColor = health === 2 ? '#4CAF50' : '#FF9800';
+        let scale = health === 2 ? 1.0 : 0.7;
+        let actualWidth = width * scale;
+        let actualHeight = height * scale;
+        let offsetY = health === 1 ? height * 0.3 : 0;
+        
+        // 無敵時間中の透明度
+        if (invulnerable) {
+            this.ctx.globalAlpha = 0.5;
+        }
+        
+        // 向きによる反転
+        this.ctx.save();
+        this.ctx.translate(x + width / 2, y + offsetY);
+        if (direction < 0) {
+            this.ctx.scale(-1, 1);
+        }
+        this.ctx.translate(-actualWidth / 2, 0);
+        
+        // プレイヤーボディ（丸みを帯びた矩形）
+        const bodyPath = `
+            M 10 10
+            Q 10 5 15 5
+            L ${actualWidth - 15} 5
+            Q ${actualWidth - 10} 5 ${actualWidth - 10} 10
+            L ${actualWidth - 10} ${actualHeight - 15}
+            Q ${actualWidth - 10} ${actualHeight - 10} ${actualWidth - 15} ${actualHeight - 10}
+            L 15 ${actualHeight - 10}
+            Q 10 ${actualHeight - 10} 10 ${actualHeight - 15}
+            Z
+        `;
+        
+        this.drawSVGPath(bodyPath, 0, 0, actualWidth, actualHeight, fillColor);
+        
+        // 顔の描画
+        const eyeSize = Math.max(2, actualWidth * 0.08);
+        const eyeY = actualHeight * 0.3;
+        
+        // 目
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillRect(actualWidth * 0.25 - eyeSize/2, eyeY, eyeSize, eyeSize);
+        this.ctx.fillRect(actualWidth * 0.75 - eyeSize/2, eyeY, eyeSize, eyeSize);
+        
+        // 瞳
+        this.ctx.fillStyle = 'black';
+        const pupilSize = eyeSize * 0.6;
+        this.ctx.fillRect(actualWidth * 0.25 - pupilSize/2, eyeY + eyeSize * 0.2, pupilSize, pupilSize);
+        this.ctx.fillRect(actualWidth * 0.75 - pupilSize/2, eyeY + eyeSize * 0.2, pupilSize, pupilSize);
+        
+        // 帽子（マリオ風）
+        this.ctx.fillStyle = '#FF0000';
+        this.ctx.fillRect(actualWidth * 0.1, 0, actualWidth * 0.8, actualHeight * 0.2);
+        
+        // 帽子のつば
+        this.ctx.fillStyle = '#CC0000';
+        this.ctx.fillRect(0, actualHeight * 0.15, actualWidth, actualHeight * 0.1);
+        
+        this.ctx.restore();
+        
+        if (invulnerable) {
+            this.ctx.globalAlpha = 1.0;
+        }
+    }
+    
+    // スライムのSVG
+    drawSlime(x, y, width, height, animTimer) {
+        const bounce = Math.sin(animTimer * 0.1) * 2;
+        
+        this.ctx.save();
+        this.ctx.translate(x, y + bounce);
+        
+        // スライムボディ（楕円形）
+        const slimePath = `
+            M ${width * 0.5} 0
+            Q ${width * 0.9} ${height * 0.3} ${width * 0.8} ${height * 0.8}
+            Q ${width * 0.5} ${height} ${width * 0.2} ${height * 0.8}
+            Q ${width * 0.1} ${height * 0.3} ${width * 0.5} 0
+            Z
+        `;
+        
+        this.drawSVGPath(slimePath, 0, 0, width, height, '#4CAF50', '#2E7D32', 2);
+        
+        // 目
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        this.ctx.arc(width * 0.35, height * 0.35, width * 0.08, 0, Math.PI * 2);
+        this.ctx.arc(width * 0.65, height * 0.35, width * 0.08, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 瞳
+        this.ctx.fillStyle = 'black';
+        this.ctx.beginPath();
+        this.ctx.arc(width * 0.35, height * 0.38, width * 0.04, 0, Math.PI * 2);
+        this.ctx.arc(width * 0.65, height * 0.38, width * 0.04, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+    }
+    
+    // 鳥のSVG
+    drawBird(x, y, width, height, animTimer) {
+        const wingFlap = Math.sin(animTimer * 0.3) * 10;
+        
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        
+        // 鳥のボディ
+        this.ctx.fillStyle = '#9C27B0';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width * 0.5, height * 0.6, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 頭
+        this.ctx.beginPath();
+        this.ctx.arc(width * 0.3, height * 0.4, width * 0.2, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // くちばし
+        this.ctx.fillStyle = '#FF9800';
+        this.ctx.beginPath();
+        this.ctx.moveTo(width * 0.1, height * 0.4);
+        this.ctx.lineTo(width * 0.25, height * 0.35);
+        this.ctx.lineTo(width * 0.25, height * 0.45);
+        this.ctx.closePath();
+        this.ctx.fill();
+        
+        // 翼
+        this.ctx.fillStyle = '#7B1FA2';
+        this.ctx.save();
+        this.ctx.translate(width * 0.5, height * 0.5);
+        this.ctx.rotate((wingFlap * Math.PI) / 180);
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 0, width * 0.25, height * 0.15, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.restore();
+        
+        // 目
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        this.ctx.arc(width * 0.25, height * 0.35, width * 0.05, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.fillStyle = 'black';
+        this.ctx.beginPath();
+        this.ctx.arc(width * 0.27, height * 0.35, width * 0.02, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+    }
+    
+    // コインのSVG
+    drawCoin(x, y, width, height, rotation) {
+        this.ctx.save();
+        this.ctx.translate(x + width / 2, y + height / 2);
+        this.ctx.scale(Math.cos(rotation), 1); // 回転効果
+        
+        // コインベース
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, width * 0.4, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // コインの縁
+        this.ctx.strokeStyle = '#FFA000';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        
+        // 中央の記号
+        this.ctx.fillStyle = '#FFA000';
+        this.ctx.font = `bold ${width * 0.5}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('¥', 0, 0);
+        
+        this.ctx.restore();
+    }
+    
+    // フラグのSVG
+    drawFlag(x, y, width, height) {
+        // ポール
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(x + width * 0.47, y, width * 0.06, height);
+        
+        // 旗
+        this.ctx.save();
+        this.ctx.translate(x + width * 0.5, y);
+        
+        const flagPath = `
+            M 0 0
+            L ${width * 0.4} ${height * 0.1}
+            L ${width * 0.35} ${height * 0.25}
+            L ${width * 0.4} ${height * 0.4}
+            L 0 ${height * 0.5}
+            Z
+        `;
+        
+        this.drawSVGPath(flagPath, 0, 0, width * 0.4, height * 0.5, '#FF0000');
+        
+        this.ctx.restore();
+    }
+}
+
 // ===== ゲーム状態管理 =====
 class GameState {
     constructor() {
@@ -264,6 +498,7 @@ class Game {
         }
         
         this.ctx = this.canvas.getContext('2d');
+        this.svg = new SVGGraphics(this.ctx); // SVGグラフィックシステム追加
         
         this.gameState = new GameState();
         this.inputManager = new InputManager();
@@ -710,76 +945,29 @@ class Game {
     drawPlayer() {
         const x = this.player.x - this.camera.x;
         
-        this.ctx.save();
-        
-        // 無敵時間中の視覚効果
-        if (this.player.invulnerable) {
-            if (Math.floor(this.player.invulnerabilityTime / 3) % 2) {
-                this.ctx.globalAlpha = 0.5; // 点滅効果
-            }
-        }
-        
-        // HP状態による見た目変化（マリオ風）
-        let playerWidth = this.player.width;
-        let playerHeight = this.player.height;
-        let playerColor = COLORS.player;
-        let offsetY = 0;
-        
-        if (this.player.health === 2) {
-            // 最大HP：大きいサイズ
-            playerWidth = this.player.width;
-            playerHeight = this.player.height;
-            playerColor = '#4CAF50'; // 緑色（元気）
-        } else if (this.player.health === 1) {
-            // ダメージ状態：小さいサイズ
-            playerWidth = this.player.width * 0.7;
-            playerHeight = this.player.height * 0.7;
-            playerColor = '#FF9800'; // オレンジ色（ダメージ）
-            offsetY = this.player.height * 0.3; // 下端を合わせるため
-        }
-        
-        // プレイヤー描画
-        this.ctx.fillStyle = playerColor;
-        this.ctx.fillRect(
-            x + (this.player.width - playerWidth) / 2, 
-            this.player.y + offsetY, 
-            playerWidth, 
-            playerHeight
+        // SVGグラフィックでプレイヤーを描画
+        this.svg.drawPlayer(
+            x, 
+            this.player.y, 
+            this.player.width, 
+            this.player.height, 
+            this.player.health, 
+            this.player.direction, 
+            this.player.invulnerable, 
+            this.player.animFrame
         );
-        
-        // 目を描画（キャラクター感を出すため）
-        this.ctx.fillStyle = 'white';
-        const eyeSize = Math.max(2, playerWidth * 0.15);
-        const eyeY = this.player.y + offsetY + playerHeight * 0.3;
-        
-        // 左目
-        this.ctx.fillRect(
-            x + (this.player.width - playerWidth) / 2 + playerWidth * 0.25 - eyeSize/2, 
-            eyeY, 
-            eyeSize, 
-            eyeSize
-        );
-        // 右目
-        this.ctx.fillRect(
-            x + (this.player.width - playerWidth) / 2 + playerWidth * 0.75 - eyeSize/2, 
-            eyeY, 
-            eyeSize, 
-            eyeSize
-        );
-        
-        this.ctx.restore();
     }
     
     drawEnemies() {
         this.enemies.forEach(enemy => {
             const x = enemy.x - this.camera.x;
             if (x + enemy.width > 0 && x < CANVAS_WIDTH) {
-                // デバッグ用：敵の境界ボックスを表示
-                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-                this.ctx.strokeRect(x, enemy.y, enemy.width, enemy.height);
-                
-                this.ctx.fillStyle = enemy.color;
-                this.ctx.fillRect(x, enemy.y, enemy.width, enemy.height);
+                // 敵の種類に応じてSVG描画
+                if (enemy.type === 'slime') {
+                    this.svg.drawSlime(x, enemy.y, enemy.width, enemy.height, enemy.animTimer);
+                } else if (enemy.type === 'bird') {
+                    this.svg.drawBird(x, enemy.y, enemy.width, enemy.height, enemy.animTimer);
+                }
             }
         });
     }
@@ -789,12 +977,8 @@ class Game {
             if (!coin.collected) {
                 const x = coin.x - this.camera.x;
                 if (x + coin.width > 0 && x < CANVAS_WIDTH) {
-                    this.ctx.save();
-                    this.ctx.translate(x + coin.width / 2, coin.y + coin.height / 2);
-                    this.ctx.scale(Math.cos(coin.rotation), 1);
-                    this.ctx.fillStyle = COLORS.coin;
-                    this.ctx.fillRect(-coin.width / 2, -coin.height / 2, coin.width, coin.height);
-                    this.ctx.restore();
+                    // SVGグラフィックでコインを描画
+                    this.svg.drawCoin(x, coin.y, coin.width, coin.height, coin.rotation);
                 }
             }
         });
@@ -805,22 +989,8 @@ class Game {
         
         const x = this.flag.x - this.camera.x;
         if (x + 60 > 0 && x < CANVAS_WIDTH) {
-            // デバッグ用：フラグの境界ボックスを表示
-            this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
-            this.ctx.strokeRect(x, this.flag.y, 60, 80);
-            
-            // ポール
-            this.ctx.fillStyle = '#8B4513';
-            this.ctx.fillRect(x + 28, this.flag.y, 4, 80);
-            
-            // 旗
-            this.ctx.fillStyle = COLORS.flag;
-            this.ctx.beginPath();
-            this.ctx.moveTo(x + 30, this.flag.y);
-            this.ctx.lineTo(x + 70, this.flag.y + 20);
-            this.ctx.lineTo(x + 30, this.flag.y + 40);
-            this.ctx.closePath();
-            this.ctx.fill();
+            // SVGグラフィックでフラグを描画
+            this.svg.drawFlag(x, this.flag.y, 60, 80);
         }
     }
     
