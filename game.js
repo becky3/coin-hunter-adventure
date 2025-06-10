@@ -115,6 +115,12 @@ class Player {
     }
     
     handleInput(input) {
+        // 死亡状態では入力を無効化
+        if (this.isDead) {
+            this.velX = 0;
+            return;
+        }
+        
         // 左右移動のリセット
         this.velX = 0;
         
@@ -506,7 +512,7 @@ class Game {
         if (this.player.y > worldHeight) {
             console.log(`プレイヤーが穴に落ちました！ 現在のライフ: ${this.gameState.lives}, HP: ${this.player.health}`);
             this.loseLife();
-            this.player.reset();
+            // player.reset()はloseLife()内で処理されるため削除
         }
         
         // 敵の境界チェックと落下判定
@@ -573,27 +579,28 @@ class Game {
             
             // プラットフォームの端での方向転換
             if (enemy.type !== 'bird') {
-                let onPlatform = false;
-                
                 // 現在立っているプラットフォームを確認
                 this.platforms.forEach(platform => {
                     if (enemy.y + enemy.height >= platform.y && 
                         enemy.y + enemy.height <= platform.y + 10 &&
                         enemy.x + enemy.width > platform.x && 
                         enemy.x < platform.x + platform.width) {
-                        onPlatform = true;
                         
-                        // プラットフォームの端に近づいたら方向転換
-                        if (enemy.x <= platform.x + 5 || 
-                            enemy.x + enemy.width >= platform.x + platform.width - 5) {
+                        // プラットフォームの端に近づいたら方向転換（振動防止のため一度だけ実行）
+                        if ((enemy.velX > 0 && enemy.x + enemy.width >= platform.x + platform.width - 10) ||
+                            (enemy.velX < 0 && enemy.x <= platform.x + 10)) {
                             enemy.velX *= -1;
                             enemy.direction *= -1;
+                            
+                            // 位置を少し調整して振動を防ぐ
+                            if (enemy.velX > 0) {
+                                enemy.x = platform.x + 15;
+                            } else {
+                                enemy.x = platform.x + platform.width - enemy.width - 15;
+                            }
                         }
                     }
                 });
-                
-                // プラットフォーム上にいない場合は落下させる
-                // 地面判定を削除したので、ここでの方向転換も削除
             } else {
                 // 鳥の場合の簡易的な方向転換
                 if (enemy.x < 0 || enemy.x > 3000) {
@@ -751,12 +758,6 @@ class Game {
                 
                 this.ctx.fillStyle = enemy.color;
                 this.ctx.fillRect(x, enemy.y, enemy.width, enemy.height);
-                
-                // 敵のタイプを表示
-                this.ctx.fillStyle = 'white';
-                this.ctx.font = '10px Arial';
-                this.ctx.textAlign = 'center';
-                this.ctx.fillText(enemy.type, x + enemy.width / 2, enemy.y - 2);
             }
         });
     }
