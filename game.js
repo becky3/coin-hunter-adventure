@@ -271,6 +271,7 @@ class Game {
         
         this.lastTime = 0;
         this.isRunning = false;
+        this.damageEffect = 0; // ダメージエフェクト用
         
         this.initLevel();
         this.setupUI();
@@ -397,6 +398,11 @@ class Game {
         
         // 敵更新
         this.updateEnemies(deltaTime);
+        
+        // ダメージエフェクトの更新
+        if (this.damageEffect > 0) {
+            this.damageEffect--;
+        }
     }
     
     handleCollisions() {
@@ -602,6 +608,9 @@ class Game {
         console.log('敵に衝突！ライフを失います');
         const isDead = this.player.takeDamage();
         
+        // ダメージエフェクト：画面を少し赤くする
+        this.damageEffect = 30; // 30フレーム間エフェクト表示
+        
         if (isDead) {
             const gameOver = this.gameState.loseLife();
             if (gameOver) {
@@ -612,7 +621,7 @@ class Game {
                 this.player.reset();
             }
         } else {
-            console.log('無敵時間開始');
+            console.log(`無敵時間開始 - 残りHP: ${this.player.health}`);
         }
     }
     
@@ -641,6 +650,14 @@ class Game {
             this.drawPlayer();
             this.drawFlag();
         }
+        
+        // ダメージエフェクト
+        if (this.damageEffect > 0) {
+            this.ctx.save();
+            this.ctx.fillStyle = `rgba(255, 0, 0, ${this.damageEffect / 60})`;
+            this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+            this.ctx.restore();
+        }
     }
     
     drawBackground() {
@@ -666,16 +683,33 @@ class Game {
         
         this.ctx.save();
         
-        if (this.player.invulnerable && Math.floor(this.player.invulnerabilityTime / 5) % 2) {
-            this.ctx.globalAlpha = 0.5;
+        // 無敵時間中の視覚効果
+        if (this.player.invulnerable) {
+            if (Math.floor(this.player.invulnerabilityTime / 3) % 2) {
+                this.ctx.globalAlpha = 0.3; // より透明に
+            }
+            // 無敵時間中は赤い輪郭で強調
+            this.ctx.strokeStyle = 'red';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(x - 2, this.player.y - 2, this.player.width + 4, this.player.height + 4);
         }
         
-        // デバッグ用：プレイヤーの境界ボックスを表示
-        this.ctx.strokeStyle = 'rgba(0, 255, 0, 0.5)';
-        this.ctx.strokeRect(x, this.player.y, this.player.width, this.player.height);
+        // プレイヤーの色をヘルスによって変更
+        let playerColor = COLORS.player;
+        if (this.player.health === 1) {
+            playerColor = '#FF3333'; // 赤色（危険）
+        } else if (this.player.health === 2) {
+            playerColor = '#FFA500'; // オレンジ色（注意）
+        }
         
-        this.ctx.fillStyle = COLORS.player;
+        this.ctx.fillStyle = playerColor;
         this.ctx.fillRect(x, this.player.y, this.player.width, this.player.height);
+        
+        // ヘルス表示（プレイヤーの上に小さく表示）
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = '12px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.fillText(`HP:${this.player.health}`, x + this.player.width / 2, this.player.y - 5);
         
         this.ctx.restore();
     }
@@ -684,8 +718,18 @@ class Game {
         this.enemies.forEach(enemy => {
             const x = enemy.x - this.camera.x;
             if (x + enemy.width > 0 && x < CANVAS_WIDTH) {
+                // デバッグ用：敵の境界ボックスを表示
+                this.ctx.strokeStyle = 'rgba(255, 0, 0, 0.5)';
+                this.ctx.strokeRect(x, enemy.y, enemy.width, enemy.height);
+                
                 this.ctx.fillStyle = enemy.color;
                 this.ctx.fillRect(x, enemy.y, enemy.width, enemy.height);
+                
+                // 敵のタイプを表示
+                this.ctx.fillStyle = 'white';
+                this.ctx.font = '10px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(enemy.type, x + enemy.width / 2, enemy.y - 2);
             }
         });
     }
@@ -737,6 +781,9 @@ class Game {
         
         const livesElement = document.getElementById('lives');
         if (livesElement) livesElement.textContent = this.gameState.lives;
+        
+        const healthElement = document.getElementById('health');
+        if (healthElement) healthElement.textContent = this.player.health;
         
         const coinsElement = document.getElementById('coins');
         if (coinsElement) coinsElement.textContent = this.gameState.coins;
