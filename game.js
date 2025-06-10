@@ -3,8 +3,9 @@
  * モジュール化されたコードを単一ファイルに統合
  */
 
-// 設定は config.js から読み込み
+// 設定は config.js から読み込み、レベルデータは levels.js から読み込み
 console.log('game.js loaded, CANVAS_WIDTH:', CANVAS_WIDTH);
+console.log('game.js loaded, levelData platforms count:', levelData.platforms.length);
 
 // ===== ゲーム状態管理 =====
 class GameState {
@@ -246,65 +247,6 @@ class InputManager {
     }
 }
 
-// ===== 簡単なレベルデータ =====
-const levelData = {
-    platforms: [
-        // 地面レベル - 隙間を広くする
-        { x: 0, y: 476, width: 600, height: 100 },      // 最初の地面
-        { x: 750, y: 476, width: 300, height: 100 },    // 隙間: 600-750 (150px)
-        { x: 1150, y: 476, width: 400, height: 100 },   // 隙間: 1050-1150 (100px)
-        { x: 1650, y: 476, width: 350, height: 100 },   // 隙間: 1550-1650 (100px)
-        { x: 2100, y: 476, width: 400, height: 100 },   // 隙間: 2000-2100 (100px)
-        { x: 2600, y: 476, width: 400, height: 100 },   // 隙間: 2500-2600 (100px)
-        
-        // 空中のプラットフォーム - 配置を調整
-        { x: 200, y: 350, width: 150, height: 20 },
-        { x: 400, y: 250, width: 150, height: 20 },
-        { x: 650, y: 350, width: 100, height: 20 },
-        { x: 850, y: 300, width: 120, height: 20 },
-        { x: 1200, y: 350, width: 200, height: 20 },
-        { x: 1450, y: 250, width: 150, height: 20 },
-        { x: 1700, y: 350, width: 100, height: 20 },
-        { x: 2000, y: 300, width: 150, height: 20 },
-        { x: 2300, y: 200, width: 200, height: 20 }
-    ],
-    enemies: [
-        { type: 'slime', x: 550, y: 436 },  // 最初の地面の端付近
-        { type: 'slime', x: 900, y: 436 },  // 2番目の地面の端付近
-        { type: 'slime', x: 1400, y: 436 }, // 3番目の地面の端付近
-        { type: 'slime', x: 1950, y: 436 }, // 4番目の地面の端付近
-        { type: 'slime', x: 2400, y: 436 }  // 5番目の地面の端付近
-    ],
-    coins: [
-        // 地面のコイン
-        { x: 150, y: 440 },
-        { x: 350, y: 440 },
-        { x: 500, y: 440 },
-        { x: 800, y: 440 },
-        { x: 950, y: 440 },
-        { x: 1200, y: 440 },
-        { x: 1400, y: 440 },
-        { x: 1700, y: 440 },
-        { x: 1900, y: 440 },
-        { x: 2200, y: 440 },
-        { x: 2450, y: 440 },
-        { x: 2700, y: 440 },
-        
-        // 空中のコイン
-        { x: 225, y: 320 },
-        { x: 425, y: 220 },
-        { x: 675, y: 320 },
-        { x: 875, y: 270 },
-        { x: 1250, y: 320 },
-        { x: 1300, y: 320 },
-        { x: 1475, y: 220 },
-        { x: 1725, y: 320 },
-        { x: 2025, y: 270 },
-        { x: 2350, y: 170 },
-        { x: 2400, y: 170 }
-    ],
-    flag: { x: 2800, y: 396 }
-};
 
 // ===== ゲームメイン =====
 class Game {
