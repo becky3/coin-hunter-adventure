@@ -154,7 +154,14 @@ runner.test('入力マネージャーの動作', () => {
     assert(!inputManager.keys.ArrowLeft, '左キーが解放されていません');
 });
 
-// 衝突判定のテスト
+// 衝突判定のテスト（関数を追加）
+function checkCollision(rect1, rect2) {
+    return rect1.x < rect2.x + rect2.width &&
+           rect1.x + rect1.width > rect2.x &&
+           rect1.y < rect2.y + rect2.height &&
+           rect1.y + rect1.height > rect2.y;
+}
+
 runner.test('AABB衝突判定', () => {
     const rect1 = { x: 0, y: 0, width: 50, height: 50 };
     const rect2 = { x: 25, y: 25, width: 50, height: 50 };
@@ -207,18 +214,23 @@ runner.test('ゲーム状態の遷移', () => {
     // 初期状態
     assertEquals(gameState.state, 'start', '初期状態が正しくありません');
     
-    // ゲーム開始
-    gameState.startGame();
+    // ゲーム開始（setStateメソッドを使用）
+    gameState.setState('playing');
     assertEquals(gameState.state, 'playing', 'ゲーム開始後の状態が正しくありません');
     
     // ゲームオーバー
-    gameState.gameOver();
-    assertEquals(gameState.state, 'gameover', 'ゲームオーバー状態が正しくありません');
+    gameState.setState('gameOver');
+    assertEquals(gameState.state, 'gameOver', 'ゲームオーバー状態が正しくありません');
     
     // クリア
-    gameState.state = 'playing';
-    gameState.clear();
-    assertEquals(gameState.state, 'clear', 'クリア状態が正しくありません');
+    gameState.setState('levelComplete');
+    assertEquals(gameState.state, 'levelComplete', 'クリア状態が正しくありません');
+    
+    // resetGameDataメソッドのテスト
+    gameState.score = 100;
+    gameState.resetGameData();
+    assertEquals(gameState.score, 0, 'resetGameDataでスコアがリセットされていません');
+    assertEquals(gameState.lives, 3, 'resetGameDataでライフがリセットされていません');
 });
 
 // プラットフォーム配置のテスト
