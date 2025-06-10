@@ -788,3 +788,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('ゲーム初期化エラー:', error);
     }
 });
+
+// Node.js環境用にクラスをグローバルに設定
+if (typeof global !== 'undefined') {
+    global.GameState = GameState;
+    global.Player = Player;
+    global.InputManager = InputManager;
+    global.Game = Game;
+}

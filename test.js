@@ -159,15 +159,15 @@ runner.test('入力マネージャーの動作', () => {
     
     const state = inputManager.getInputState();
     assert(state.left === true, 'getInputStateでleftが検出されません');
-    assert(state.right === false, 'getInputStateでrightが誤検出されています');
+    assert(!state.right, 'getInputStateでrightが誤検出されています');
     assert(state.jump === true, 'getInputStateでjumpが検出されません');
     
     // キーの状態をリセット
     inputManager.keys = {};
     const state2 = inputManager.getInputState();
-    assert(state2.left === false, 'リセット後もleftが検出されています');
-    assert(state2.right === false, 'リセット後もrightが検出されています');
-    assert(state2.jump === false, 'リセット後もjumpが検出されています');
+    assert(!state2.left, 'リセット後もleftが検出されています');
+    assert(!state2.right, 'リセット後もrightが検出されています');
+    assert(!state2.jump, 'リセット後もjumpが検出されています');
 });
 
 // 衝突判定のテスト（関数を追加）

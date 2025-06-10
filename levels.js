@@ -3,7 +3,7 @@
  * ES5形式でグローバル変数として定義
  */
 
-const levelData = {
+var levelData = {
     platforms: [
         // 地面レベル - 隙間を広くする
         { x: 0, y: 476, width: 600, height: 100 },      // 最初の地面

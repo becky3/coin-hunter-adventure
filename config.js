@@ -4,13 +4,13 @@
  */
 
 // キャンバス設定
-const CANVAS_WIDTH = 1024;
-const CANVAS_HEIGHT = 576;
-const GRAVITY = 0.8;
-const GROUND_Y = CANVAS_HEIGHT - 100;
+var CANVAS_WIDTH = 1024;
+var CANVAS_HEIGHT = 576;
+var GRAVITY = 0.8;
+var GROUND_Y = CANVAS_HEIGHT - 100;
 
 // プレイヤー設定
-const PLAYER_CONFIG = {
+var PLAYER_CONFIG = {
     width: 40,
     height: 60,
     speed: 5,
@@ -22,7 +22,7 @@ const PLAYER_CONFIG = {
 };
 
 // 敵キャラクター設定
-const ENEMY_CONFIG = {
+var ENEMY_CONFIG = {
     slime: {
         width: 50,
         height: 40,
@@ -39,7 +39,7 @@ const ENEMY_CONFIG = {
 };
 
 // コイン設定
-const COIN_CONFIG = {
+var COIN_CONFIG = {
     width: 30,
     height: 30,
     value: 10,
@@ -47,7 +47,7 @@ const COIN_CONFIG = {
 };
 
 // カラーパレット
-const COLORS = {
+var COLORS = {
     sky: '#87CEEB',
     ground: '#8B4513',
     platform: '#696969',
