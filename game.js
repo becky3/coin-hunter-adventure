@@ -18,7 +18,6 @@ class SVGGraphics {
     drawSVGPath(pathData, x, y, width, height, fillStyle = '#000', strokeStyle = null, strokeWidth = 1) {
         this.ctx.save();
         this.ctx.translate(x, y);
-        this.ctx.scale(width / 100, height / 100); // 100x100を基準サイズとする
         
         const path = new Path2D(pathData);
         
@@ -45,13 +44,14 @@ class SVGGraphics {
         let actualHeight = height * scale;
         let offsetY = health === 1 ? height * 0.3 : 0;
         
+        this.ctx.save();
+        
         // 無敵時間中の透明度
         if (invulnerable) {
             this.ctx.globalAlpha = 0.5;
         }
         
         // 向きによる反転
-        this.ctx.save();
         this.ctx.translate(x + width / 2, y + offsetY);
         if (direction < 0) {
             this.ctx.scale(-1, 1);
@@ -59,26 +59,23 @@ class SVGGraphics {
         this.ctx.translate(-actualWidth / 2, 0);
         
         // プレイヤーボディ（丸みを帯びた矩形）
-        const bodyPath = `
-            M 10 10
-            Q 10 5 15 5
-            L ${actualWidth - 15} 5
-            Q ${actualWidth - 10} 5 ${actualWidth - 10} 10
-            L ${actualWidth - 10} ${actualHeight - 15}
-            Q ${actualWidth - 10} ${actualHeight - 10} ${actualWidth - 15} ${actualHeight - 10}
-            L 15 ${actualHeight - 10}
-            Q 10 ${actualHeight - 10} 10 ${actualHeight - 15}
-            Z
-        `;
+        this.ctx.fillStyle = fillColor;
+        this.ctx.beginPath();
+        this.ctx.roundRect(5, 5, actualWidth - 10, actualHeight - 10, 8);
+        this.ctx.fill();
         
-        this.drawSVGPath(bodyPath, 0, 0, actualWidth, actualHeight, fillColor);
+        // 帽子（マリオ風）
+        this.ctx.fillStyle = '#FF0000';
+        this.ctx.fillRect(actualWidth * 0.1, 0, actualWidth * 0.8, actualHeight * 0.25);
         
-        // 顔の描画
-        const eyeSize = Math.max(2, actualWidth * 0.08);
-        const eyeY = actualHeight * 0.3;
+        // 帽子のつば
+        this.ctx.fillStyle = '#CC0000';
+        this.ctx.fillRect(0, actualHeight * 0.2, actualWidth, actualHeight * 0.1);
         
         // 目
         this.ctx.fillStyle = 'white';
+        const eyeSize = Math.max(3, actualWidth * 0.12);
+        const eyeY = actualHeight * 0.4;
         this.ctx.fillRect(actualWidth * 0.25 - eyeSize/2, eyeY, eyeSize, eyeSize);
         this.ctx.fillRect(actualWidth * 0.75 - eyeSize/2, eyeY, eyeSize, eyeSize);
         
@@ -88,19 +85,7 @@ class SVGGraphics {
         this.ctx.fillRect(actualWidth * 0.25 - pupilSize/2, eyeY + eyeSize * 0.2, pupilSize, pupilSize);
         this.ctx.fillRect(actualWidth * 0.75 - pupilSize/2, eyeY + eyeSize * 0.2, pupilSize, pupilSize);
         
-        // 帽子（マリオ風）
-        this.ctx.fillStyle = '#FF0000';
-        this.ctx.fillRect(actualWidth * 0.1, 0, actualWidth * 0.8, actualHeight * 0.2);
-        
-        // 帽子のつば
-        this.ctx.fillStyle = '#CC0000';
-        this.ctx.fillRect(0, actualHeight * 0.15, actualWidth, actualHeight * 0.1);
-        
         this.ctx.restore();
-        
-        if (invulnerable) {
-            this.ctx.globalAlpha = 1.0;
-        }
     }
     
     // スライムのSVG
@@ -111,15 +96,25 @@ class SVGGraphics {
         this.ctx.translate(x, y + bounce);
         
         // スライムボディ（楕円形）
-        const slimePath = `
-            M ${width * 0.5} 0
-            Q ${width * 0.9} ${height * 0.3} ${width * 0.8} ${height * 0.8}
-            Q ${width * 0.5} ${height} ${width * 0.2} ${height * 0.8}
-            Q ${width * 0.1} ${height * 0.3} ${width * 0.5} 0
-            Z
-        `;
+        this.ctx.fillStyle = '#4CAF50';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
+        this.ctx.fill();
         
-        this.drawSVGPath(slimePath, 0, 0, width, height, '#4CAF50', '#2E7D32', 2);
+        // スライムの頭部
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 輪郭
+        this.ctx.strokeStyle = '#2E7D32';
+        this.ctx.lineWidth = 2;
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
+        this.ctx.stroke();
         
         // 目
         this.ctx.fillStyle = 'white';
@@ -140,7 +135,7 @@ class SVGGraphics {
     
     // 鳥のSVG
     drawBird(x, y, width, height, animTimer) {
-        const wingFlap = Math.sin(animTimer * 0.3) * 10;
+        const wingFlap = Math.sin(animTimer * 0.3) * 0.2;
         
         this.ctx.save();
         this.ctx.translate(x, y);
@@ -165,11 +160,11 @@ class SVGGraphics {
         this.ctx.closePath();
         this.ctx.fill();
         
-        // 翼
+        // 翼（アニメーション）
         this.ctx.fillStyle = '#7B1FA2';
         this.ctx.save();
         this.ctx.translate(width * 0.5, height * 0.5);
-        this.ctx.rotate((wingFlap * Math.PI) / 180);
+        this.ctx.rotate(wingFlap);
         this.ctx.beginPath();
         this.ctx.ellipse(0, 0, width * 0.25, height * 0.15, 0, 0, Math.PI * 2);
         this.ctx.fill();
@@ -208,7 +203,7 @@ class SVGGraphics {
         
         // 中央の記号
         this.ctx.fillStyle = '#FFA000';
-        this.ctx.font = `bold ${width * 0.5}px Arial`;
+        this.ctx.font = `bold ${Math.max(12, width * 0.6)}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         this.ctx.fillText('¥', 0, 0);
@@ -223,21 +218,20 @@ class SVGGraphics {
         this.ctx.fillRect(x + width * 0.47, y, width * 0.06, height);
         
         // 旗
-        this.ctx.save();
-        this.ctx.translate(x + width * 0.5, y);
+        this.ctx.fillStyle = '#FF0000';
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + width * 0.5, y);
+        this.ctx.lineTo(x + width * 0.9, y + height * 0.1);
+        this.ctx.lineTo(x + width * 0.85, y + height * 0.25);
+        this.ctx.lineTo(x + width * 0.9, y + height * 0.4);
+        this.ctx.lineTo(x + width * 0.5, y + height * 0.5);
+        this.ctx.closePath();
+        this.ctx.fill();
         
-        const flagPath = `
-            M 0 0
-            L ${width * 0.4} ${height * 0.1}
-            L ${width * 0.35} ${height * 0.25}
-            L ${width * 0.4} ${height * 0.4}
-            L 0 ${height * 0.5}
-            Z
-        `;
-        
-        this.drawSVGPath(flagPath, 0, 0, width * 0.4, height * 0.5, '#FF0000');
-        
-        this.ctx.restore();
+        // 旗の縁
+        this.ctx.strokeStyle = '#CC0000';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
     }
 }
 
