@@ -112,13 +112,47 @@ runner.test('レベルデータの読み込み', () => {
 
 // ゲームインスタンスのテスト
 runner.test('ゲームの初期化', () => {
-    const game = new Game();
-    assert(game.canvas, 'Canvasが初期化されていません');
-    assert(game.ctx, 'Canvas contextが初期化されていません');
-    assert(game.gameState, 'ゲーム状態が初期化されていません');
-    assert(game.inputManager, '入力マネージャーが初期化されていません');
+    // UIボタンのモックを作成
+    const mockElement = {
+        addEventListener: () => {},
+        style: { display: 'none' }
+    };
     
-    assertEquals(game.gameState.state, 'start', '初期状態が正しくありません');
+    // getElementById のモックを一時的に上書き
+    const originalGetElementById = document.getElementById;
+    document.getElementById = (id) => {
+        if (id === 'gameCanvas') {
+            return {
+                getContext: () => ({})
+            };
+        }
+        if (id === 'startBtn' || id.includes('restartBtn') || id.includes('backToTitleBtn')) {
+            return mockElement;
+        }
+        if (id.includes('Screen')) {
+            return mockElement;
+        }
+        return null;
+    };
+    
+    // querySelectorAll のモック
+    document.querySelectorAll = () => [];
+    
+    try {
+        const game = new Game();
+        // ゲームループを停止
+        game.isRunning = false;
+        
+        assert(game.canvas, 'Canvasが初期化されていません');
+        assert(game.ctx, 'Canvas contextが初期化されていません');
+        assert(game.gameState, 'ゲーム状態が初期化されていません');
+        assert(game.inputManager, '入力マネージャーが初期化されていません');
+        
+        assertEquals(game.gameState.state, 'start', '初期状態が正しくありません');
+    } finally {
+        // 元に戻す
+        document.getElementById = originalGetElementById;
+    }
 });
 
 // プレイヤーのテスト
@@ -143,15 +177,20 @@ runner.test('入力マネージャーの動作', () => {
     assert(!inputManager.keys.ArrowRight, '右キーが初期状態で押されています');
     assert(!inputManager.keys.Space, 'スペースキーが初期状態で押されています');
     
-    // キー押下をシミュレート
-    const leftEvent = new KeyboardEvent('keydown', { key: 'ArrowLeft' });
-    inputManager.handleKeyDown(leftEvent);
+    // キー押下をシミュレート（直接イベントを発火）
+    const leftEvent = new KeyboardEvent('keydown', { code: 'ArrowLeft' });
+    document.dispatchEvent(leftEvent);
     assert(inputManager.keys.ArrowLeft, '左キーが押されていません');
     
     // キー解放をシミュレート
-    const leftUpEvent = new KeyboardEvent('keyup', { key: 'ArrowLeft' });
-    inputManager.handleKeyUp(leftUpEvent);
+    const leftUpEvent = new KeyboardEvent('keyup', { code: 'ArrowLeft' });
+    document.dispatchEvent(leftUpEvent);
     assert(!inputManager.keys.ArrowLeft, '左キーが解放されていません');
+    
+    // getInputStateメソッドのテスト
+    inputManager.keys.ArrowLeft = true;
+    const state = inputManager.getInputState();
+    assert(state.left, 'getInputStateでleftが検出されません');
 });
 
 // 衝突判定のテスト（関数を追加）
@@ -174,23 +213,28 @@ runner.test('AABB衝突判定', () => {
 // プレイヤー移動のテスト
 runner.test('プレイヤーの移動処理', () => {
     const player = new Player(100, 300);
-    const inputManager = new InputManager();
     
     // 右移動
-    inputManager.keys.ArrowRight = true;
-    player.handleInput(inputManager.keys);
+    player.handleInput({ right: true, left: false, jump: false });
     assertEquals(player.velX, PLAYER_CONFIG.speed, '右移動速度が正しくありません');
+    assertEquals(player.direction, 1, '右向きの方向が正しくありません');
     
     // 左移動
-    inputManager.keys.ArrowRight = false;
-    inputManager.keys.ArrowLeft = true;
-    player.handleInput(inputManager.keys);
+    player.handleInput({ right: false, left: true, jump: false });
     assertEquals(player.velX, -PLAYER_CONFIG.speed, '左移動速度が正しくありません');
+    assertEquals(player.direction, -1, '左向きの方向が正しくありません');
     
     // 停止
-    inputManager.keys.ArrowLeft = false;
-    player.handleInput(inputManager.keys);
+    player.handleInput({ right: false, left: false, jump: false });
     assertEquals(player.velX, 0, '停止時の速度が0ではありません');
+    
+    // ジャンプ（地面にいる状態で）
+    player.onGround = true;
+    player.isJumping = false;
+    player.handleInput({ right: false, left: false, jump: true });
+    assertEquals(player.velY, -PLAYER_CONFIG.jumpPower, 'ジャンプ力が正しくありません');
+    assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
+    assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
 });
 
 // 重力のテスト
@@ -254,6 +298,11 @@ runner.test('プラットフォームの隙間', () => {
 
 // テストを実行
 window.addEventListener('load', () => {
+    // ゲームの自動開始を防ぐ
+    if (window.game && window.game.stop) {
+        window.game.stop();
+    }
+    
     setTimeout(() => {
         runner.run();
     }, 100);
