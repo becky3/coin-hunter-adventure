@@ -15,7 +15,7 @@ var PLAYER_CONFIG = {
     height: 60,
     speed: 5,
     jumpPower: 18,
-    maxHealth: 3,
+    maxHealth: 2,
     invulnerabilityTime: 120,
     spawnX: 100,
     spawnY: 300

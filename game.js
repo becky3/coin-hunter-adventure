@@ -504,7 +504,7 @@ class Game {
         
         // 落下死判定
         if (this.player.y > worldHeight) {
-            console.log('プレイヤーが穴に落ちました');
+            console.log(`プレイヤーが穴に落ちました！ 現在のライフ: ${this.gameState.lives}, HP: ${this.player.health}`);
             this.loseLife();
             this.player.reset();
         }
@@ -605,7 +605,7 @@ class Game {
     }
     
     loseLife() {
-        console.log('敵に衝突！ライフを失います');
+        console.log('ダメージを受けました！');
         const isDead = this.player.takeDamage();
         
         // ダメージエフェクト：画面を少し赤くする
@@ -686,30 +686,57 @@ class Game {
         // 無敵時間中の視覚効果
         if (this.player.invulnerable) {
             if (Math.floor(this.player.invulnerabilityTime / 3) % 2) {
-                this.ctx.globalAlpha = 0.3; // より透明に
+                this.ctx.globalAlpha = 0.5; // 点滅効果
             }
-            // 無敵時間中は赤い輪郭で強調
-            this.ctx.strokeStyle = 'red';
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeRect(x - 2, this.player.y - 2, this.player.width + 4, this.player.height + 4);
         }
         
-        // プレイヤーの色をヘルスによって変更
+        // HP状態による見た目変化（マリオ風）
+        let playerWidth = this.player.width;
+        let playerHeight = this.player.height;
         let playerColor = COLORS.player;
-        if (this.player.health === 1) {
-            playerColor = '#FF3333'; // 赤色（危険）
-        } else if (this.player.health === 2) {
-            playerColor = '#FFA500'; // オレンジ色（注意）
+        let offsetY = 0;
+        
+        if (this.player.health === 2) {
+            // 最大HP：大きいサイズ
+            playerWidth = this.player.width;
+            playerHeight = this.player.height;
+            playerColor = '#4CAF50'; // 緑色（元気）
+        } else if (this.player.health === 1) {
+            // ダメージ状態：小さいサイズ
+            playerWidth = this.player.width * 0.7;
+            playerHeight = this.player.height * 0.7;
+            playerColor = '#FF9800'; // オレンジ色（ダメージ）
+            offsetY = this.player.height * 0.3; // 下端を合わせるため
         }
         
+        // プレイヤー描画
         this.ctx.fillStyle = playerColor;
-        this.ctx.fillRect(x, this.player.y, this.player.width, this.player.height);
+        this.ctx.fillRect(
+            x + (this.player.width - playerWidth) / 2, 
+            this.player.y + offsetY, 
+            playerWidth, 
+            playerHeight
+        );
         
-        // ヘルス表示（プレイヤーの上に小さく表示）
+        // 目を描画（キャラクター感を出すため）
         this.ctx.fillStyle = 'white';
-        this.ctx.font = '12px Arial';
-        this.ctx.textAlign = 'center';
-        this.ctx.fillText(`HP:${this.player.health}`, x + this.player.width / 2, this.player.y - 5);
+        const eyeSize = Math.max(2, playerWidth * 0.15);
+        const eyeY = this.player.y + offsetY + playerHeight * 0.3;
+        
+        // 左目
+        this.ctx.fillRect(
+            x + (this.player.width - playerWidth) / 2 + playerWidth * 0.25 - eyeSize/2, 
+            eyeY, 
+            eyeSize, 
+            eyeSize
+        );
+        // 右目
+        this.ctx.fillRect(
+            x + (this.player.width - playerWidth) / 2 + playerWidth * 0.75 - eyeSize/2, 
+            eyeY, 
+            eyeSize, 
+            eyeSize
+        );
         
         this.ctx.restore();
     }
@@ -781,9 +808,6 @@ class Game {
         
         const livesElement = document.getElementById('lives');
         if (livesElement) livesElement.textContent = this.gameState.lives;
-        
-        const healthElement = document.getElementById('health');
-        if (healthElement) healthElement.textContent = this.player.health;
         
         const coinsElement = document.getElementById('coins');
         if (coinsElement) coinsElement.textContent = this.gameState.coins;
