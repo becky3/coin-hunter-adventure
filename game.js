@@ -35,7 +35,7 @@ class SVGGraphics {
         this.ctx.restore();
     }
     
-    // プレイヤーキャラクターのSVG（マリオ風）
+    // プレイヤーキャラクターのSVG
     drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame) {
         // HP状態による色とサイズの調整
         let fillColor = health === 2 ? '#4CAF50' : '#FF9800';
@@ -64,7 +64,7 @@ class SVGGraphics {
         this.ctx.roundRect(5, 5, actualWidth - 10, actualHeight - 10, 8);
         this.ctx.fill();
         
-        // 帽子（マリオ風）
+        // 帽子
         this.ctx.fillStyle = '#FF0000';
         this.ctx.fillRect(actualWidth * 0.1, 0, actualWidth * 0.8, actualHeight * 0.25);
         
@@ -760,10 +760,9 @@ class Game {
         }
         
         // 落下死判定
-        if (this.player.y > worldHeight) {
+        if (this.player.y > worldHeight && !this.player.isDead) {
             console.log(`プレイヤーが穴に落ちました！ 現在のライフ: ${this.gameState.lives}, HP: ${this.player.health}`);
-            this.loseLife();
-            // player.reset()はloseLife()内で処理されるため削除
+            this.fallDeath();
         }
         
         // 敵の境界チェックと落下判定
@@ -880,6 +879,33 @@ class Game {
             }
         } else {
             console.log(`無敵時間開始 - 残りHP: ${this.player.health}`);
+        }
+    }
+    
+    fallDeath() {
+        console.log('プレイヤーが穴に落ちて死亡しました！');
+        
+        // プレイヤーを即死状態にする
+        this.player.isDead = true;
+        this.player.velX = 0;
+        this.player.velY = 0;
+        
+        // ダメージエフェクト
+        this.damageEffect = 30;
+        
+        // ライフを減らす
+        const gameOver = this.gameState.loseLife();
+        if (gameOver) {
+            console.log('ゲームオーバー');
+            this.gameOver();
+        } else {
+            console.log('ライフが残っています。少し待ってからプレイヤーをリセット');
+            // 少し遅延を入れてリセット（死亡演出のため）
+            setTimeout(() => {
+                if (this.gameState.lives > 0) {
+                    this.player.reset();
+                }
+            }, 1000);
         }
     }
     
