@@ -20,35 +20,87 @@ body {
     height: 100vh;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
     background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #334155 100%);
 }
 
-.ui-container {
-    position: absolute;
-    top: 24px;
-    left: 24px;
+.game-area {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding-top: 80px; /* HUDの高さ分のオフセット */
+}
+
+/* モダンなHUDレイアウト：画面上部に横並び */
+.hud-top {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
     z-index: 100;
     display: flex;
-    gap: 16px;
-    font-size: 16px;
-    font-weight: 600;
-    color: #F1F5F9;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 32px;
+    background: linear-gradient(180deg, 
+        rgba(15, 23, 42, 0.95) 0%, 
+        rgba(15, 23, 42, 0.8) 70%,
+        transparent 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hud-left, .hud-center, .hud-right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.hud-left {
+    justify-content: flex-start;
+}
+
+.hud-right {
+    justify-content: flex-end;
 }
 
 .score-display, .lives-display, .coins-display {
-    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px 24px;
+    min-width: 120px;
     /* グラスモーフィズム効果 */
-    background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 20px;
     box-shadow: 
-        0 8px 32px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.score-display .label, .lives-display .label, .coins-display .label {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(241, 245, 249, 0.8);
+    margin-bottom: 4px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.score-display .value, .lives-display .value, .coins-display .value {
+    font-size: 24px;
+    font-weight: 700;
+    color: #F1F5F9;
+    background: linear-gradient(135deg, #6366F1, #8B5CF6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
 }
 
 .score-display:hover, .lives-display:hover, .coins-display:hover {
@@ -72,29 +124,41 @@ body {
     -webkit-backdrop-filter: blur(10px);
 }
 
+/* モダンなメニュー画面のベーススタイル */
 .game-over-screen, .game-clear-screen, .start-screen {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    /* グラスモーフィズム + モダングラデーション */
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    animation: modalFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* メニューコンテンツの共通スタイル */
+.menu-content, .result-content {
+    max-width: 600px;
+    width: 90vw;
+    padding: 48px;
     background: linear-gradient(135deg, 
-        rgba(99, 102, 241, 0.2) 0%, 
-        rgba(139, 92, 246, 0.2) 50%, 
-        rgba(6, 255, 165, 0.1) 100%);
+        rgba(99, 102, 241, 0.15) 0%, 
+        rgba(139, 92, 246, 0.15) 50%, 
+        rgba(6, 255, 165, 0.08) 100%);
     backdrop-filter: blur(40px);
     -webkit-backdrop-filter: blur(40px);
-    padding: 48px;
-    border-radius: 24px;
-    text-align: center;
-    color: #F1F5F9;
-    z-index: 1000;
     border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 32px;
     box-shadow: 
         0 32px 64px rgba(0, 0, 0, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    max-width: 90vw;
-    animation: modalFadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: center;
+    color: #F1F5F9;
 }
 
 @keyframes modalFadeIn {
@@ -108,10 +172,70 @@ body {
     }
 }
 
-.start-screen {
-    background: linear-gradient(135deg, 
-        rgba(99, 102, 241, 0.25) 0%, 
-        rgba(139, 92, 246, 0.25) 100%);
+/* スタート画面の特別なレイアウト */
+.title-section {
+    margin-bottom: 40px;
+}
+
+.controls-section {
+    margin-bottom: 40px;
+}
+
+.controls-section h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: rgba(241, 245, 249, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.control-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: all 0.3s ease;
+}
+
+.control-item:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-2px);
+}
+
+.control-item .key {
+    font-size: 14px;
+    font-weight: 700;
+    color: #6366F1;
+    margin-bottom: 8px;
+    padding: 6px 12px;
+    background: rgba(99, 102, 241, 0.2);
+    border-radius: 8px;
+    border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.control-item .action {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(241, 245, 249, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.button-section {
+    display: flex;
+    justify-content: center;
 }
 
 .game-over-screen h1, .game-clear-screen h1, .start-screen h1 {
@@ -126,50 +250,95 @@ body {
     letter-spacing: -0.02em;
 }
 
-.game-over-screen p, .game-clear-screen p {
+
+/* 結果画面のレイアウト */
+.result-header {
+    margin-bottom: 32px;
+}
+
+.result-header .congratulations {
     font-size: 1.125rem;
     font-weight: 500;
-    margin-bottom: 16px;
+    margin-top: 16px;
     opacity: 0.9;
     line-height: 1.6;
 }
 
-.controls {
-    margin: 24px 0;
+.score-section {
+    margin-bottom: 40px;
+}
+
+.final-score {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     padding: 24px;
     background: rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.controls p {
-    margin: 10px 0;
-    font-size: 1rem;
+.score-label {
+    font-size: 14px;
     font-weight: 500;
-    opacity: 0.9;
-    line-height: 1.5;
+    color: rgba(241, 245, 249, 0.8);
+    margin-bottom: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
 }
 
+.score-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #6366F1, #8B5CF6, #06FFA5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ボタンの基本スタイル */
 button {
     padding: 16px 32px;
-    margin: 8px;
     font-family: 'Inter', sans-serif;
     font-size: 1rem;
     font-weight: 600;
-    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-    color: #FFFFFF;
     border: none;
-    border-radius: 12px;
+    border-radius: 16px;
     cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 
-        0 4px 16px rgba(99, 102, 241, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
     overflow: hidden;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.primary-btn {
+    background: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
+    color: #FFFFFF;
+    box-shadow: 
+        0 8px 24px rgba(99, 102, 241, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.secondary-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: #F1F5F9;
+    box-shadow: 
+        0 8px 24px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
 }
 
 button::before {
@@ -184,12 +353,24 @@ button::before {
     transition: opacity 0.2s ease;
 }
 
-button:hover {
+.primary-btn:hover {
     background: linear-gradient(135deg, #5855F5 0%, #7C3AED 100%);
-    transform: translateY(-2px);
+    transform: translateY(-3px);
     box-shadow: 
-        0 8px 24px rgba(99, 102, 241, 0.4),
+        0 12px 32px rgba(99, 102, 241, 0.5),
         inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.secondary-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-3px);
+    box-shadow: 
+        0 12px 32px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+button:hover {
+    transform: translateY(-3px);
 }
 
 button:hover::before {
@@ -198,9 +379,18 @@ button:hover::before {
 
 button:active {
     transform: translateY(-1px);
+}
+
+.primary-btn:active {
     box-shadow: 
-        0 4px 12px rgba(99, 102, 241, 0.3),
+        0 4px 16px rgba(99, 102, 241, 0.4),
         inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.secondary-btn:active {
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 @keyframes float {
@@ -227,16 +417,42 @@ button:active {
 
 /* レスポンシブデザイン */
 @media (max-width: 768px) {
-    .ui-container {
-        font-size: 14px;
-        gap: 12px;
-        top: 16px;
-        left: 16px;
+    .hud-top {
+        height: 70px;
+        padding: 12px 16px;
+        flex-direction: row;
+    }
+    
+    .hud-left, .hud-center, .hud-right {
+        flex: 1;
     }
     
     .score-display, .lives-display, .coins-display {
-        padding: 10px 16px;
-        border-radius: 12px;
+        padding: 12px 16px;
+        min-width: 90px;
+        border-radius: 16px;
+    }
+    
+    .score-display .label, .lives-display .label, .coins-display .label {
+        font-size: 10px;
+    }
+    
+    .score-display .value, .lives-display .value, .coins-display .value {
+        font-size: 20px;
+    }
+    
+    .game-area {
+        padding-top: 70px;
+    }
+    
+    .menu-content, .result-content {
+        padding: 32px 24px;
+        border-radius: 24px;
+    }
+    
+    .control-grid {
+        grid-template-columns: 1fr;
+        max-width: 300px;
     }
     
     #gameCanvas {
@@ -264,17 +480,44 @@ button:active {
 }
 
 @media (max-width: 480px) {
-    .ui-container {
-        flex-direction: column;
-        gap: 8px;
+    .hud-top {
+        height: 60px;
+        padding: 8px 12px;
     }
     
-    .game-over-screen, .game-clear-screen, .start-screen {
+    .score-display, .lives-display, .coins-display {
+        padding: 8px 12px;
+        min-width: 70px;
+        border-radius: 12px;
+    }
+    
+    .score-display .label, .lives-display .label, .coins-display .label {
+        font-size: 9px;
+    }
+    
+    .score-display .value, .lives-display .value, .coins-display .value {
+        font-size: 18px;
+    }
+    
+    .game-area {
+        padding-top: 60px;
+    }
+    
+    .menu-content, .result-content {
         padding: 24px 20px;
+        border-radius: 20px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: center;
     }
     
     button {
-        padding: 12px 24px;
-        font-size: 0.85rem;
+        padding: 14px 28px;
+        font-size: 0.9rem;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 280px;
     }
 }
