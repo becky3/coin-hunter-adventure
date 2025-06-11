@@ -18,6 +18,7 @@ class MusicSystem {
         
         // 音量設定
         this.bgmVolume = 0.3;
+        this.sfxVolume = 0.5; // 効果音の音量
         this.isMuted = false;
     }
     
@@ -450,6 +451,249 @@ class MusicSystem {
     // ミュート状態を取得
     getMuteState() {
         return this.isMuted;
+    }
+    
+    // ===== サウンドエフェクトシステム =====
+    
+    // 効果音を再生する基本メソッド
+    playSoundEffect(frequency, duration, type = 'square', volume = null, envelope = null) {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const effectVolume = volume !== null ? volume : this.sfxVolume;
+        const now = this.audioContext.currentTime;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.type = type;
+        oscillator.frequency.setValueAtTime(frequency, now);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.masterGain);
+        
+        // エンベロープの設定
+        if (envelope) {
+            gainNode.gain.setValueAtTime(0, now);
+            gainNode.gain.linearRampToValueAtTime(effectVolume, now + envelope.attack);
+            gainNode.gain.exponentialRampToValueAtTime(effectVolume * envelope.decay, now + envelope.attack + envelope.decayTime);
+            gainNode.gain.setValueAtTime(effectVolume * envelope.sustain, now + duration - envelope.release);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        } else {
+            gainNode.gain.setValueAtTime(effectVolume, now);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        }
+        
+        oscillator.start(now);
+        oscillator.stop(now + duration);
+    }
+    
+    // ゲームスタート効果音
+    playGameStartSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // 上昇音階
+        const notes = [
+            { freq: this.getNoteFrequency('C4'), time: 0, duration: 0.1 },
+            { freq: this.getNoteFrequency('E4'), time: 0.1, duration: 0.1 },
+            { freq: this.getNoteFrequency('G4'), time: 0.2, duration: 0.1 },
+            { freq: this.getNoteFrequency('C5'), time: 0.3, duration: 0.3 }
+        ];
+        
+        notes.forEach(({ freq, time, duration }) => {
+            setTimeout(() => {
+                this.playSoundEffect(freq, duration, 'sine', 0.6);
+            }, time * 1000);
+        });
+    }
+    
+    // 敵踏みつけ効果音
+    playEnemyStompSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // フリークエンシースイープ + ノイズ
+        const oscillator1 = this.audioContext.createOscillator();
+        const oscillator2 = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator1.type = 'square';
+        oscillator1.frequency.setValueAtTime(800, now);
+        oscillator1.frequency.exponentialRampToValueAtTime(200, now + 0.2);
+        
+        oscillator2.type = 'sawtooth';
+        oscillator2.frequency.setValueAtTime(1200, now);
+        oscillator2.frequency.exponentialRampToValueAtTime(300, now + 0.15);
+        
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(this.masterGain);
+        
+        gainNode.gain.setValueAtTime(0.4, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        
+        oscillator1.start(now);
+        oscillator2.start(now);
+        oscillator1.stop(now + 0.2);
+        oscillator2.stop(now + 0.15);
+    }
+    
+    // ミス（ダメージ）効果音
+    playDamageSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // 下降音階 + ノイズ
+        const oscillator = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        oscillator.type = 'sawtooth';
+        oscillator.frequency.setValueAtTime(400, now);
+        oscillator.frequency.exponentialRampToValueAtTime(80, now + 0.5);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(this.masterGain);
+        
+        gainNode.gain.setValueAtTime(0.3, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+        
+        oscillator.start(now);
+        oscillator.stop(now + 0.5);
+    }
+    
+    // 穴に落ちた時の効果音
+    playFallDeathSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // 長い下降音（落下感を表現）
+        const oscillator1 = this.audioContext.createOscillator();
+        const oscillator2 = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        // メイン下降音
+        oscillator1.type = 'sine';
+        oscillator1.frequency.setValueAtTime(800, now);
+        oscillator1.frequency.exponentialRampToValueAtTime(40, now + 1.5);
+        
+        // ハーモニクス（オクターブ上）
+        oscillator2.type = 'triangle';
+        oscillator2.frequency.setValueAtTime(1600, now);
+        oscillator2.frequency.exponentialRampToValueAtTime(80, now + 1.5);
+        
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(this.masterGain);
+        
+        // フェードアウト
+        gainNode.gain.setValueAtTime(0.4, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+        
+        oscillator1.start(now);
+        oscillator2.start(now);
+        oscillator1.stop(now + 1.5);
+        oscillator2.stop(now + 1.5);
+        
+        // エコー効果を追加
+        setTimeout(() => {
+            if (!this.isInitialized || this.isMuted) return;
+            this.playSoundEffect(200, 0.3, 'sine', 0.2);
+        }, 500);
+    }
+    
+    // ジャンプ効果音
+    playJumpSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        this.playSoundEffect(
+            440, // A4
+            0.1,
+            'square',
+            0.3,
+            { attack: 0.01, decayTime: 0.03, decay: 0.7, sustain: 0.5, release: 0.06 }
+        );
+        
+        // ハーモニクスを追加
+        setTimeout(() => {
+            this.playSoundEffect(880, 0.08, 'sine', 0.15);
+        }, 20);
+    }
+    
+    // コイン収集効果音（より高音でコインらしく）
+    playCoinSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // より高音のキラキラ音（オクターブ上げる）
+        const notes = [
+            { freq: this.getNoteFrequency('A5'), time: 0, duration: 0.08 },
+            { freq: this.getNoteFrequency('C6'), time: 0.04, duration: 0.08 },
+            { freq: this.getNoteFrequency('E6'), time: 0.08, duration: 0.12 }
+        ];
+        
+        notes.forEach(({ freq, time, duration }) => {
+            setTimeout(() => {
+                this.playSoundEffect(freq, duration, 'sine', 0.5);
+            }, time * 1000);
+        });
+        
+        // さらに高いハーモニクスを追加
+        setTimeout(() => {
+            this.playSoundEffect(this.getNoteFrequency('A6'), 0.1, 'triangle', 0.3);
+        }, 60);
+    }
+    
+    // ゴール効果音
+    playGoalSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // ファンファーレ風の効果音
+        const melody = [
+            { freq: this.getNoteFrequency('C5'), time: 0, duration: 0.2 },
+            { freq: this.getNoteFrequency('E5'), time: 0.15, duration: 0.2 },
+            { freq: this.getNoteFrequency('G5'), time: 0.3, duration: 0.2 },
+            { freq: this.getNoteFrequency('C6'), time: 0.45, duration: 0.4 }
+        ];
+        
+        melody.forEach(({ freq, time, duration }) => {
+            setTimeout(() => {
+                this.playSoundEffect(freq, duration, 'triangle', 0.5);
+            }, time * 1000);
+        });
+        
+        // ハーモニーを追加
+        setTimeout(() => {
+            this.playChord(['C4', 'E4', 'G4', 'C5'], 0.8, this.audioContext.currentTime, 'sine', 0.3);
+        }, 200);
+    }
+    
+    // ボタン押下効果音
+    playButtonClickSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // 短いクリック音
+        this.playSoundEffect(
+            800,
+            0.05,
+            'square',
+            0.2,
+            { attack: 0.01, decayTime: 0.02, decay: 0.5, sustain: 0.3, release: 0.02 }
+        );
+    }
+    
+    // 効果音の音量を設定
+    setSfxVolume(volume) {
+        this.sfxVolume = Math.max(0, Math.min(1, volume));
+    }
+    
+    // 効果音の音量を取得
+    getSfxVolume() {
+        return this.sfxVolume;
     }
 }
 
