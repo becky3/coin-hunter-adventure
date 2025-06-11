@@ -15,6 +15,7 @@ class MusicSystem {
         
         // 音量設定
         this.bgmVolume = 0.3;
+        this.isMuted = false;
     }
     
     // オーディオコンテキストの初期化（ユーザー操作後に呼ぶ必要がある）
@@ -122,6 +123,7 @@ class MusicSystem {
     
     // タイトル画面のBGM
     playTitleBGM() {
+        if (this.currentBGM === 'title') return; // 既に再生中の場合はスキップ
         this.stopBGM();
         if (!this.isInitialized) return;
         
@@ -201,6 +203,7 @@ class MusicSystem {
     
     // ゲームプレイ中のBGM
     playGameBGM() {
+        if (this.currentBGM === 'game') return; // 既に再生中の場合はスキップ
         this.stopBGM();
         if (!this.isInitialized) return;
         
@@ -340,14 +343,38 @@ class MusicSystem {
             this.bgmLoopInterval = null;
         }
         this.currentBGM = null;
+        
+        // 音声のフェードアウト効果
+        if (this.masterGain) {
+            this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.1);
+            setTimeout(() => {
+                if (this.masterGain) {
+                    this.masterGain.gain.value = this.bgmVolume;
+                }
+            }, 150);
+        }
     }
     
     // 音量を設定
     setVolume(volume) {
         this.bgmVolume = Math.max(0, Math.min(1, volume));
-        if (this.masterGain) {
+        if (this.masterGain && !this.isMuted) {
             this.masterGain.gain.value = this.bgmVolume;
         }
+    }
+    
+    // ミュート切り替え
+    toggleMute() {
+        this.isMuted = !this.isMuted;
+        if (this.masterGain) {
+            this.masterGain.gain.value = this.isMuted ? 0 : this.bgmVolume;
+        }
+        return this.isMuted;
+    }
+    
+    // ミュート状態を取得
+    getMuteState() {
+        return this.isMuted;
     }
 }
 

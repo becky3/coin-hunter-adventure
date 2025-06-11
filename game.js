@@ -630,12 +630,20 @@ class Game {
         
         this.updateUIVisibility();
         
-        // タイトル画面のBGMを再生
-        setTimeout(() => {
-            if (this.gameState.state === 'start' && this.musicSystem.isInitialized) {
-                this.musicSystem.playTitleBGM();
+        // タイトル画面のBGMを再生（初期化後に実行）
+        const playInitialMusic = async () => {
+            try {
+                await this.musicSystem.init();
+                if (this.gameState.state === 'start') {
+                    this.musicSystem.playTitleBGM();
+                }
+            } catch (error) {
+                console.log('音楽の自動再生はユーザー操作後に開始されます');
             }
-        }, 100);
+        };
+        
+        // 少し遅延して音楽を開始
+        setTimeout(playInitialMusic, 500);
         
         // 音量スライダーの設定
         const volumeSlider = document.getElementById('volumeSlider');
@@ -643,6 +651,16 @@ class Game {
             volumeSlider.addEventListener('input', (e) => {
                 const volume = e.target.value / 100;
                 this.musicSystem.setVolume(volume);
+            });
+        }
+        
+        // ミュートボタンの設定
+        const muteBtn = document.getElementById('muteBtn');
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                const isMuted = this.musicSystem.toggleMute();
+                muteBtn.textContent = isMuted ? '🔇' : '🔊';
+                muteBtn.classList.toggle('muted', isMuted);
             });
         }
     }
