@@ -256,6 +256,51 @@ class SVGGraphics {
         this.ctx.lineWidth = 2;
         this.ctx.stroke();
     }
+    
+    // スプリングのSVG
+    drawSpring(x, y, width, height, compression = 0) {
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        
+        // スプリングベース
+        this.ctx.fillStyle = '#888888';
+        this.ctx.fillRect(width * 0.2, height * 0.9, width * 0.6, height * 0.1);
+        
+        // スプリングコイル（圧縮アニメーション付き）
+        const coilHeight = height * 0.8 * (1 - compression * 0.5);
+        const coilY = height * 0.1 + compression * height * 0.4;
+        const coils = 5;
+        
+        this.ctx.strokeStyle = '#FFD700';
+        this.ctx.lineWidth = 3;
+        this.ctx.shadowColor = '#FFD700';
+        this.ctx.shadowBlur = 10;
+        
+        for (let i = 0; i < coils; i++) {
+            const segmentHeight = coilHeight / coils;
+            const y1 = coilY + i * segmentHeight;
+            const y2 = coilY + (i + 0.5) * segmentHeight;
+            const y3 = coilY + (i + 1) * segmentHeight;
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(width * 0.3, y1);
+            this.ctx.quadraticCurveTo(width * 0.1, y2, width * 0.3, y3);
+            this.ctx.stroke();
+            
+            this.ctx.beginPath();
+            this.ctx.moveTo(width * 0.7, y1);
+            this.ctx.quadraticCurveTo(width * 0.9, y2, width * 0.7, y3);
+            this.ctx.stroke();
+        }
+        
+        // トッププレート
+        this.ctx.fillStyle = '#FF4444';
+        this.ctx.shadowColor = '#FF4444';
+        this.ctx.shadowBlur = 8;
+        this.ctx.fillRect(width * 0.15, coilY - height * 0.05, width * 0.7, height * 0.05);
+        
+        this.ctx.restore();
+    }
 }
 
 // ===== ゲーム状態管理 =====
@@ -612,6 +657,15 @@ class Game {
             baseY: c.y
         }));
         this.flag = levelData.flag;
+        
+        // スプリングの初期化
+        this.springs = (levelData.springs || []).map(s => ({
+            ...s,
+            ...SPRING_CONFIG,
+            compression: 0,
+            triggered: false,
+            cooldown: 0
+        }));
     }
     
     setupUI() {
@@ -796,6 +850,9 @@ class Game {
         // 敵更新
         this.updateEnemies(deltaTime);
         
+        // スプリング更新
+        this.updateSprings(deltaTime);
+        
         // ダメージエフェクトの更新
         if (this.damageEffect > 0) {
             this.damageEffect--;
@@ -893,6 +950,39 @@ class Game {
                 }
                 
                 this.gameState.collectCoin();
+            }
+        });
+        
+        // スプリング判定
+        this.springs.forEach(spring => {
+            if (spring.cooldown > 0) return;
+            
+            const springBounds = {
+                x: spring.x,
+                y: spring.y,
+                width: spring.width,
+                height: spring.height
+            };
+            
+            if (this.checkCollision(this.player.getBounds(), springBounds)) {
+                // プレイヤーが上から接触している場合のみ発動
+                if (this.player.velY > 0 && this.player.y < spring.y) {
+                    console.log('スプリングに乗りました！');
+                    
+                    // 大ジャンプ
+                    this.player.velY = -spring.bouncePower;
+                    this.player.onGround = false;
+                    
+                    // スプリング発動
+                    spring.compression = 1;
+                    spring.triggered = true;
+                    spring.cooldown = 30; // クールダウン設定
+                    
+                    // スプリング効果音を再生（実装予定）
+                    // if (this.musicSystem.isInitialized) {
+                    //     this.musicSystem.playSpringSound();
+                    // }
+                }
             }
         });
         
@@ -1046,6 +1136,24 @@ class Game {
         });
     }
     
+    updateSprings(deltaTime) {
+        this.springs.forEach(spring => {
+            // クールダウン処理
+            if (spring.cooldown > 0) {
+                spring.cooldown--;
+            }
+            
+            // 圧縮アニメーション
+            if (spring.compression > 0) {
+                spring.compression -= SPRING_CONFIG.animationSpeed;
+                if (spring.compression < 0) {
+                    spring.compression = 0;
+                    spring.triggered = false;
+                }
+            }
+        });
+    }
+    
     loseLife() {
         console.log('ダメージを受けました！');
         const isDead = this.player.takeDamage();
@@ -1129,6 +1237,7 @@ class Game {
         if (this.gameState.state === 'playing' || this.gameState.state === 'levelComplete') {
             // ゲームオブジェクト描画
             this.drawPlatforms();
+            this.drawSprings();
             this.drawCoins();
             this.drawEnemies();
             this.drawPlayer();
@@ -1281,6 +1390,16 @@ class Game {
                     // SVGグラフィックでコインを描画
                     this.svg.drawCoin(x, coin.y, coin.width, coin.height, coin.rotation);
                 }
+            }
+        });
+    }
+    
+    drawSprings() {
+        this.springs.forEach(spring => {
+            const x = spring.x - this.camera.x;
+            if (x + spring.width > 0 && x < CANVAS_WIDTH) {
+                // SVGグラフィックでスプリングを描画
+                this.svg.drawSpring(x, spring.y, spring.width, spring.height, spring.compression);
             }
         });
     }
