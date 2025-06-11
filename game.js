@@ -701,17 +701,24 @@ class Game {
     async initTitleMusic() {
         console.log('タイトル音楽の初期化を開始します');
         
+        // 音楽開始インジケーターの表示
+        this.showMusicPrompt();
+        
         // ユーザー操作での音楽開始
-        const startMusicOnInteraction = async () => {
+        const startMusicOnInteraction = async (event) => {
             try {
-                console.log('ユーザー操作により音楽システムを初期化します');
+                console.log('ユーザー操作により音楽システムを初期化します。イベント:', event.type);
                 await this.musicSystem.init();
+                
+                // 音楽プロンプトを非表示
+                this.hideMusicPrompt();
+                
                 if (this.gameState.state === 'start') {
                     console.log('タイトル画面でBGMを開始します');
-                    // 少し遅延を入れてから再生
+                    // 遅延を短縮
                     setTimeout(() => {
                         this.musicSystem.playTitleBGM();
-                    }, 200);
+                    }, 100);
                 }
             } catch (e) {
                 console.error('音楽初期化エラー:', e);
@@ -726,17 +733,36 @@ class Game {
         // 即座に初期化を試行（自動再生可能な環境のため）
         try {
             await this.musicSystem.init();
+            this.hideMusicPrompt();
             if (this.gameState.state === 'start') {
                 setTimeout(() => {
                     this.musicSystem.playTitleBGM();
-                }, 300);
+                }, 200);
             }
         } catch (error) {
             console.log('自動再生はできません。ユーザー操作を待機中...');
         }
     }
     
+    // 音楽開始プロンプトを表示
+    showMusicPrompt() {
+        const prompt = document.getElementById('musicPrompt');
+        if (prompt) {
+            prompt.style.display = 'block';
+        }
+    }
+    
+    // 音楽開始プロンプトを非表示
+    hideMusicPrompt() {
+        const prompt = document.getElementById('musicPrompt');
+        if (prompt) {
+            prompt.style.display = 'none';
+        }
+    }
+    
     startGame() {
+        console.log('ゲームを開始します');
+        
         // ゲームデータをリセット（状態は変更しない）
         this.gameState.resetGameData();
         this.gameState.setState('playing');
@@ -744,9 +770,11 @@ class Game {
         this.resetLevel();
         this.updateUIVisibility();
         
-        // ゲームBGMを再生
+        // ゲームBGMを再生（少し遅延を入れて確実に切り替え）
         if (this.musicSystem.isInitialized) {
-            this.musicSystem.playGameBGM();
+            setTimeout(() => {
+                this.musicSystem.playGameBGM();
+            }, 200);
         }
     }
     
@@ -759,11 +787,11 @@ class Game {
         this.gameState.setState('start');
         this.updateUIVisibility();
         
-        // タイトルBGMを再生
+        // タイトルBGMを再生（遅延を追加して確実に切り替え）
         if (this.musicSystem.isInitialized) {
             setTimeout(() => {
                 this.musicSystem.playTitleBGM();
-            }, 100);
+            }, 300);
         } else {
             // 初期化されていない場合は再初期化を試行
             this.initTitleMusic();

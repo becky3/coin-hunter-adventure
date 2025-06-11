@@ -334,6 +334,22 @@ body {
     width: 120px;
 }
 
+.music-prompt {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background: rgba(255, 193, 7, 0.15);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.music-prompt p {
+    margin: 0;
+    font-size: 12px;
+    color: rgba(255, 193, 7, 0.9);
+    font-weight: 500;
+}
+
 .button-section {
     display: flex;
     justify-content: center;

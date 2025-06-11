@@ -13,6 +13,9 @@ class MusicSystem {
         this.currentBGM = null;
         this.bgmLoopInterval = null;
         
+        // アクティブなオーディオノードを追跡
+        this.activeNodes = [];
+        
         // 音量設定
         this.bgmVolume = 0.3;
         this.isMuted = false;
@@ -59,6 +62,9 @@ class MusicSystem {
         oscillator.connect(gainNode);
         gainNode.connect(this.masterGain);
         
+        // アクティブノードリストに追加
+        this.activeNodes.push({ oscillator, gainNode });
+        
         // エンベロープ
         const now = startTime;
         gainNode.gain.setValueAtTime(0, now);
@@ -69,6 +75,14 @@ class MusicSystem {
         
         oscillator.start(now);
         oscillator.stop(now + duration);
+        
+        // 終了時にアクティブノードリストから削除
+        oscillator.addEventListener('ended', () => {
+            const index = this.activeNodes.findIndex(node => node.oscillator === oscillator);
+            if (index !== -1) {
+                this.activeNodes.splice(index, 1);
+            }
+        });
     }
     
     // コードを再生
@@ -87,6 +101,9 @@ class MusicSystem {
         
         oscillator.connect(gainNode);
         gainNode.connect(this.masterGain);
+        
+        // アクティブノードリストに追加
+        this.activeNodes.push({ oscillator, gainNode });
         
         switch(type) {
             case 'kick':
@@ -109,6 +126,8 @@ class MusicSystem {
                 gainNode.gain.setValueAtTime(0.3, now);
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
                 noise.start(now);
+                // ノイズソースもアクティブノードリストに追加
+                this.activeNodes.push({ oscillator: noise, gainNode });
                 break;
             case 'hihat':
                 oscillator.type = 'square';
@@ -119,18 +138,30 @@ class MusicSystem {
                 oscillator.stop(now + 0.05);
                 break;
         }
+        
+        // 終了時にアクティブノードリストから削除
+        oscillator.addEventListener('ended', () => {
+            const index = this.activeNodes.findIndex(node => node.oscillator === oscillator);
+            if (index !== -1) {
+                this.activeNodes.splice(index, 1);
+            }
+        });
     }
     
     // タイトル画面のBGM
     playTitleBGM() {
-        if (this.currentBGM === 'title') return; // 既に再生中の場合はスキップ
+        if (this.currentBGM === 'title') {
+            console.log('タイトルBGMは既に再生中です');
+            return;
+        }
+        
+        console.log('タイトルBGMを開始します（現在のBGM:', this.currentBGM, '）');
         this.stopBGM();
+        
         if (!this.isInitialized) {
             console.log('音楽システムが初期化されていません');
             return;
         }
-        
-        console.log('タイトルBGMを開始します');
         
         const bpm = 120;
         const beatLength = 60 / bpm;
@@ -208,14 +239,18 @@ class MusicSystem {
     
     // ゲームプレイ中のBGM
     playGameBGM() {
-        if (this.currentBGM === 'game') return; // 既に再生中の場合はスキップ
+        if (this.currentBGM === 'game') {
+            console.log('ゲームBGMは既に再生中です');
+            return;
+        }
+        
+        console.log('ゲームBGMを開始します（現在のBGM:', this.currentBGM, '）');
         this.stopBGM();
+        
         if (!this.isInitialized) {
             console.log('音楽システムが初期化されていません');
             return;
         }
-        
-        console.log('ゲームBGMを開始します');
         
         const bpm = 140;
         const beatLength = 60 / bpm;
@@ -346,34 +381,53 @@ class MusicSystem {
         });
     }
     
+    // 全てのアクティブノードを強制停止
+    stopAllActiveNodes() {
+        console.log('アクティブノードを停止します。ノード数:', this.activeNodes.length);
+        
+        this.activeNodes.forEach(({ oscillator, gainNode }) => {
+            try {
+                // ゲインを即座に0に設定
+                if (gainNode && gainNode.gain) {
+                    gainNode.gain.cancelScheduledValues(this.audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0, this.audioContext.currentTime);
+                }
+                // オシレーターを即座に停止
+                if (oscillator && oscillator.stop) {
+                    oscillator.stop(this.audioContext.currentTime);
+                }
+            } catch (e) {
+                console.log('ノード停止エラー:', e);
+            }
+        });
+        
+        // アクティブノードリストをクリア
+        this.activeNodes = [];
+    }
+    
     // BGMを停止
     stopBGM() {
         console.log('BGMを停止します。現在のBGM:', this.currentBGM);
         
+        // 既に停止済みの場合はスキップ
+        if (!this.currentBGM && !this.bgmLoopInterval) {
+            console.log('BGMは既に停止済みです');
+            return;
+        }
+        
+        // ループを停止
         if (this.bgmLoopInterval) {
             clearInterval(this.bgmLoopInterval);
             this.bgmLoopInterval = null;
         }
         
-        // 即座に全ての音を止める
-        if (this.audioContext && this.audioContext.state === 'running') {
-            // 現在のオーディオコンテキストを一時停止して再開することで即座に音を止める
-            try {
-                this.audioContext.suspend().then(() => {
-                    this.audioContext.resume();
-                });
-            } catch (e) {
-                console.log('オーディオコンテキストの制御に失敗:', e);
-            }
-        }
+        // 全てのアクティブノードを強制停止
+        this.stopAllActiveNodes();
         
+        // 現在のBGMを無効化
         this.currentBGM = null;
         
-        // マスターゲインをリセット
-        if (this.masterGain) {
-            this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
-            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.bgmVolume, this.audioContext.currentTime);
-        }
+        console.log('BGM停止完了');
     }
     
     // 音量を設定
