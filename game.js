@@ -538,7 +538,46 @@ class Game {
         
         this.initLevel();
         this.setupUI();
+        this.setupCanvas();
+        this.setupResizeHandler();
         this.start();
+    }
+    
+    setupCanvas() {
+        // ビューポートサイズに基づいてキャンバスサイズを調整
+        const gameArea = document.querySelector('.game-area');
+        if (!gameArea) return;
+        
+        const rect = gameArea.getBoundingClientRect();
+        const aspectRatio = CANVAS_WIDTH / CANVAS_HEIGHT;
+        
+        let width = rect.width;
+        let height = rect.height;
+        
+        // アスペクト比を維持
+        if (width / height > aspectRatio) {
+            width = height * aspectRatio;
+        } else {
+            height = width / aspectRatio;
+        }
+        
+        // キャンバスの内部解像度は元のまま
+        this.canvas.width = CANVAS_WIDTH;
+        this.canvas.height = CANVAS_HEIGHT;
+        
+        // CSSでの表示サイズを調整
+        this.canvas.style.width = `${width}px`;
+        this.canvas.style.height = `${height}px`;
+    }
+    
+    setupResizeHandler() {
+        let resizeTimeout;
+        window.addEventListener('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                this.setupCanvas();
+            }, 100);
+        });
     }
     
     initLevel() {

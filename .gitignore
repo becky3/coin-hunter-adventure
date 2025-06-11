@@ -1,0 +1,9 @@
+# GitHub CLI
+gh_2.40.1_linux_amd64.tar.gz
+gh_2.40.1_linux_amd64/
+
+# Scripts
+github-comment.sh
+
+# Documentation
+issue-*.md
