@@ -536,6 +536,9 @@ class Game {
         this.isRunning = false;
         this.damageEffect = 0; // ダメージエフェクト用
         
+        // 音楽システム
+        this.musicSystem = new MusicSystem();
+        
         this.initLevel();
         this.setupUI();
         this.setupCanvas();
@@ -609,7 +612,10 @@ class Game {
     setupUI() {
         const startBtn = document.getElementById('startBtn');
         if (startBtn) {
-            startBtn.addEventListener('click', () => this.startGame());
+            startBtn.addEventListener('click', async () => {
+                await this.musicSystem.init(); // 音楽システムを初期化
+                this.startGame();
+            });
         }
         
         const restartBtns = document.querySelectorAll('#restartBtn1, #restartBtn2');
@@ -623,6 +629,22 @@ class Game {
         });
         
         this.updateUIVisibility();
+        
+        // タイトル画面のBGMを再生
+        setTimeout(() => {
+            if (this.gameState.state === 'start' && this.musicSystem.isInitialized) {
+                this.musicSystem.playTitleBGM();
+            }
+        }, 100);
+        
+        // 音量スライダーの設定
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                const volume = e.target.value / 100;
+                this.musicSystem.setVolume(volume);
+            });
+        }
     }
     
     startGame() {
@@ -632,6 +654,11 @@ class Game {
         this.player.reset();
         this.resetLevel();
         this.updateUIVisibility();
+        
+        // ゲームBGMを再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playGameBGM();
+        }
     }
     
     restartGame() {
@@ -641,6 +668,11 @@ class Game {
     backToTitle() {
         this.gameState.setState('start');
         this.updateUIVisibility();
+        
+        // タイトルBGMを再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playTitleBGM();
+        }
     }
     
     resetLevel() {
@@ -988,11 +1020,21 @@ class Game {
     levelComplete() {
         this.gameState.setState('levelComplete');
         this.updateUIVisibility();
+        
+        // 勝利ジングルを再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playVictoryJingle();
+        }
     }
     
     gameOver() {
         this.gameState.setState('gameOver');
         this.updateUIVisibility();
+        
+        // ゲームオーバージングルを再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playGameOverJingle();
+        }
     }
     
     render() {
