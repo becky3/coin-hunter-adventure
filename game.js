@@ -387,6 +387,11 @@ class Player {
             this.velY = -this.jumpPower;
             this.onGround = false;
             this.isJumping = true;
+            
+            // ジャンプ効果音を再生（ゲームインスタンスを参照）
+            if (window.game && window.game.musicSystem && window.game.musicSystem.isInitialized) {
+                window.game.musicSystem.playJumpSound();
+            }
         }
         
         if (!input.jump) {
@@ -614,6 +619,12 @@ class Game {
         if (startBtn) {
             startBtn.addEventListener('click', async () => {
                 console.log('スタートボタンがクリックされました');
+                
+                // ボタンクリック効果音を再生
+                if (this.musicSystem.isInitialized) {
+                    this.musicSystem.playButtonClickSound();
+                }
+                
                 // 音楽システムを初期化（ゲーム開始時のみ）
                 if (!this.musicSystem.isInitialized) {
                     try {
@@ -629,12 +640,24 @@ class Game {
         
         const restartBtns = document.querySelectorAll('#restartBtn1, #restartBtn2');
         restartBtns.forEach(btn => {
-            btn.addEventListener('click', () => this.restartGame());
+            btn.addEventListener('click', () => {
+                // ボタンクリック効果音を再生
+                if (this.musicSystem.isInitialized) {
+                    this.musicSystem.playButtonClickSound();
+                }
+                this.restartGame();
+            });
         });
         
         const backBtns = document.querySelectorAll('#backToTitleBtn1, #backToTitleBtn2');
         backBtns.forEach(btn => {
-            btn.addEventListener('click', () => this.backToTitle());
+            btn.addEventListener('click', () => {
+                // ボタンクリック効果音を再生
+                if (this.musicSystem.isInitialized) {
+                    this.musicSystem.playButtonClickSound();
+                }
+                this.backToTitle();
+            });
         });
         
         this.updateUIVisibility();
@@ -654,6 +677,11 @@ class Game {
         const muteBtn = document.getElementById('muteBtn');
         if (muteBtn) {
             muteBtn.addEventListener('click', () => {
+                // ボタンクリック効果音を再生（ミュート中でなければ）
+                if (this.musicSystem.isInitialized && !this.musicSystem.getMuteState()) {
+                    this.musicSystem.playButtonClickSound();
+                }
+                
                 const isMuted = this.musicSystem.toggleMute();
                 muteBtn.textContent = isMuted ? '🔇' : '🔊';
                 muteBtn.classList.toggle('muted', isMuted);
@@ -666,6 +694,11 @@ class Game {
     startGame() {
         console.log('ゲームを開始します');
         
+        // ゲームスタート効果音を再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playGameStartSound();
+        }
+        
         // ゲームデータをリセット（状態は変更しない）
         this.gameState.resetGameData();
         this.gameState.setState('playing');
@@ -677,7 +710,7 @@ class Game {
         if (this.musicSystem.isInitialized) {
             setTimeout(() => {
                 this.musicSystem.playGameBGM();
-            }, 200);
+            }, 600); // ゲームスタート効果音の後に再生
         }
     }
     
@@ -821,6 +854,11 @@ class Game {
                         // 敵を撃破
                         this.enemies.splice(enemyIndex, 1);
                         
+                        // 敵踏みつけ効果音を再生
+                        if (this.musicSystem.isInitialized) {
+                            this.musicSystem.playEnemyStompSound();
+                        }
+                        
                         // プレイヤーにバウンス効果
                         this.player.velY = -10;
                         
@@ -831,6 +869,12 @@ class Game {
                     } else {
                         // 通常の衝突（横から当たった場合）
                         console.log('敵との衝突を検出');
+                        
+                        // ダメージ効果音を再生
+                        if (this.musicSystem.isInitialized) {
+                            this.musicSystem.playDamageSound();
+                        }
+                        
                         this.loseLife();
                         return; // 一度の衝突で複数回呼ばれるのを防ぐ
                     }
@@ -842,6 +886,12 @@ class Game {
         this.coins.forEach(coin => {
             if (!coin.collected && this.checkCollision(this.player.getBounds(), coin)) {
                 coin.collected = true;
+                
+                // コイン収集効果音を再生
+                if (this.musicSystem.isInitialized) {
+                    this.musicSystem.playCoinSound();
+                }
+                
                 this.gameState.collectCoin();
             }
         });
@@ -857,6 +907,12 @@ class Game {
             
             if (this.checkCollision(this.player.getBounds(), flagBounds)) {
                 console.log('ゴールに到達！');
+                
+                // ゴール効果音を再生
+                if (this.musicSystem.isInitialized) {
+                    this.musicSystem.playGoalSound();
+                }
+                
                 this.levelComplete();
             }
         }
