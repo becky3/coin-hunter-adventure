@@ -125,7 +125,12 @@ class MusicSystem {
     playTitleBGM() {
         if (this.currentBGM === 'title') return; // 既に再生中の場合はスキップ
         this.stopBGM();
-        if (!this.isInitialized) return;
+        if (!this.isInitialized) {
+            console.log('音楽システムが初期化されていません');
+            return;
+        }
+        
+        console.log('タイトルBGMを開始します');
         
         const bpm = 120;
         const beatLength = 60 / bpm;
@@ -205,7 +210,12 @@ class MusicSystem {
     playGameBGM() {
         if (this.currentBGM === 'game') return; // 既に再生中の場合はスキップ
         this.stopBGM();
-        if (!this.isInitialized) return;
+        if (!this.isInitialized) {
+            console.log('音楽システムが初期化されていません');
+            return;
+        }
+        
+        console.log('ゲームBGMを開始します');
         
         const bpm = 140;
         const beatLength = 60 / bpm;
@@ -338,20 +348,31 @@ class MusicSystem {
     
     // BGMを停止
     stopBGM() {
+        console.log('BGMを停止します。現在のBGM:', this.currentBGM);
+        
         if (this.bgmLoopInterval) {
             clearInterval(this.bgmLoopInterval);
             this.bgmLoopInterval = null;
         }
+        
+        // 即座に全ての音を止める
+        if (this.audioContext && this.audioContext.state === 'running') {
+            // 現在のオーディオコンテキストを一時停止して再開することで即座に音を止める
+            try {
+                this.audioContext.suspend().then(() => {
+                    this.audioContext.resume();
+                });
+            } catch (e) {
+                console.log('オーディオコンテキストの制御に失敗:', e);
+            }
+        }
+        
         this.currentBGM = null;
         
-        // 音声のフェードアウト効果
+        // マスターゲインをリセット
         if (this.masterGain) {
-            this.masterGain.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 0.1);
-            setTimeout(() => {
-                if (this.masterGain) {
-                    this.masterGain.gain.value = this.bgmVolume;
-                }
-            }, 150);
+            this.masterGain.gain.cancelScheduledValues(this.audioContext.currentTime);
+            this.masterGain.gain.setValueAtTime(this.isMuted ? 0 : this.bgmVolume, this.audioContext.currentTime);
         }
     }
     

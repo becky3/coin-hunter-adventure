@@ -306,6 +306,34 @@ body {
     letter-spacing: 0.05em;
 }
 
+.audio-settings {
+    margin-bottom: 32px;
+}
+
+.audio-settings h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: rgba(241, 245, 249, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.title-volume-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px 20px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.title-volume-control .volume-slider {
+    width: 120px;
+}
+
 .button-section {
     display: flex;
     justify-content: center;

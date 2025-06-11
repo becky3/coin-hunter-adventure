@@ -613,7 +613,16 @@ class Game {
         const startBtn = document.getElementById('startBtn');
         if (startBtn) {
             startBtn.addEventListener('click', async () => {
-                await this.musicSystem.init(); // 音楽システムを初期化
+                console.log('スタートボタンがクリックされました');
+                // 音楽システムが初期化されていない場合は初期化
+                if (!this.musicSystem.isInitialized) {
+                    try {
+                        await this.musicSystem.init();
+                        console.log('スタートボタンクリックで音楽システムを初期化しました');
+                    } catch (e) {
+                        console.error('音楽システム初期化失敗:', e);
+                    }
+                }
                 this.startGame();
             });
         }
@@ -630,38 +639,100 @@ class Game {
         
         this.updateUIVisibility();
         
-        // タイトル画面のBGMを再生（初期化後に実行）
-        const playInitialMusic = async () => {
-            try {
-                await this.musicSystem.init();
-                if (this.gameState.state === 'start') {
-                    this.musicSystem.playTitleBGM();
-                }
-            } catch (error) {
-                console.log('音楽の自動再生はユーザー操作後に開始されます');
-            }
-        };
+        // タイトル画面の音楽初期化
+        this.initTitleMusic();
         
-        // 少し遅延して音楽を開始
-        setTimeout(playInitialMusic, 500);
-        
-        // 音量スライダーの設定
+        // 音量スライダーの設定（ゲーム中）
         const volumeSlider = document.getElementById('volumeSlider');
         if (volumeSlider) {
             volumeSlider.addEventListener('input', (e) => {
                 const volume = e.target.value / 100;
                 this.musicSystem.setVolume(volume);
+                // タイトル画面のスライダーと同期
+                const titleSlider = document.getElementById('titleVolumeSlider');
+                if (titleSlider) titleSlider.value = e.target.value;
             });
         }
         
-        // ミュートボタンの設定
+        // ミュートボタンの設定（ゲーム中）
         const muteBtn = document.getElementById('muteBtn');
         if (muteBtn) {
             muteBtn.addEventListener('click', () => {
                 const isMuted = this.musicSystem.toggleMute();
                 muteBtn.textContent = isMuted ? '🔇' : '🔊';
                 muteBtn.classList.toggle('muted', isMuted);
+                // タイトル画面のボタンと同期
+                const titleMuteBtn = document.getElementById('titleMuteBtn');
+                if (titleMuteBtn) {
+                    titleMuteBtn.textContent = isMuted ? '🔇' : '🔊';
+                    titleMuteBtn.classList.toggle('muted', isMuted);
+                }
             });
+        }
+        
+        // タイトル画面の音量スライダーの設定
+        const titleVolumeSlider = document.getElementById('titleVolumeSlider');
+        if (titleVolumeSlider) {
+            titleVolumeSlider.addEventListener('input', (e) => {
+                const volume = e.target.value / 100;
+                this.musicSystem.setVolume(volume);
+                // ゲーム中のスライダーと同期
+                if (volumeSlider) volumeSlider.value = e.target.value;
+            });
+        }
+        
+        // タイトル画面のミュートボタンの設定
+        const titleMuteBtn = document.getElementById('titleMuteBtn');
+        if (titleMuteBtn) {
+            titleMuteBtn.addEventListener('click', () => {
+                const isMuted = this.musicSystem.toggleMute();
+                titleMuteBtn.textContent = isMuted ? '🔇' : '🔊';
+                titleMuteBtn.classList.toggle('muted', isMuted);
+                // ゲーム中のボタンと同期
+                if (muteBtn) {
+                    muteBtn.textContent = isMuted ? '🔇' : '🔊';
+                    muteBtn.classList.toggle('muted', isMuted);
+                }
+            });
+        }
+    }
+    
+    // タイトル音楽の初期化
+    async initTitleMusic() {
+        console.log('タイトル音楽の初期化を開始します');
+        
+        // ユーザー操作での音楽開始
+        const startMusicOnInteraction = async () => {
+            try {
+                console.log('ユーザー操作により音楽システムを初期化します');
+                await this.musicSystem.init();
+                if (this.gameState.state === 'start') {
+                    console.log('タイトル画面でBGMを開始します');
+                    // 少し遅延を入れてから再生
+                    setTimeout(() => {
+                        this.musicSystem.playTitleBGM();
+                    }, 200);
+                }
+            } catch (e) {
+                console.error('音楽初期化エラー:', e);
+            }
+        };
+        
+        // 複数のイベントで音楽開始を試行
+        document.addEventListener('click', startMusicOnInteraction, { once: true });
+        document.addEventListener('keydown', startMusicOnInteraction, { once: true });
+        document.addEventListener('touchstart', startMusicOnInteraction, { once: true });
+        
+        // 即座に初期化を試行（自動再生可能な環境のため）
+        try {
+            await this.musicSystem.init();
+            if (this.gameState.state === 'start') {
+                setTimeout(() => {
+                    this.musicSystem.playTitleBGM();
+                }, 300);
+            }
+        } catch (error) {
+            console.log('自動再生はできません。ユーザー操作を待機中...');
         }
     }
     
@@ -684,12 +755,18 @@ class Game {
     }
     
     backToTitle() {
+        console.log('タイトルに戻ります');
         this.gameState.setState('start');
         this.updateUIVisibility();
         
         // タイトルBGMを再生
         if (this.musicSystem.isInitialized) {
-            this.musicSystem.playTitleBGM();
+            setTimeout(() => {
+                this.musicSystem.playTitleBGM();
+            }, 100);
+        } else {
+            // 初期化されていない場合は再初期化を試行
+            this.initTitleMusic();
         }
     }
     
