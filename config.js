@@ -64,4 +64,6 @@ var COLORS = {
     flag: '#FF0000'
 };
 
-console.log('config.js loaded');
+if (typeof console !== 'undefined') {
+    console.log('config.js loaded');
+}

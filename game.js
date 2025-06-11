@@ -4,8 +4,12 @@
  */
 
 // 設定は config.js から読み込み、レベルデータは levels.js から読み込み
-console.log('game.js loaded, CANVAS_WIDTH:', CANVAS_WIDTH);
-console.log('game.js loaded, levelData platforms count:', levelData.platforms.length);
+if (typeof CANVAS_WIDTH !== 'undefined') {
+    console.log('game.js loaded, CANVAS_WIDTH:', CANVAS_WIDTH);
+}
+if (typeof levelData !== 'undefined' && levelData.platforms) {
+    console.log('game.js loaded, levelData platforms count:', levelData.platforms.length);
+}
 
 // ===== SVGグラフィックシステム =====
 class SVGGraphics {

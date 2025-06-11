@@ -273,6 +273,102 @@ runner.test('プラットフォームの隙間', () => {
     assert(gapFound, 'プラットフォーム間に十分な隙間（100px以上）がありません');
 });
 
+// === Issue #12: レベルデザイン改善のテスト ===
+
+// スプリング設定のテスト
+runner.test('スプリング設定の読み込み', () => {
+    assert(typeof SPRING_CONFIG === 'object', 'SPRING_CONFIGが定義されていません');
+    assertEquals(SPRING_CONFIG.width, 40, 'スプリング幅が正しくありません');
+    assertEquals(SPRING_CONFIG.height, 40, 'スプリング高さが正しくありません');
+    assertEquals(SPRING_CONFIG.bouncePower, 25, 'スプリング跳躍力が正しくありません');
+    assertEquals(SPRING_CONFIG.animationSpeed, 0.2, 'スプリングアニメーション速度が正しくありません');
+});
+
+// 改善されたレベルデータのテスト
+runner.test('改善されたレベルデータの検証', () => {
+    // スプリングデータの存在確認
+    assert(Array.isArray(levelData.springs), 'スプリング配列がありません');
+    assertEquals(levelData.springs.length, 3, 'スプリングが3個配置されていません');
+    
+    // 各スプリングの位置確認
+    const expectedSpringPositions = [
+        { x: 650, y: 456 },   // 大ジャンプ補助
+        { x: 1750, y: 456 },  // 垂直セクションへ
+        { x: 2000, y: 80 }    // 最高地点から下降用
+    ];
+    
+    expectedSpringPositions.forEach((expected, index) => {
+        assert(levelData.springs[index], `スプリング${index + 1}が存在しません`);
+        assertEquals(levelData.springs[index].x, expected.x, `スプリング${index + 1}のX座標が正しくありません`);
+        assertEquals(levelData.springs[index].y, expected.y, `スプリング${index + 1}のY座標が正しくありません`);
+    });
+    
+    // 飛行敵（鳥）の配置確認
+    const birds = levelData.enemies.filter(e => e.type === 'bird');
+    assertEquals(birds.length, 6, '飛行敵（鳥）が6体配置されていません');
+    
+    // 地上敵（スライム）の配置確認
+    const slimes = levelData.enemies.filter(e => e.type === 'slime');
+    assertEquals(slimes.length, 7, '地上敵（スライム）が7体配置されていません');
+    
+    // コイン数の確認（30枚に増加）
+    assert(levelData.coins.length >= 30, 'コイン数が十分に増加していません');
+    
+    // ゴール位置の確認（より遠くに）
+    assertEquals(levelData.flag.x, 2900, 'ゴール位置が正しくありません');
+});
+
+// 4つのセクションの構造テスト
+runner.test('4セクション構造の確認', () => {
+    // セクション1: チュートリアルエリア（0-800px）
+    const section1Platforms = levelData.platforms.filter(p => p.x >= 0 && p.x < 800);
+    assertGreaterThan(section1Platforms.length, 3, 'セクション1のプラットフォーム数が不足');
+    
+    // セクション2: ジャンプチャレンジ（800-1600px）
+    const section2Platforms = levelData.platforms.filter(p => p.x >= 800 && p.x < 1600);
+    assertGreaterThan(section2Platforms.length, 3, 'セクション2のプラットフォーム数が不足');
+    
+    // セクション3: 垂直チャレンジ（1600-2400px）
+    const section3Platforms = levelData.platforms.filter(p => p.x >= 1600 && p.x < 2400);
+    assertGreaterThan(section3Platforms.length, 5, 'セクション3のプラットフォーム数が不足');
+    
+    // セクション4: 最終チャレンジ（2400-3000px）
+    const section4Platforms = levelData.platforms.filter(p => p.x >= 2400 && p.x < 3000);
+    assertGreaterThan(section4Platforms.length, 3, 'セクション4のプラットフォーム数が不足');
+});
+
+// 高所ボーナスエリアのテスト
+runner.test('高所ボーナスエリアの確認', () => {
+    // y=120付近の高所コイン（リスクとリワード）
+    const highCoins = levelData.coins.filter(c => c.y >= 100 && c.y <= 140);
+    assertGreaterThan(highCoins.length, 3, '高所ボーナスコインが不足しています');
+    
+    // 高所プラットフォーム（y=150）の存在確認
+    const highPlatform = levelData.platforms.find(p => p.y === 150);
+    assert(highPlatform, '高所ボーナスプラットフォームが存在しません');
+    assertEquals(highPlatform.width, 200, '高所プラットフォームの幅が正しくありません');
+});
+
+// 垂直チャレンジの構造テスト
+runner.test('垂直チャレンジの構造確認', () => {
+    // 垂直配置されたプラットフォーム（1800-2100px範囲）
+    const verticalPlatforms = levelData.platforms.filter(p => 
+        p.x >= 1800 && p.x <= 2100 && p.height === 20 // 空中プラットフォーム
+    ).sort((a, b) => a.y - b.y); // Y座標でソート
+    
+    assertGreaterThan(verticalPlatforms.length, 5, '垂直プラットフォームが不足しています');
+    
+    // 最高地点（y=100）の確認
+    const highestPlatform = verticalPlatforms[0];
+    assert(highestPlatform.y <= 100, '最高地点のプラットフォームがありません');
+    
+    // 段階的な上昇の確認
+    for (let i = 1; i < verticalPlatforms.length; i++) {
+        assert(verticalPlatforms[i].y >= verticalPlatforms[i-1].y, 
+            '垂直プラットフォームが正しく配置されていません');
+    }
+});
+
 // テストを実行
 window.addEventListener('DOMContentLoaded', () => {
     // ゲームが初期化された後に実行

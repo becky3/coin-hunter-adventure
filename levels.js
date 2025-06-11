@@ -36,9 +36,10 @@ var levelData = {
         { x: 1850, y: 280, width: 100, height: 20 },
         { x: 1900, y: 180, width: 100, height: 20 },
         { x: 1950, y: 100, width: 150, height: 20 },    // 最上部
+        { x: 2050, y: 200, width: 80, height: 20 },     // 追加の垂直プラットフォーム
+        { x: 1820, y: 330, width: 90, height: 20 },     // 追加の垂直プラットフォーム2
         
         // 下降ルート
-        { x: 2050, y: 200, width: 80, height: 20 },
         { x: 2150, y: 300, width: 80, height: 20 },
         { x: 2250, y: 380, width: 100, height: 20 },
         
@@ -137,4 +138,6 @@ var levelData = {
     flag: { x: 2900, y: 396 }
 };
 
-console.log('levels.js loaded - 改善版レベルデザイン');
+if (typeof console !== 'undefined') {
+    console.log('levels.js loaded - 改善版レベルデザイン');
+}
