@@ -27,6 +27,10 @@
                     <span class="label">COINS</span>
                     <span class="value" id="coins">0</span>
                 </div>
+                <div class="volume-control">
+                    <button id="muteBtn" class="mute-btn">🔊</button>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="30" class="volume-slider">
+                </div>
             </div>
         </div>
         
@@ -101,6 +105,17 @@
                         </div>
                     </div>
                 </div>
+                <div class="game-info">
+                    <h3>ゲーム情報</h3>
+                    <div class="info-item">
+                        <span class="info-icon">🎵</span>
+                        <span class="info-text">ゲーム開始時に音楽が再生されます</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-icon">🎮</span>
+                        <span class="info-text">ゲーム中の音量は右上で調整できます</span>
+                    </div>
+                </div>
                 <div class="button-section">
                     <button id="startBtn" class="primary-btn">ゲーム開始</button>
                 </div>
@@ -111,6 +126,7 @@
     <!-- ゲームスクリプト -->
     <script src="config.js"></script>
     <script src="levels.js"></script>
+    <script src="music.js"></script>
     <script src="game.js"></script>
 </body>
 </html>

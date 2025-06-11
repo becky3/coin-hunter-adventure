@@ -536,6 +536,9 @@ class Game {
         this.isRunning = false;
         this.damageEffect = 0; // ダメージエフェクト用
         
+        // 音楽システム
+        this.musicSystem = new MusicSystem();
+        
         this.initLevel();
         this.setupUI();
         this.setupCanvas();
@@ -609,7 +612,19 @@ class Game {
     setupUI() {
         const startBtn = document.getElementById('startBtn');
         if (startBtn) {
-            startBtn.addEventListener('click', () => this.startGame());
+            startBtn.addEventListener('click', async () => {
+                console.log('スタートボタンがクリックされました');
+                // 音楽システムを初期化（ゲーム開始時のみ）
+                if (!this.musicSystem.isInitialized) {
+                    try {
+                        await this.musicSystem.init();
+                        console.log('ゲーム開始時に音楽システムを初期化しました');
+                    } catch (e) {
+                        console.error('音楽システム初期化失敗:', e);
+                    }
+                }
+                this.startGame();
+            });
         }
         
         const restartBtns = document.querySelectorAll('#restartBtn1, #restartBtn2');
@@ -623,15 +638,47 @@ class Game {
         });
         
         this.updateUIVisibility();
+        
+        // タイトル画面では音楽を再生しない
+        
+        // 音量スライダーの設定（ゲーム中）
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                const volume = e.target.value / 100;
+                this.musicSystem.setVolume(volume);
+            });
+        }
+        
+        // ミュートボタンの設定（ゲーム中）
+        const muteBtn = document.getElementById('muteBtn');
+        if (muteBtn) {
+            muteBtn.addEventListener('click', () => {
+                const isMuted = this.musicSystem.toggleMute();
+                muteBtn.textContent = isMuted ? '🔇' : '🔊';
+                muteBtn.classList.toggle('muted', isMuted);
+            });
+        }
+        
     }
     
+    
     startGame() {
+        console.log('ゲームを開始します');
+        
         // ゲームデータをリセット（状態は変更しない）
         this.gameState.resetGameData();
         this.gameState.setState('playing');
         this.player.reset();
         this.resetLevel();
         this.updateUIVisibility();
+        
+        // ゲームBGMを再生（少し遅延を入れて確実に切り替え）
+        if (this.musicSystem.isInitialized) {
+            setTimeout(() => {
+                this.musicSystem.playGameBGM();
+            }, 200);
+        }
     }
     
     restartGame() {
@@ -639,8 +686,14 @@ class Game {
     }
     
     backToTitle() {
+        console.log('タイトルに戻ります');
         this.gameState.setState('start');
         this.updateUIVisibility();
+        
+        // タイトル画面では音楽を停止
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.stopBGM();
+        }
     }
     
     resetLevel() {
@@ -988,11 +1041,21 @@ class Game {
     levelComplete() {
         this.gameState.setState('levelComplete');
         this.updateUIVisibility();
+        
+        // 勝利ジングルを再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playVictoryJingle();
+        }
     }
     
     gameOver() {
         this.gameState.setState('gameOver');
         this.updateUIVisibility();
+        
+        // ゲームオーバージングルを再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playGameOverJingle();
+        }
     }
     
     render() {
