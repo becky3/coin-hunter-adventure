@@ -37,8 +37,9 @@ class SVGGraphics {
     
     // プレイヤーキャラクターのSVG
     drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame) {
-        // HP状態による色とサイズの調整
-        let fillColor = health === 2 ? '#4CAF50' : '#FF9800';
+        // HP状態による色とサイズの調整（ネオンカラー）
+        let fillColor = health === 2 ? '#00FF88' : '#FF6B35'; // サイバーパンク調
+        let glowColor = health === 2 ? '#00FF88' : '#FF6B35';
         let scale = health === 2 ? 1.0 : 0.7;
         let actualWidth = width * scale;
         let actualHeight = height * scale;
@@ -60,17 +61,30 @@ class SVGGraphics {
         
         // プレイヤーボディ（丸みを帯びた矩形）
         this.ctx.fillStyle = fillColor;
+        
+        // グロー効果を追加
+        this.ctx.shadowColor = glowColor;
+        this.ctx.shadowBlur = 15;
+        
         this.ctx.beginPath();
         this.ctx.roundRect(5, 5, actualWidth - 10, actualHeight - 10, 8);
         this.ctx.fill();
         
-        // 帽子
-        this.ctx.fillStyle = '#FF0000';
+        // グロー効果をリセット
+        this.ctx.shadowBlur = 0;
+        
+        // 帽子（ネオンカラー）
+        this.ctx.fillStyle = '#FF3366';
+        this.ctx.shadowColor = '#FF3366';
+        this.ctx.shadowBlur = 8;
         this.ctx.fillRect(actualWidth * 0.1, 0, actualWidth * 0.8, actualHeight * 0.25);
         
         // 帽子のつば
-        this.ctx.fillStyle = '#CC0000';
+        this.ctx.fillStyle = '#CC1144';
+        this.ctx.shadowBlur = 5;
         this.ctx.fillRect(0, actualHeight * 0.2, actualWidth, actualHeight * 0.1);
+        
+        this.ctx.shadowBlur = 0;
         
         // 目
         this.ctx.fillStyle = 'white';
@@ -95,8 +109,10 @@ class SVGGraphics {
         this.ctx.save();
         this.ctx.translate(x, y + bounce);
         
-        // スライムボディ（楕円形）
-        this.ctx.fillStyle = '#4CAF50';
+        // スライムボディ（楕円形・ネオンカラー）
+        this.ctx.fillStyle = '#00FFAA';
+        this.ctx.shadowColor = '#00FFAA';
+        this.ctx.shadowBlur = 10;
         this.ctx.beginPath();
         this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
         this.ctx.fill();
@@ -140,8 +156,10 @@ class SVGGraphics {
         this.ctx.save();
         this.ctx.translate(x, y);
         
-        // 鳥のボディ
-        this.ctx.fillStyle = '#9C27B0';
+        // 鳥のボディ（ネオンパープル）
+        this.ctx.fillStyle = '#CC00FF';
+        this.ctx.shadowColor = '#CC00FF';
+        this.ctx.shadowBlur = 8;
         this.ctx.beginPath();
         this.ctx.ellipse(width * 0.5, height * 0.6, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
         this.ctx.fill();
@@ -190,19 +208,24 @@ class SVGGraphics {
         this.ctx.translate(x + width / 2, y + height / 2);
         this.ctx.scale(Math.cos(rotation), 1); // 回転効果
         
-        // コインベース
-        this.ctx.fillStyle = '#FFD700';
+        // コインベース（ネオンゴールド）
+        this.ctx.fillStyle = '#FFFF00';
+        this.ctx.shadowColor = '#FFFF00';
+        this.ctx.shadowBlur = 12;
         this.ctx.beginPath();
         this.ctx.arc(0, 0, width * 0.4, 0, Math.PI * 2);
         this.ctx.fill();
         
         // コインの縁
-        this.ctx.strokeStyle = '#FFA000';
+        this.ctx.strokeStyle = '#FFD700';
         this.ctx.lineWidth = 2;
+        this.ctx.shadowBlur = 8;
         this.ctx.stroke();
         
         // 中央の記号
-        this.ctx.fillStyle = '#FFA000';
+        this.ctx.fillStyle = '#FF8800';
+        this.ctx.shadowColor = '#FF8800';
+        this.ctx.shadowBlur = 6;
         this.ctx.font = `bold ${Math.max(12, width * 0.6)}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
@@ -498,6 +521,11 @@ class Game {
         this.inputManager = new InputManager();
         this.player = new Player();
         
+        // モダンデザイン用の時間とエフェクト
+        this.gameTime = 0;
+        this.particles = [];
+        this.backgroundAnimation = 0;
+        
         this.camera = { x: 0, y: 0 };
         this.platforms = [];
         this.enemies = [];
@@ -603,6 +631,9 @@ class Game {
     
     update(deltaTime) {
         const input = this.inputManager.getInputState();
+        
+        // モダンデザイン用の時間を更新
+        this.gameTime += deltaTime;
         
         if (!this.gameState.isPlaying()) return;
         
@@ -945,19 +976,100 @@ class Game {
     }
     
     drawBackground() {
+        // モダンなダイナミックグラデーション背景
+        const time = this.gameTime * 0.001; // 時間ベースのアニメーション
+        
+        // ダークモードベースのグラデーション
         const gradient = this.ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-        gradient.addColorStop(0, '#87CEEB');
-        gradient.addColorStop(1, '#F0E68C');
+        
+        // 時間によって変化する色彩
+        const hue1 = 220 + Math.sin(time * 0.5) * 30; // ブルー系ベース
+        const hue2 = 280 + Math.cos(time * 0.3) * 40; // パープル系ベース
+        
+        gradient.addColorStop(0, `hsl(${hue1}, 70%, 15%)`);
+        gradient.addColorStop(0.5, `hsl(${(hue1 + hue2) / 2}, 60%, 8%)`);
+        gradient.addColorStop(1, `hsl(${hue2}, 80%, 12%)`);
+        
         this.ctx.fillStyle = gradient;
         this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        
+        // 背景パーティクル（星空効果）
+        this.drawBackgroundParticles();
+    }
+    
+    drawBackgroundParticles() {
+        // 背景用パーティクルを生成
+        if (this.particles.length < 100) {
+            for (let i = 0; i < 3; i++) {
+                this.particles.push({
+                    x: Math.random() * CANVAS_WIDTH,
+                    y: Math.random() * CANVAS_HEIGHT,
+                    size: Math.random() * 2 + 1,
+                    speed: Math.random() * 0.5 + 0.2,
+                    opacity: Math.random() * 0.8 + 0.2,
+                    twinkle: Math.random() * Math.PI * 2,
+                    color: Math.random() > 0.7 ? '#FFD700' : '#FFFFFF'
+                });
+            }
+        }
+        
+        // パーティクルの描画と更新
+        this.particles.forEach((particle, index) => {
+            // きらめき効果
+            particle.twinkle += 0.1;
+            const alpha = particle.opacity * (0.5 + 0.5 * Math.sin(particle.twinkle));
+            
+            this.ctx.save();
+            this.ctx.globalAlpha = alpha;
+            this.ctx.fillStyle = particle.color;
+            
+            // グロー効果
+            this.ctx.shadowColor = particle.color;
+            this.ctx.shadowBlur = particle.size * 3;
+            
+            this.ctx.beginPath();
+            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            this.ctx.restore();
+            
+            // パーティクルの移動
+            particle.y -= particle.speed;
+            particle.x += Math.sin(this.gameTime * 0.001 + index) * 0.2;
+            
+            // 画面外に出たら再配置
+            if (particle.y < -10) {
+                particle.y = CANVAS_HEIGHT + 10;
+                particle.x = Math.random() * CANVAS_WIDTH;
+            }
+        });
     }
     
     drawPlatforms() {
-        this.ctx.fillStyle = COLORS.platform;
         this.platforms.forEach(platform => {
             const x = platform.x - this.camera.x;
             if (x + platform.width > 0 && x < CANVAS_WIDTH) {
+                this.ctx.save();
+                
+                // モダンなグラデーションプラットフォーム
+                const gradient = this.ctx.createLinearGradient(x, platform.y, x, platform.y + platform.height);
+                gradient.addColorStop(0, '#4A5568');
+                gradient.addColorStop(0.5, '#2D3748');
+                gradient.addColorStop(1, '#1A202C');
+                
+                this.ctx.fillStyle = gradient;
                 this.ctx.fillRect(x, platform.y, platform.width, platform.height);
+                
+                // 上面のハイライト
+                this.ctx.fillStyle = '#63B3ED';
+                this.ctx.fillRect(x, platform.y, platform.width, 2);
+                
+                // グロー効果
+                this.ctx.shadowColor = '#63B3ED';
+                this.ctx.shadowBlur = 8;
+                this.ctx.fillRect(x, platform.y, platform.width, 1);
+                
+                this.ctx.restore();
             }
         });
     }
