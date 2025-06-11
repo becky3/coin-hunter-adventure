@@ -548,7 +548,13 @@ class Game {
         const gameArea = document.querySelector('.game-area');
         if (!gameArea) return;
         
+        // ゲームエリアが非表示の場合はスキップ
+        if (gameArea.style.display === 'none') return;
+        
         const rect = gameArea.getBoundingClientRect();
+        // rectのサイズが0の場合はスキップ
+        if (rect.width === 0 || rect.height === 0) return;
+        
         const aspectRatio = CANVAS_WIDTH / CANVAS_HEIGHT;
         
         let width = rect.width;
@@ -1215,6 +1221,8 @@ class Game {
             // ゲーム中はゲームキャンバスとHUDを表示
             if (gameArea) gameArea.style.display = 'flex';
             if (hudTop) hudTop.style.display = 'flex';
+            // ゲーム開始時にキャンバスサイズを再計算
+            this.setupCanvas();
         }
     }
 }
