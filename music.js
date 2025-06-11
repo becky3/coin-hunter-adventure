@@ -564,6 +564,47 @@ class MusicSystem {
         oscillator.stop(now + 0.5);
     }
     
+    // 穴に落ちた時の効果音
+    playFallDeathSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        const now = this.audioContext.currentTime;
+        
+        // 長い下降音（落下感を表現）
+        const oscillator1 = this.audioContext.createOscillator();
+        const oscillator2 = this.audioContext.createOscillator();
+        const gainNode = this.audioContext.createGain();
+        
+        // メイン下降音
+        oscillator1.type = 'sine';
+        oscillator1.frequency.setValueAtTime(800, now);
+        oscillator1.frequency.exponentialRampToValueAtTime(40, now + 1.5);
+        
+        // ハーモニクス（オクターブ上）
+        oscillator2.type = 'triangle';
+        oscillator2.frequency.setValueAtTime(1600, now);
+        oscillator2.frequency.exponentialRampToValueAtTime(80, now + 1.5);
+        
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
+        gainNode.connect(this.masterGain);
+        
+        // フェードアウト
+        gainNode.gain.setValueAtTime(0.4, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+        
+        oscillator1.start(now);
+        oscillator2.start(now);
+        oscillator1.stop(now + 1.5);
+        oscillator2.stop(now + 1.5);
+        
+        // エコー効果を追加
+        setTimeout(() => {
+            if (!this.isInitialized || this.isMuted) return;
+            this.playSoundEffect(200, 0.3, 'sine', 0.2);
+        }, 500);
+    }
+    
     // ジャンプ効果音
     playJumpSound() {
         if (!this.isInitialized || this.isMuted) return;
@@ -582,23 +623,29 @@ class MusicSystem {
         }, 20);
     }
     
-    // コイン収集効果音
+    // コイン収集効果音（より高音でコインらしく）
     playCoinSound() {
         if (!this.isInitialized || this.isMuted) return;
         
         const now = this.audioContext.currentTime;
         
-        // 高音のキラキラ音
+        // より高音のキラキラ音（オクターブ上げる）
         const notes = [
-            { freq: this.getNoteFrequency('E5'), time: 0, duration: 0.1 },
-            { freq: this.getNoteFrequency('A5'), time: 0.05, duration: 0.15 }
+            { freq: this.getNoteFrequency('A5'), time: 0, duration: 0.08 },
+            { freq: this.getNoteFrequency('C6'), time: 0.04, duration: 0.08 },
+            { freq: this.getNoteFrequency('E6'), time: 0.08, duration: 0.12 }
         ];
         
         notes.forEach(({ freq, time, duration }) => {
             setTimeout(() => {
-                this.playSoundEffect(freq, duration, 'sine', 0.4);
+                this.playSoundEffect(freq, duration, 'sine', 0.5);
             }, time * 1000);
         });
+        
+        // さらに高いハーモニクスを追加
+        setTimeout(() => {
+            this.playSoundEffect(this.getNoteFrequency('A6'), 0.1, 'triangle', 0.3);
+        }, 60);
     }
     
     // ゴール効果音

@@ -1070,6 +1070,11 @@ class Game {
     fallDeath() {
         console.log('プレイヤーが穴に落ちて死亡しました！');
         
+        // 穴落ち効果音を再生
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.playFallDeathSound();
+        }
+        
         // プレイヤーを即死状態にする
         this.player.isDead = true;
         this.player.velX = 0;
