@@ -7,3 +7,6 @@ github-comment.sh
 
 # Documentation
 issue-*.md
+
+# Local development rules (security sensitive)
+CLAUDE.md
