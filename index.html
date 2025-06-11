@@ -8,43 +8,103 @@
 </head>
 <body>
     <div class="game-container">
-        <div class="ui-container">
-            <div class="score-display">
-                <span>スコア: </span><span id="score">0</span>
+        <!-- モダンなHUDレイアウト：画面上部に横並び -->
+        <div class="hud-top">
+            <div class="hud-left">
+                <div class="score-display">
+                    <span class="label">SCORE</span>
+                    <span class="value" id="score">0</span>
+                </div>
             </div>
-            <div class="lives-display">
-                <span>ライフ: </span><span id="lives">3</span>
+            <div class="hud-center">
+                <div class="lives-display">
+                    <span class="label">LIVES</span>
+                    <span class="value" id="lives">3</span>
+                </div>
             </div>
-            <div class="coins-display">
-                <span>コイン: </span><span id="coins">0</span>
+            <div class="hud-right">
+                <div class="coins-display">
+                    <span class="label">COINS</span>
+                    <span class="value" id="coins">0</span>
+                </div>
             </div>
         </div>
         
-        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+        <!-- ゲームエリア -->
+        <div class="game-area">
+            <canvas id="gameCanvas" width="1024" height="576"></canvas>
+        </div>
         
+        <!-- モダンなゲームオーバー画面 -->
         <div class="game-over-screen" id="gameOverScreen" style="display: none;">
-            <h1>ゲームオーバー</h1>
-            <p>最終スコア: <span id="finalScore">0</span></p>
-            <button id="restartBtn1">もう一度プレイ</button>
-            <button id="backToTitleBtn1">タイトルに戻る</button>
-        </div>
-        
-        <div class="game-clear-screen" id="gameClearScreen" style="display: none;">
-            <h1>ゲームクリア！</h1>
-            <p>おめでとうございます！</p>
-            <p>最終スコア: <span id="clearScore">0</span></p>
-            <button id="restartBtn2">もう一度プレイ</button>
-            <button id="backToTitleBtn2">タイトルに戻る</button>
-        </div>
-        
-        <div class="start-screen" id="startScreen" style="display: flex;">
-            <h1>コインハンター<br>アドベンチャー</h1>
-            <div class="controls">
-                <p>操作方法:</p>
-                <p>← → または A D : 移動</p>
-                <p>スペース または W : ジャンプ</p>
+            <div class="result-content">
+                <div class="result-header">
+                    <h1>GAME OVER</h1>
+                </div>
+                <div class="score-section">
+                    <div class="final-score">
+                        <span class="score-label">FINAL SCORE</span>
+                        <span class="score-value" id="finalScore">0</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button id="restartBtn1" class="primary-btn">もう一度プレイ</button>
+                    <button id="backToTitleBtn1" class="secondary-btn">タイトルに戻る</button>
+                </div>
             </div>
-            <button id="startBtn">ゲーム開始</button>
+        </div>
+        
+        <!-- モダンなゲームクリア画面 -->
+        <div class="game-clear-screen" id="gameClearScreen" style="display: none;">
+            <div class="result-content">
+                <div class="result-header">
+                    <h1>GAME CLEAR!</h1>
+                    <p class="congratulations">おめでとうございます！</p>
+                </div>
+                <div class="score-section">
+                    <div class="final-score">
+                        <span class="score-label">FINAL SCORE</span>
+                        <span class="score-value" id="clearScore">0</span>
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button id="restartBtn2" class="primary-btn">もう一度プレイ</button>
+                    <button id="backToTitleBtn2" class="secondary-btn">タイトルに戻る</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- モダンなスタート画面 -->
+        <div class="start-screen" id="startScreen" style="display: flex;">
+            <div class="menu-content">
+                <div class="title-section">
+                    <h1>コインハンター<br>アドベンチャー</h1>
+                </div>
+                <div class="controls-section">
+                    <h3>操作方法</h3>
+                    <div class="control-grid">
+                        <div class="control-item">
+                            <span class="key">← →</span>
+                            <span class="action">移動</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="key">A D</span>
+                            <span class="action">移動</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="key">SPACE</span>
+                            <span class="action">ジャンプ</span>
+                        </div>
+                        <div class="control-item">
+                            <span class="key">W</span>
+                            <span class="action">ジャンプ</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="button-section">
+                    <button id="startBtn" class="primary-btn">ゲーム開始</button>
+                </div>
+            </div>
         </div>
     </div>
 

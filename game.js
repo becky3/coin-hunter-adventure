@@ -1148,6 +1148,8 @@ class Game {
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const gameClearScreen = document.getElementById('gameClearScreen');
+        const gameArea = document.querySelector('.game-area');
+        const hudTop = document.querySelector('.hud-top');
         
         // 全て非表示
         if (startScreen) startScreen.style.display = 'none';
@@ -1157,10 +1159,23 @@ class Game {
         // 対応する画面を表示
         if (this.gameState.state === 'start') {
             if (startScreen) startScreen.style.display = 'flex';
+            // スタート画面の時はゲームキャンバスとHUDを非表示
+            if (gameArea) gameArea.style.display = 'none';
+            if (hudTop) hudTop.style.display = 'none';
         } else if (this.gameState.state === 'gameOver') {
             if (gameOverScreen) gameOverScreen.style.display = 'flex';
+            // ゲームオーバー画面の時もゲームキャンバスとHUDを非表示
+            if (gameArea) gameArea.style.display = 'none';
+            if (hudTop) hudTop.style.display = 'none';
         } else if (this.gameState.state === 'levelComplete') {
             if (gameClearScreen) gameClearScreen.style.display = 'flex';
+            // ゲームクリア画面の時もゲームキャンバスとHUDを非表示
+            if (gameArea) gameArea.style.display = 'none';
+            if (hudTop) hudTop.style.display = 'none';
+        } else {
+            // ゲーム中はゲームキャンバスとHUDを表示
+            if (gameArea) gameArea.style.display = 'flex';
+            if (hudTop) hudTop.style.display = 'flex';
         }
     }
 }
