@@ -1,0 +1,17 @@
+node_modules/
+gh_2.40.1_linux_amd64/
+*.min.js
+dist/
+build/
+# デバッグスクリプトは除外
+debug-*.js
+# テストユーティリティは除外
+run-*.js
+validate-*.js
+check-*.js
+simulate-*.js
+test-server.js
+test-html-simulator.js
+# 一時ファイル
+*.md
+*.sh
