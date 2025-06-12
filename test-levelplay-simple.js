@@ -62,6 +62,9 @@ class SimpleLevelTest {
     async quickSimulation() {
         const issues = [];
         
+        // 処理が実行されていることを確認するため、短い遅延を追加
+        await new Promise(resolve => setTimeout(resolve, 10));
+        
         // 簡単なAIで進行をテスト
         let playerX = 100;
         let playerY = 300;
@@ -148,14 +151,22 @@ class SimpleLevelTest {
         
         // 1. 静的解析
         console.log('1. 静的解析実行中...');
+        const analyzeStart = performance.now();
         const staticIssues = this.analyzeLevel();
+        const analyzeEnd = performance.now();
+        console.log(`静的解析完了: ${((analyzeEnd - analyzeStart) / 1000).toFixed(3)}秒`);
         
         // 2. 高速シミュレーション
         console.log('2. 高速シミュレーション実行中...');
+        const simStart = performance.now();
         const simResult = await this.quickSimulation();
+        const simEnd = performance.now();
+        console.log(`シミュレーション完了: ${((simEnd - simStart) / 1000).toFixed(3)}秒`);
         
         const endTime = performance.now();
         const duration = (endTime - startTime) / 1000;
+        
+        console.log(`総実行時間: ${duration.toFixed(3)}秒`);
         
         // 結果をまとめ
         const allIssues = [...staticIssues, ...simResult.issues];
@@ -172,6 +183,22 @@ class SimpleLevelTest {
                 high: highSeverityIssues.length,
                 medium: allIssues.filter(issue => issue.severity === 'medium').length
             }
+        };
+        
+        // 処理内容の詳細を追加
+        result.processingDetails = {
+            staticAnalysis: {
+                duration: ((analyzeEnd - analyzeStart) / 1000).toFixed(3),
+                platformsChecked: levelData.platforms ? levelData.platforms.length : 0,
+                issuesFound: staticIssues.length
+            },
+            simulation: {
+                duration: ((simEnd - simStart) / 1000).toFixed(3),
+                progress: simResult.progress,
+                finalPosition: simResult.finalPosition,
+                issuesFound: simResult.issues.length
+            },
+            totalDuration: duration.toFixed(3)
         };
         
         this.displayQuickResult(result);

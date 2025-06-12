@@ -301,9 +301,19 @@ npm run serve
                 // 結果を表示
                 let outputText = `=== 簡易レベルテスト結果 ===\n`;
                 outputText += `結果: ${result.passed ? '✅ 合格' : '❌ 要修正'}\n`;
-                outputText += `実行時間: ${((endTime - startTime) / 1000).toFixed(2)}秒\n`;
+                outputText += `実行時間: ${((endTime - startTime) / 1000).toFixed(3)}秒\n`;
                 outputText += `進行度: ${result.progress.toFixed(1)}%\n`;
                 outputText += `問題数: ${result.summary.total} (重要: ${result.summary.high}, 中程度: ${result.summary.medium})\n`;
+                
+                // 詳細な処理情報を追加
+                if (result.processingDetails) {
+                    outputText += `\n=== 処理詳細 ===\n`;
+                    outputText += `静的解析: ${result.processingDetails.staticAnalysis.duration}秒 `;
+                    outputText += `(プラットフォーム${result.processingDetails.staticAnalysis.platformsChecked}個チェック)\n`;
+                    outputText += `シミュレーション: ${result.processingDetails.simulation.duration}秒 `;
+                    outputText += `(位置${result.processingDetails.simulation.finalPosition}まで進行)\n`;
+                    outputText += `総処理時間: ${result.processingDetails.totalDuration}秒\n`;
+                }
                 
                 if (result.issues.length > 0) {
                     outputText += `\n検出された問題:\n`;
