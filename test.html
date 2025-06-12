@@ -158,6 +158,56 @@
         .test-category:nth-child(3) {
             animation-delay: 0.2s;
         }
+        
+        /* 追加テストセクション */
+        .additional-tests {
+            background-color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        
+        .test-button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 10px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background-color: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        }
+        
+        .test-button.level-test {
+            background-color: #28a745;
+        }
+        
+        .test-button.level-test:hover {
+            background-color: #218838;
+        }
+        
+        .level-test-output {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
     </style>
 </head>
 <body>
@@ -165,6 +215,38 @@
     
     <div class="test-results" id="testResults">
         <p>テストを実行中...</p>
+    </div>
+    
+    <!-- 追加テスト -->
+    <div class="additional-tests">
+        <h2>🎮 追加テスト</h2>
+        
+        <div>
+            <h3>レベルテスト</h3>
+            <p>レベル設計の静的解析と高速シミュレーションを実行します（約3秒）</p>
+            <button class="test-button level-test" onclick="runLevelTest()">
+                ⚡ 簡易レベルテスト実行
+            </button>
+            <div id="levelTestOutput" class="level-test-output" style="display: none;"></div>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <h3>コマンドライン実行</h3>
+            <p>ターミナルで以下のコマンドを実行することも可能です：</p>
+            <div class="level-test-output">
+# 基本テスト
+npm test
+
+# ブラウザテスト（このページ）
+npm run test-browser
+
+# 簡易レベルテスト
+npm run test-level
+
+# 開発サーバー起動
+npm run serve
+            </div>
+        </div>
     </div>
     
     <!-- テスト用の隠しCanvas -->
@@ -175,6 +257,85 @@
     <script src="levels.js"></script>
     <script src="music.js"></script>
     <script src="game.js"></script>
+    <script src="test-levelplay-simple.js"></script>
     <script src="test.js"></script>
+    
+    <script>
+        // 簡易レベルテスト実行関数
+        async function runLevelTest() {
+            const button = document.querySelector('.level-test');
+            const output = document.getElementById('levelTestOutput');
+            
+            // ボタンを無効化
+            button.disabled = true;
+            button.textContent = '⏳ 実行中...';
+            
+            // 出力エリアを表示
+            output.style.display = 'block';
+            output.textContent = 'レベルテストを実行中...\n';
+            
+            try {
+                // SimpleLevelTestクラスが利用可能か確認
+                if (typeof SimpleLevelTest === 'undefined') {
+                    throw new Error('SimpleLevelTestクラスが読み込まれていません');
+                }
+                
+                const levelTest = new SimpleLevelTest();
+                
+                // テスト実行
+                const startTime = performance.now();
+                const result = await levelTest.runQuickTest();
+                const endTime = performance.now();
+                
+                // 結果を表示
+                let outputText = `=== 簡易レベルテスト結果 ===\n`;
+                outputText += `結果: ${result.passed ? '✅ 合格' : '❌ 要修正'}\n`;
+                outputText += `実行時間: ${((endTime - startTime) / 1000).toFixed(2)}秒\n`;
+                outputText += `進行度: ${result.progress.toFixed(1)}%\n`;
+                outputText += `問題数: ${result.summary.total} (重要: ${result.summary.high}, 中程度: ${result.summary.medium})\n`;
+                
+                if (result.issues.length > 0) {
+                    outputText += `\n検出された問題:\n`;
+                    result.issues.forEach((issue, index) => {
+                        const severity = issue.severity === 'high' ? '🔴' : '🟡';
+                        outputText += `  ${index + 1}. ${severity} ${issue.message} (位置: ${issue.position}px)\n`;
+                    });
+                }
+                
+                if (result.passed) {
+                    outputText += `\n👍 レベルは基本的な問題がなく、プレイ可能と思われます。`;
+                } else {
+                    outputText += `\n⚠️  重要な問題が検出されました。修正を推奨します。`;
+                }
+                
+                output.textContent = outputText;
+                
+            } catch (error) {
+                output.textContent = `❌ エラーが発生しました: ${error.message}\n\n` +
+                    `HTTPサーバー経由でアクセスしてください:\n` +
+                    `npm run serve\n` +
+                    `http://localhost:8080/test.html`;
+            } finally {
+                // ボタンを再有効化
+                button.disabled = false;
+                button.textContent = '⚡ 簡易レベルテスト実行';
+            }
+        }
+        
+        // ページ読み込み完了後の初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            // レベルテスト機能の利用可能性をチェック
+            if (typeof SimpleLevelTest !== 'undefined') {
+                console.log('✅ SimpleLevelTestクラスが利用可能です');
+            } else {
+                console.log('❌ SimpleLevelTestクラスが読み込まれていません');
+                const button = document.querySelector('.level-test');
+                if (button) {
+                    button.textContent = '❌ レベルテスト（読み込みエラー）';
+                    button.disabled = true;
+                }
+            }
+        });
+    </script>
 </body>
 </html>
