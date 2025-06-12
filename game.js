@@ -648,8 +648,8 @@ class Game {
         this.enemies = levelData.enemies.map(e => ({
             ...e,
             ...ENEMY_CONFIG[e.type],
-            velX: ENEMY_CONFIG[e.type].speed,
-            direction: 1,
+            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
+            direction: e.type === 'bird' ? -1 : 1,
             animTimer: 0,
             originalX: e.x,
             originalY: e.y
@@ -801,8 +801,8 @@ class Game {
         this.enemies = levelData.enemies.map(e => ({
             ...e,
             ...ENEMY_CONFIG[e.type],
-            velX: ENEMY_CONFIG[e.type].speed,
-            direction: 1,
+            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
+            direction: e.type === 'bird' ? -1 : 1,
             animTimer: 0,
             originalX: e.x,
             originalY: e.y
