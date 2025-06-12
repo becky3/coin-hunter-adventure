@@ -788,11 +788,30 @@ class Game {
     }
     
     resetLevel() {
+        // コインをリセット
         this.coins.forEach(coin => {
             coin.collected = false;
             coin.rotation = 0;
             coin.floatOffset = 0;
         });
+        
+        // 敵をリセット（初期状態に復元）
+        this.enemies = levelData.enemies.map(e => ({
+            ...e,
+            ...ENEMY_CONFIG[e.type],
+            velX: ENEMY_CONFIG[e.type].speed,
+            direction: 1,
+            animTimer: 0
+        }));
+        
+        // スプリングをリセット
+        this.springs = (levelData.springs || []).map(s => ({
+            ...s,
+            ...SPRING_CONFIG,
+            compression: 0,
+            triggered: false,
+            cooldown: 0
+        }));
     }
     
     start() {
@@ -1046,15 +1065,25 @@ class Game {
         
         // 敵の境界チェックと落下判定
         this.enemies.forEach(enemy => {
-            if (enemy.x < 0) {
-                enemy.x = 0;
-                enemy.velX *= -1;
-                enemy.direction *= -1;
-            }
-            if (enemy.x + enemy.width > worldWidth) {
-                enemy.x = worldWidth - enemy.width;
-                enemy.velX *= -1;
-                enemy.direction *= -1;
+            if (enemy.type === 'bird') {
+                // 飛行敵（鳥）の境界処理 - 画面端でワープ
+                if (enemy.x < -enemy.width) {
+                    enemy.x = worldWidth;
+                } else if (enemy.x > worldWidth) {
+                    enemy.x = -enemy.width;
+                }
+            } else {
+                // 地上敵の境界処理 - 画面端で反転
+                if (enemy.x < 0) {
+                    enemy.x = 0;
+                    enemy.velX *= -1;
+                    enemy.direction *= -1;
+                }
+                if (enemy.x + enemy.width > worldWidth) {
+                    enemy.x = worldWidth - enemy.width;
+                    enemy.velX *= -1;
+                    enemy.direction *= -1;
+                }
             }
             
             // 敵の落下判定
