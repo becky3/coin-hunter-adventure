@@ -1169,11 +1169,8 @@ class Game {
                     }
                 });
             } else {
-                // 鳥の場合の簡易的な方向転換
-                if (enemy.x < 0 || enemy.x > 3000) {
-                    enemy.velX *= -1;
-                    enemy.direction *= -1;
-                }
+                // 鳥の場合は境界での方向転換は行わない（ワープ処理のみ）
+                // updateEnemiesでの横移動は継続
             }
         });
     }
