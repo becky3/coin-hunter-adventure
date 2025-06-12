@@ -650,7 +650,9 @@ class Game {
             ...ENEMY_CONFIG[e.type],
             velX: ENEMY_CONFIG[e.type].speed,
             direction: 1,
-            animTimer: 0
+            animTimer: 0,
+            originalX: e.x,
+            originalY: e.y
         }));
         this.coins = levelData.coins.map(c => ({
             ...c,
@@ -801,7 +803,9 @@ class Game {
             ...ENEMY_CONFIG[e.type],
             velX: ENEMY_CONFIG[e.type].speed,
             direction: 1,
-            animTimer: 0
+            animTimer: 0,
+            originalX: e.x,
+            originalY: e.y
         }));
         
         // スプリングをリセット
@@ -1089,9 +1093,14 @@ class Game {
             // 敵の落下判定
             if (enemy.y > worldHeight) {
                 console.log('敵が穴に落ちました');
-                // 敵を初期位置にリセット
-                const originalEnemy = levelData.enemies.find(e => e.type === enemy.type);
-                if (originalEnemy) {
+                // 敵を初期位置にリセット - 正しい敵を特定するため元のインデックスを使用
+                const originalEnemies = levelData.enemies;
+                const originalIndex = originalEnemies.findIndex(e => 
+                    e.type === enemy.type && e.x === enemy.originalX && e.y === enemy.originalY
+                );
+                
+                if (originalIndex !== -1) {
+                    const originalEnemy = originalEnemies[originalIndex];
                     enemy.x = originalEnemy.x;
                     enemy.y = originalEnemy.y;
                     enemy.velY = 0;
