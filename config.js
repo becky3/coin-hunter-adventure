@@ -46,6 +46,14 @@ var COIN_CONFIG = {
     rotationSpeed: 0.05
 };
 
+// スプリング設定
+var SPRING_CONFIG = {
+    width: 40,
+    height: 40,
+    bouncePower: 25,
+    animationSpeed: 0.2
+};
+
 // カラーパレット
 var COLORS = {
     sky: '#87CEEB',
@@ -56,4 +64,6 @@ var COLORS = {
     flag: '#FF0000'
 };
 
-console.log('config.js loaded');
+if (typeof console !== 'undefined') {
+    console.log('config.js loaded');
+}

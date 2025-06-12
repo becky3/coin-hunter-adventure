@@ -1,0 +1,14 @@
+{
+  "name": "coin-hunter-adventure",
+  "version": "1.0.0",
+  "description": "Platform game testing environment",
+  "main": "game.js",
+  "scripts": {
+    "test": "node test-simple.js",
+    "test-browser": "node run-browser-tests.js",
+    "serve": "python3 -m http.server 8080",
+    "lint": "echo 'No linter configured'",
+    "typecheck": "echo 'No TypeScript configured'"
+  },
+  "dependencies": {}
+}

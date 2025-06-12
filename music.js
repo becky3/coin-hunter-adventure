@@ -697,9 +697,12 @@ class MusicSystem {
     }
 }
 
-// グローバルに音楽システムをエクスポート
+// グローバルスコープに設定（ブラウザ/テスト環境）
 if (typeof window !== 'undefined') {
     window.MusicSystem = MusicSystem;
+}
+if (typeof global !== 'undefined') {
+    global.MusicSystem = MusicSystem;
 }
 
 // Node.js環境用
