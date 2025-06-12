@@ -68,33 +68,77 @@ class SVGGraphics {
         }
         this.ctx.translate(-actualWidth / 2, 0);
         
-        // プレイヤーボディ（グラデーション効果）
-        const bodyGradient = this.ctx.createLinearGradient(0, 0, 0, actualHeight);
+        // 体部分（下半分）
+        const bodyHeight = actualHeight * 0.6;
+        const bodyY = actualHeight * 0.4;
+        const bodyGradient = this.ctx.createLinearGradient(0, bodyY, 0, actualHeight);
         bodyGradient.addColorStop(0, baseColor);
-        bodyGradient.addColorStop(0.5, this.lightenColor(baseColor, 20));
-        bodyGradient.addColorStop(1, this.darkenColor(baseColor, 15));
+        bodyGradient.addColorStop(0.5, this.lightenColor(baseColor, 15));
+        bodyGradient.addColorStop(1, this.darkenColor(baseColor, 10));
         
-        // 外側のグロー効果
         this.ctx.shadowColor = glowColor;
-        this.ctx.shadowBlur = 12;
+        this.ctx.shadowBlur = 10;
         this.ctx.fillStyle = bodyGradient;
-        
         this.ctx.beginPath();
-        this.ctx.roundRect(3, 3, actualWidth - 6, actualHeight - 6, 12);
+        this.ctx.roundRect(actualWidth * 0.1, bodyY, actualWidth * 0.8, bodyHeight, 8);
         this.ctx.fill();
         
-        // 内側のハイライト
+        // 腕（左右）
+        this.ctx.shadowBlur = 6;
+        const armWidth = actualWidth * 0.15;
+        const armHeight = bodyHeight * 0.7;
+        const armY = bodyY + bodyHeight * 0.1;
+        
+        // 左腕
+        this.ctx.beginPath();
+        this.ctx.roundRect(-armWidth * 0.3, armY, armWidth, armHeight, 6);
+        this.ctx.fill();
+        
+        // 右腕
+        this.ctx.beginPath();
+        this.ctx.roundRect(actualWidth - armWidth * 0.7, armY, armWidth, armHeight, 6);
+        this.ctx.fill();
+        
+        // 足（左右）
+        const legWidth = actualWidth * 0.2;
+        const legHeight = actualHeight * 0.15;
+        const legY = actualHeight - legHeight;
+        
+        // 左足
+        this.ctx.beginPath();
+        this.ctx.roundRect(actualWidth * 0.2, legY, legWidth, legHeight, 4);
+        this.ctx.fill();
+        
+        // 右足
+        this.ctx.beginPath();
+        this.ctx.roundRect(actualWidth * 0.6, legY, legWidth, legHeight, 4);
+        this.ctx.fill();
+        
+        // 頭部（上半分）
+        const headHeight = actualHeight * 0.45;
+        const headGradient = this.ctx.createLinearGradient(0, 0, 0, headHeight);
+        headGradient.addColorStop(0, this.lightenColor(baseColor, 25));
+        headGradient.addColorStop(0.5, this.lightenColor(baseColor, 15));
+        headGradient.addColorStop(1, baseColor);
+        
+        this.ctx.fillStyle = headGradient;
+        this.ctx.shadowBlur = 8;
+        this.ctx.beginPath();
+        this.ctx.roundRect(actualWidth * 0.15, 0, actualWidth * 0.7, headHeight, 12);
+        this.ctx.fill();
+        
+        // 頭部のハイライト
         this.ctx.shadowBlur = 0;
-        const highlightGradient = this.ctx.createLinearGradient(0, 0, actualWidth * 0.3, actualHeight * 0.3);
-        highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
-        highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        this.ctx.fillStyle = highlightGradient;
+        const headHighlight = this.ctx.createLinearGradient(0, 0, actualWidth * 0.3, headHeight * 0.3);
+        headHighlight.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+        headHighlight.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = headHighlight;
         this.ctx.beginPath();
-        this.ctx.roundRect(6, 6, actualWidth * 0.4, actualHeight * 0.3, 8);
+        this.ctx.roundRect(actualWidth * 0.2, headHeight * 0.1, actualWidth * 0.3, headHeight * 0.3, 8);
         this.ctx.fill();
         
-        // 帽子（改良版）
-        const hatGradient = this.ctx.createLinearGradient(0, 0, 0, actualHeight * 0.3);
+        // 帽子（頭部に合わせて調整）
+        const hatGradient = this.ctx.createLinearGradient(0, -5, 0, headHeight * 0.25);
         hatGradient.addColorStop(0, accentColor);
         hatGradient.addColorStop(1, this.darkenColor(accentColor, 25));
         
@@ -102,29 +146,29 @@ class SVGGraphics {
         this.ctx.shadowColor = accentColor;
         this.ctx.shadowBlur = 6;
         this.ctx.beginPath();
-        this.ctx.roundRect(actualWidth * 0.1, -2, actualWidth * 0.8, actualHeight * 0.28, 4);
+        this.ctx.roundRect(actualWidth * 0.12, -5, actualWidth * 0.76, headHeight * 0.25, 4);
         this.ctx.fill();
         
         // 帽子のつば（3D効果）
         this.ctx.fillStyle = this.darkenColor(accentColor, 35);
         this.ctx.shadowBlur = 3;
         this.ctx.beginPath();
-        this.ctx.roundRect(-2, actualHeight * 0.18, actualWidth + 4, actualHeight * 0.12, 6);
+        this.ctx.roundRect(actualWidth * 0.05, headHeight * 0.15, actualWidth * 0.9, headHeight * 0.1, 6);
         this.ctx.fill();
         
         this.ctx.shadowBlur = 0;
         
-        // 目（改良版）
+        // 目（頭部内に配置）
         this.ctx.fillStyle = 'white';
-        const eyeSize = Math.max(4, actualWidth * 0.14);
-        const eyeY = actualHeight * 0.38;
+        const eyeSize = Math.max(3, actualWidth * 0.12);
+        const eyeY = headHeight * 0.5;
         
         // 目の白い部分（楕円形）
         this.ctx.beginPath();
-        this.ctx.ellipse(actualWidth * 0.28, eyeY + eyeSize/2, eyeSize/2, eyeSize/2 * eyeBlink, 0, 0, 2 * Math.PI);
+        this.ctx.ellipse(actualWidth * 0.32, eyeY, eyeSize/2, eyeSize/2 * eyeBlink, 0, 0, 2 * Math.PI);
         this.ctx.fill();
         this.ctx.beginPath();
-        this.ctx.ellipse(actualWidth * 0.72, eyeY + eyeSize/2, eyeSize/2, eyeSize/2 * eyeBlink, 0, 0, 2 * Math.PI);
+        this.ctx.ellipse(actualWidth * 0.68, eyeY, eyeSize/2, eyeSize/2 * eyeBlink, 0, 0, 2 * Math.PI);
         this.ctx.fill();
         
         // 瞳（改良版）
@@ -132,29 +176,35 @@ class SVGGraphics {
             this.ctx.fillStyle = '#2C3E50';
             const pupilSize = eyeSize * 0.5;
             this.ctx.beginPath();
-            this.ctx.ellipse(actualWidth * 0.28, eyeY + eyeSize/2, pupilSize/2, pupilSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.ellipse(actualWidth * 0.32, eyeY, pupilSize/2, pupilSize/2, 0, 0, 2 * Math.PI);
             this.ctx.fill();
             this.ctx.beginPath();
-            this.ctx.ellipse(actualWidth * 0.72, eyeY + eyeSize/2, pupilSize/2, pupilSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.ellipse(actualWidth * 0.68, eyeY, pupilSize/2, pupilSize/2, 0, 0, 2 * Math.PI);
             this.ctx.fill();
             
             // 瞳のハイライト
             this.ctx.fillStyle = 'white';
-            const highlightSize = pupilSize * 0.3;
+            const highlightSize = pupilSize * 0.4;
             this.ctx.beginPath();
-            this.ctx.ellipse(actualWidth * 0.28 + pupilSize * 0.15, eyeY + eyeSize/2 - pupilSize * 0.15, highlightSize/2, highlightSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.ellipse(actualWidth * 0.32 - pupilSize * 0.1, eyeY - pupilSize * 0.1, highlightSize/2, highlightSize/2, 0, 0, 2 * Math.PI);
             this.ctx.fill();
             this.ctx.beginPath();
-            this.ctx.ellipse(actualWidth * 0.72 + pupilSize * 0.15, eyeY + eyeSize/2 - pupilSize * 0.15, highlightSize/2, highlightSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.ellipse(actualWidth * 0.68 - pupilSize * 0.1, eyeY - pupilSize * 0.1, highlightSize/2, highlightSize/2, 0, 0, 2 * Math.PI);
             this.ctx.fill();
         }
         
+        // 鼻（小さなポイント）
+        this.ctx.fillStyle = this.darkenColor(baseColor, 15);
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.5, headHeight * 0.7, actualWidth * 0.02, actualWidth * 0.015, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
         // 口（笑顔）
-        this.ctx.strokeStyle = this.darkenColor(baseColor, 40);
-        this.ctx.lineWidth = 2;
+        this.ctx.strokeStyle = this.darkenColor(baseColor, 30);
+        this.ctx.lineWidth = 1.5;
         this.ctx.lineCap = 'round';
         this.ctx.beginPath();
-        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.65, actualWidth * 0.15, 0.2 * Math.PI, 0.8 * Math.PI);
+        this.ctx.arc(actualWidth * 0.5, headHeight * 0.8, actualWidth * 0.12, 0.2 * Math.PI, 0.8 * Math.PI);
         this.ctx.stroke();
         
         this.ctx.restore();
@@ -184,75 +234,151 @@ class SVGGraphics {
             (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
     }
     
-    // スライムのSVG
+    // スライムの改良版描画
     drawSlime(x, y, width, height, animTimer) {
         const bounce = Math.sin(animTimer * 0.1) * 2;
+        const eyeBlink = animTimer % 180 > 170 ? 0.3 : 1.0;
         
         this.ctx.save();
         this.ctx.translate(x, y + bounce);
         
-        // スライムボディ（楕円形・ネオンカラー）
-        this.ctx.fillStyle = '#00FFAA';
-        this.ctx.shadowColor = '#00FFAA';
-        this.ctx.shadowBlur = 10;
+        // スライム本体（グラデーション）
+        const bodyGradient = this.ctx.createRadialGradient(width / 2, height * 0.7, 0, width / 2, height * 0.7, width * 0.5);
+        bodyGradient.addColorStop(0, '#7FFF7F'); // 明るいグリーン
+        bodyGradient.addColorStop(0.6, '#4CAF50'); // 中間グリーン
+        bodyGradient.addColorStop(1, '#2E7D32'); // 濃いグリーン
+        
+        this.ctx.fillStyle = bodyGradient;
+        this.ctx.shadowColor = '#4CAF50';
+        this.ctx.shadowBlur = 8;
         this.ctx.beginPath();
         this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // スライムの頭部
+        // スライムの頭部（グラデーション）
+        const headGradient = this.ctx.createRadialGradient(width / 2, height * 0.4, 0, width / 2, height * 0.4, width * 0.4);
+        headGradient.addColorStop(0, '#A5FF7F');
+        headGradient.addColorStop(0.7, '#4CAF50');
+        headGradient.addColorStop(1, '#2E7D32');
+        
+        this.ctx.fillStyle = headGradient;
         this.ctx.beginPath();
         this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // 輪郭
-        this.ctx.strokeStyle = '#2E7D32';
-        this.ctx.lineWidth = 2;
-        this.ctx.beginPath();
-        this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
-        this.ctx.stroke();
-        this.ctx.beginPath();
-        this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
-        this.ctx.stroke();
+        this.ctx.shadowBlur = 0;
         
-        // 目
+        // ハイライト効果
+        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width * 0.4, height * 0.35, width * 0.15, height * 0.12, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 目（改良版）
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
-        this.ctx.arc(width * 0.35, height * 0.35, width * 0.08, 0, Math.PI * 2);
-        this.ctx.arc(width * 0.65, height * 0.35, width * 0.08, 0, Math.PI * 2);
+        this.ctx.ellipse(width * 0.38, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.ellipse(width * 0.62, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // 瞳
-        this.ctx.fillStyle = 'black';
+        // 瞳（より可愛らしく）
+        if (eyeBlink > 0.5) {
+            this.ctx.fillStyle = '#1A1A1A';
+            this.ctx.beginPath();
+            this.ctx.arc(width * 0.38, height * 0.37, width * 0.04, 0, Math.PI * 2);
+            this.ctx.arc(width * 0.62, height * 0.37, width * 0.04, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // 瞳のハイライト
+            this.ctx.fillStyle = 'white';
+            this.ctx.beginPath();
+            this.ctx.arc(width * 0.38 - width * 0.015, height * 0.35, width * 0.015, 0, Math.PI * 2);
+            this.ctx.arc(width * 0.62 - width * 0.015, height * 0.35, width * 0.015, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        // 口（可愛い笑顔）
+        this.ctx.strokeStyle = '#2E7D32';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.lineCap = 'round';
         this.ctx.beginPath();
-        this.ctx.arc(width * 0.35, height * 0.38, width * 0.04, 0, Math.PI * 2);
-        this.ctx.arc(width * 0.65, height * 0.38, width * 0.04, 0, Math.PI * 2);
-        this.ctx.fill();
+        this.ctx.arc(width * 0.5, height * 0.45, width * 0.06, 0.1 * Math.PI, 0.9 * Math.PI);
+        this.ctx.stroke();
         
         this.ctx.restore();
     }
     
-    // 鳥のSVG
+    // 鳥の改良版描画
     drawBird(x, y, width, height, animTimer) {
-        const wingFlap = Math.sin(animTimer * 0.3) * 0.2;
+        const wingFlap = Math.sin(animTimer * 0.3) * 0.3;
+        const bobbing = Math.sin(animTimer * 0.1) * 1;
+        const eyeBlink = animTimer % 200 > 190 ? 0.2 : 1.0;
         
         this.ctx.save();
-        this.ctx.translate(x, y);
+        this.ctx.translate(x, y + bobbing);
         
-        // 鳥のボディ（ネオンパープル）
-        this.ctx.fillStyle = '#CC00FF';
-        this.ctx.shadowColor = '#CC00FF';
-        this.ctx.shadowBlur = 8;
+        // 鳥のボディ（グラデーション）
+        const bodyGradient = this.ctx.createRadialGradient(width * 0.5, height * 0.6, 0, width * 0.5, height * 0.6, width * 0.4);
+        bodyGradient.addColorStop(0, '#E1BEE7'); // 明るいパープル
+        bodyGradient.addColorStop(0.6, '#9C27B0'); // 中間パープル
+        bodyGradient.addColorStop(1, '#6A1B9A'); // 濃いパープル
+        
+        this.ctx.fillStyle = bodyGradient;
+        this.ctx.shadowColor = '#9C27B0';
+        this.ctx.shadowBlur = 6;
         this.ctx.beginPath();
         this.ctx.ellipse(width * 0.5, height * 0.6, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // 頭
+        // 頭（グラデーション）
+        const headGradient = this.ctx.createRadialGradient(width * 0.3, height * 0.4, 0, width * 0.3, height * 0.4, width * 0.25);
+        headGradient.addColorStop(0, '#F3E5F5');
+        headGradient.addColorStop(0.7, '#BA68C8');
+        headGradient.addColorStop(1, '#8E24AA');
+        
+        this.ctx.fillStyle = headGradient;
         this.ctx.beginPath();
         this.ctx.arc(width * 0.3, height * 0.4, width * 0.2, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // くちばし
-        this.ctx.fillStyle = '#FF9800';
+        this.ctx.shadowBlur = 0;
+        
+        // 翼（アニメーション改良版）
+        this.ctx.save();
+        this.ctx.translate(width * 0.5, height * 0.5);
+        this.ctx.rotate(wingFlap);
+        
+        // 翼のグラデーション
+        const wingGradient = this.ctx.createLinearGradient(-width * 0.25, -height * 0.15, width * 0.25, height * 0.15);
+        wingGradient.addColorStop(0, '#7B1FA2');
+        wingGradient.addColorStop(0.5, '#9C27B0');
+        wingGradient.addColorStop(1, '#6A1B9A');
+        
+        this.ctx.fillStyle = wingGradient;
+        this.ctx.beginPath();
+        this.ctx.ellipse(0, 0, width * 0.25, height * 0.15, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 翼の羽根模様
+        this.ctx.strokeStyle = '#4A148C';
+        this.ctx.lineWidth = 1;
+        this.ctx.beginPath();
+        this.ctx.moveTo(-width * 0.15, -height * 0.05);
+        this.ctx.lineTo(width * 0.15, height * 0.05);
+        this.ctx.moveTo(-width * 0.1, 0);
+        this.ctx.lineTo(width * 0.2, 0);
+        this.ctx.stroke();
+        
+        this.ctx.restore();
+        
+        // くちばし（改良版）
+        const beakGradient = this.ctx.createLinearGradient(width * 0.1, height * 0.35, width * 0.25, height * 0.45);
+        beakGradient.addColorStop(0, '#FFB74D');
+        beakGradient.addColorStop(1, '#FF8F00');
+        
+        this.ctx.fillStyle = beakGradient;
         this.ctx.beginPath();
         this.ctx.moveTo(width * 0.1, height * 0.4);
         this.ctx.lineTo(width * 0.25, height * 0.35);
@@ -260,25 +386,30 @@ class SVGGraphics {
         this.ctx.closePath();
         this.ctx.fill();
         
-        // 翼（アニメーション）
-        this.ctx.fillStyle = '#7B1FA2';
-        this.ctx.save();
-        this.ctx.translate(width * 0.5, height * 0.5);
-        this.ctx.rotate(wingFlap);
-        this.ctx.beginPath();
-        this.ctx.ellipse(0, 0, width * 0.25, height * 0.15, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.restore();
-        
-        // 目
+        // 目（改良版）
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
-        this.ctx.arc(width * 0.25, height * 0.35, width * 0.05, 0, Math.PI * 2);
+        this.ctx.ellipse(width * 0.28, height * 0.35, width * 0.05, width * 0.05 * eyeBlink, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        this.ctx.fillStyle = 'black';
+        // 瞳（より表情豊かに）
+        if (eyeBlink > 0.5) {
+            this.ctx.fillStyle = '#1A1A1A';
+            this.ctx.beginPath();
+            this.ctx.arc(width * 0.29, height * 0.35, width * 0.025, 0, Math.PI * 2);
+            this.ctx.fill();
+            
+            // 瞳のハイライト
+            this.ctx.fillStyle = 'white';
+            this.ctx.beginPath();
+            this.ctx.arc(width * 0.285, height * 0.34, width * 0.01, 0, Math.PI * 2);
+            this.ctx.fill();
+        }
+        
+        // 頬の模様
+        this.ctx.fillStyle = 'rgba(255, 193, 7, 0.4)';
         this.ctx.beginPath();
-        this.ctx.arc(width * 0.27, height * 0.35, width * 0.02, 0, Math.PI * 2);
+        this.ctx.ellipse(width * 0.35, height * 0.45, width * 0.04, width * 0.03, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
         this.ctx.restore();
