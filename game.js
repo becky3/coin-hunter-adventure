@@ -39,71 +39,149 @@ class SVGGraphics {
         this.ctx.restore();
     }
     
-    // プレイヤーキャラクターのSVG
+    // プレイヤーキャラクターの高品質描画
     drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame) {
-        // HP状態による色とサイズの調整（ネオンカラー）
-        let fillColor = health === 2 ? '#00FF88' : '#FF6B35'; // サイバーパンク調
-        let glowColor = health === 2 ? '#00FF88' : '#FF6B35';
-        let scale = health === 2 ? 1.0 : 0.7;
+        // HP状態による色とサイズの調整（改良版カラーパレット）
+        let baseColor = health === 2 ? '#4A90E2' : '#E74C3C'; // ブルー/レッド
+        let accentColor = health === 2 ? '#2ECC71' : '#F39C12'; // グリーン/オレンジ
+        let glowColor = health === 2 ? '#5DADE2' : '#EC7063';
+        let scale = health === 2 ? 1.0 : 0.8; // サイズ差を緩和
         let actualWidth = width * scale;
         let actualHeight = height * scale;
-        let offsetY = health === 1 ? height * 0.3 : 0;
+        let offsetY = health === 1 ? height * 0.2 : 0; // オフセットを緩和
+        
+        // アニメーション効果
+        const bounce = Math.sin(animFrame * 0.5) * 1.5;
+        const eyeBlink = animFrame % 60 > 55 ? 0.3 : 1.0; // まばたき効果
         
         this.ctx.save();
         
-        // 無敵時間中の透明度
+        // 無敵時間中の透明度とキラキラ効果
         if (invulnerable) {
-            this.ctx.globalAlpha = 0.5;
+            this.ctx.globalAlpha = 0.7 + Math.sin(animFrame * 0.3) * 0.2;
         }
         
         // 向きによる反転
-        this.ctx.translate(x + width / 2, y + offsetY);
+        this.ctx.translate(x + width / 2, y + offsetY + bounce);
         if (direction < 0) {
             this.ctx.scale(-1, 1);
         }
         this.ctx.translate(-actualWidth / 2, 0);
         
-        // プレイヤーボディ（丸みを帯びた矩形）
-        this.ctx.fillStyle = fillColor;
+        // プレイヤーボディ（グラデーション効果）
+        const bodyGradient = this.ctx.createLinearGradient(0, 0, 0, actualHeight);
+        bodyGradient.addColorStop(0, baseColor);
+        bodyGradient.addColorStop(0.5, this.lightenColor(baseColor, 20));
+        bodyGradient.addColorStop(1, this.darkenColor(baseColor, 15));
         
-        // グロー効果を追加
+        // 外側のグロー効果
         this.ctx.shadowColor = glowColor;
-        this.ctx.shadowBlur = 15;
+        this.ctx.shadowBlur = 12;
+        this.ctx.fillStyle = bodyGradient;
         
         this.ctx.beginPath();
-        this.ctx.roundRect(5, 5, actualWidth - 10, actualHeight - 10, 8);
+        this.ctx.roundRect(3, 3, actualWidth - 6, actualHeight - 6, 12);
         this.ctx.fill();
         
-        // グロー効果をリセット
+        // 内側のハイライト
+        this.ctx.shadowBlur = 0;
+        const highlightGradient = this.ctx.createLinearGradient(0, 0, actualWidth * 0.3, actualHeight * 0.3);
+        highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.4)');
+        highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        this.ctx.fillStyle = highlightGradient;
+        this.ctx.beginPath();
+        this.ctx.roundRect(6, 6, actualWidth * 0.4, actualHeight * 0.3, 8);
+        this.ctx.fill();
+        
+        // 帽子（改良版）
+        const hatGradient = this.ctx.createLinearGradient(0, 0, 0, actualHeight * 0.3);
+        hatGradient.addColorStop(0, accentColor);
+        hatGradient.addColorStop(1, this.darkenColor(accentColor, 25));
+        
+        this.ctx.fillStyle = hatGradient;
+        this.ctx.shadowColor = accentColor;
+        this.ctx.shadowBlur = 6;
+        this.ctx.beginPath();
+        this.ctx.roundRect(actualWidth * 0.1, -2, actualWidth * 0.8, actualHeight * 0.28, 4);
+        this.ctx.fill();
+        
+        // 帽子のつば（3D効果）
+        this.ctx.fillStyle = this.darkenColor(accentColor, 35);
+        this.ctx.shadowBlur = 3;
+        this.ctx.beginPath();
+        this.ctx.roundRect(-2, actualHeight * 0.18, actualWidth + 4, actualHeight * 0.12, 6);
+        this.ctx.fill();
+        
         this.ctx.shadowBlur = 0;
         
-        // 帽子（ネオンカラー）
-        this.ctx.fillStyle = '#FF3366';
-        this.ctx.shadowColor = '#FF3366';
-        this.ctx.shadowBlur = 8;
-        this.ctx.fillRect(actualWidth * 0.1, 0, actualWidth * 0.8, actualHeight * 0.25);
-        
-        // 帽子のつば
-        this.ctx.fillStyle = '#CC1144';
-        this.ctx.shadowBlur = 5;
-        this.ctx.fillRect(0, actualHeight * 0.2, actualWidth, actualHeight * 0.1);
-        
-        this.ctx.shadowBlur = 0;
-        
-        // 目
+        // 目（改良版）
         this.ctx.fillStyle = 'white';
-        const eyeSize = Math.max(3, actualWidth * 0.12);
-        const eyeY = actualHeight * 0.4;
-        this.ctx.fillRect(actualWidth * 0.25 - eyeSize/2, eyeY, eyeSize, eyeSize);
-        this.ctx.fillRect(actualWidth * 0.75 - eyeSize/2, eyeY, eyeSize, eyeSize);
+        const eyeSize = Math.max(4, actualWidth * 0.14);
+        const eyeY = actualHeight * 0.38;
         
-        // 瞳
-        this.ctx.fillStyle = 'black';
-        const pupilSize = eyeSize * 0.6;
-        this.ctx.fillRect(actualWidth * 0.25 - pupilSize/2, eyeY + eyeSize * 0.2, pupilSize, pupilSize);
-        this.ctx.fillRect(actualWidth * 0.75 - pupilSize/2, eyeY + eyeSize * 0.2, pupilSize, pupilSize);
+        // 目の白い部分（楕円形）
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.28, eyeY + eyeSize/2, eyeSize/2, eyeSize/2 * eyeBlink, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.72, eyeY + eyeSize/2, eyeSize/2, eyeSize/2 * eyeBlink, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 瞳（改良版）
+        if (eyeBlink > 0.5) { // まばたき中は瞳を描画しない
+            this.ctx.fillStyle = '#2C3E50';
+            const pupilSize = eyeSize * 0.5;
+            this.ctx.beginPath();
+            this.ctx.ellipse(actualWidth * 0.28, eyeY + eyeSize/2, pupilSize/2, pupilSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.ellipse(actualWidth * 0.72, eyeY + eyeSize/2, pupilSize/2, pupilSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+            
+            // 瞳のハイライト
+            this.ctx.fillStyle = 'white';
+            const highlightSize = pupilSize * 0.3;
+            this.ctx.beginPath();
+            this.ctx.ellipse(actualWidth * 0.28 + pupilSize * 0.15, eyeY + eyeSize/2 - pupilSize * 0.15, highlightSize/2, highlightSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.ellipse(actualWidth * 0.72 + pupilSize * 0.15, eyeY + eyeSize/2 - pupilSize * 0.15, highlightSize/2, highlightSize/2, 0, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
+        
+        // 口（笑顔）
+        this.ctx.strokeStyle = this.darkenColor(baseColor, 40);
+        this.ctx.lineWidth = 2;
+        this.ctx.lineCap = 'round';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.65, actualWidth * 0.15, 0.2 * Math.PI, 0.8 * Math.PI);
+        this.ctx.stroke();
         
         this.ctx.restore();
+    }
+    
+    // ヘルパーメソッド：色を明るくする
+    lightenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) + amt;
+        const G = (num >> 8 & 0x00FF) + amt;
+        const B = (num & 0x0000FF) + amt;
+        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+    }
+    
+    // ヘルパーメソッド：色を暗くする
+    darkenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = (num >> 16) - amt;
+        const G = (num >> 8 & 0x00FF) - amt;
+        const B = (num & 0x0000FF) - amt;
+        return '#' + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
+            (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
+            (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
     }
     
     // スライムのSVG
@@ -450,8 +528,8 @@ class Player {
     
     updateAnimation() {
         this.animTimer++;
-        if (this.animTimer > 8) {
-            this.animFrame = (this.animFrame + 1) % 4;
+        if (this.animTimer > 5) { // より滑らかなアニメーション
+            this.animFrame = (this.animFrame + 1) % 120; // より大きなフレーム範囲
             this.animTimer = 0;
         }
     }
