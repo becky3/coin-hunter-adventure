@@ -212,30 +212,20 @@ class SimpleLevelTest {
         console.log(`進行度: ${result.progress.toFixed(1)}%`);
         console.log(`問題数: ${result.summary.total} (重要: ${result.summary.high}, 中程度: ${result.summary.medium})`);
         
-        // 検査内容の詳細を追加
-        console.log('\n=== 検査内容 ===');
+        // 検査項目と結果を一緒に表示
+        console.log('\n=== 検査項目と結果 ===');
         console.log('🔍 静的解析検査:');
-        console.log('  - プラットフォーム間の隙間チェック (200px超で警告)');
-        console.log('  - レベル長の妥当性確認 (4000px超で警告)');
-        console.log('  - 敵の密度チェック (5体/1000px超で警告)');
-        console.log('  - ゴールまでの到達可能性確認');
-        console.log('\n🎮 シミュレーション検査:');
-        console.log('  - 基本的な進行可能性テスト');
-        console.log('  - スタック状況の検出');
-        console.log('  - 落下死の可能性チェック');
-        console.log('  - プラットフォーム衝突判定確認');
+        console.log(`  - プラットフォーム間の隙間チェック (200px超で警告) → ${levelData.platforms ? levelData.platforms.length : '不明'}個のプラットフォームをチェック`);
+        console.log(`  - レベル長の妥当性確認 (4000px超で警告) → レベル長: ${levelData.flag ? levelData.flag.x : '不明'}px`);
+        console.log(`  - 敵の密度チェック (5体/1000px超で警告) → 敵の数: ${levelData.enemies ? levelData.enemies.length : '不明'}体`);
+        console.log(`  - ゴールまでの到達可能性確認 → ゴール位置: ${levelData.flag ? levelData.flag.x : '不明'}px`);
         
-        // 検査結果の詳細を追加
-        console.log('\n=== 検査結果詳細 ===');
-        console.log('📊 レベル構造:');
-        console.log(`  - プラットフォーム数: ${levelData.platforms ? levelData.platforms.length : '不明'}個`);
-        console.log(`  - 敵の数: ${levelData.enemies ? levelData.enemies.length : '不明'}体`);
-        console.log(`  - コインの数: ${levelData.coins ? levelData.coins.length : '不明'}個`);
-        console.log(`  - レベル長: ${levelData.flag ? levelData.flag.x : '不明'}px`);
-        console.log('\n🏃 進行テスト結果:');
-        console.log(`  - 到達距離: ${result.finalPosition || '不明'}px`);
-        console.log(`  - 進行率: ${result.progress.toFixed(1)}%`);
-        console.log(`  - 検出された問題: ${result.summary.total}件`);
+        console.log('\n🎮 シミュレーション検査:');
+        console.log(`  - 基本的な進行可能性テスト → 到達距離: ${result.finalPosition || '不明'}px`);
+        console.log(`  - 進行率テスト → 進行率: ${result.progress.toFixed(1)}%`);
+        console.log(`  - スタック状況の検出 → 検出された問題: ${result.summary.total}件`);
+        console.log(`  - 落下死の可能性チェック → 重要な問題: ${result.summary.high}件`);
+        console.log(`  - プラットフォーム衝突判定確認 → 中程度の問題: ${result.summary.medium}件`);
         
         if (result.issues.length > 0) {
             console.log('\n検出された問題:');
