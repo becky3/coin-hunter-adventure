@@ -7,7 +7,6 @@
     "test": "node test-simple.js",
     "test-browser": "node run-browser-tests.js",
     "test-level": "node run-level-quick-test.js",
-    "test-level-full": "node run-levelplay-test.js",
     "serve": "python3 -m http.server 8080",
     "lint": "eslint *.js --fix",
     "lint:check": "eslint *.js",
