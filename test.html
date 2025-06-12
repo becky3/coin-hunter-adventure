@@ -280,6 +280,17 @@ npm run serve
                     throw new Error('SimpleLevelTestクラスが読み込まれていません');
                 }
                 
+                // 必要なデータの確認
+                if (typeof levelData === 'undefined') {
+                    throw new Error('levelDataが読み込まれていません');
+                }
+                
+                output.textContent += `レベルデータ確認:\n`;
+                output.textContent += `- プラットフォーム数: ${levelData.platforms ? levelData.platforms.length : '未定義'}\n`;
+                output.textContent += `- 敵数: ${levelData.enemies ? levelData.enemies.length : '未定義'}\n`;
+                output.textContent += `- コイン数: ${levelData.coins ? levelData.coins.length : '未定義'}\n`;
+                output.textContent += `- ゴール位置: ${levelData.flag ? levelData.flag.x : '未定義'}\n\n`;
+                
                 const levelTest = new SimpleLevelTest();
                 
                 // テスト実行
@@ -311,10 +322,18 @@ npm run serve
                 output.textContent = outputText;
                 
             } catch (error) {
-                output.textContent = `❌ エラーが発生しました: ${error.message}\n\n` +
-                    `HTTPサーバー経由でアクセスしてください:\n` +
-                    `npm run serve\n` +
-                    `http://localhost:8080/test.html`;
+                output.textContent += `❌ エラーが発生しました: ${error.message}\n\n`;
+                output.textContent += `デバッグ情報:\n`;
+                output.textContent += `- URL: ${window.location.href}\n`;
+                output.textContent += `- プロトコル: ${window.location.protocol}\n`;
+                output.textContent += `- SimpleLevelTest: ${typeof SimpleLevelTest}\n`;
+                output.textContent += `- levelData: ${typeof levelData}\n`;
+                output.textContent += `- performance: ${typeof performance}\n\n`;
+                output.textContent += `解決方法:\n`;
+                output.textContent += `HTTPサーバー経由でアクセスしてください:\n`;
+                output.textContent += `npm run serve\n`;
+                output.textContent += `http://localhost:8080/test.html\n\n`;
+                output.textContent += `エラー詳細:\n${error.stack || 'スタックトレースなし'}`;
             } finally {
                 // ボタンを再有効化
                 button.disabled = false;
