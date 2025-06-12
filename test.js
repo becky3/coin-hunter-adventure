@@ -1,15 +1,18 @@
 /**
  * ゲームテストスイート
- * 構造変更前に既存機能が正しく動作することを確認
+ * システムテストとレベルテストを分離して段階的に実行
  */
 
-// テストフレームワーク
+// テストフレームワーク拡張版
 class TestRunner {
-    constructor() {
+    constructor(category) {
+        this.category = category;
         this.tests = [];
         this.results = [];
         this.passed = 0;
         this.failed = 0;
+        this.startTime = null;
+        this.endTime = null;
     }
     
     test(name, fn) {
@@ -17,7 +20,10 @@ class TestRunner {
     }
     
     async run() {
+        console.log(`\n=== ${this.category} ===`);
         console.log('テスト実行開始...');
+        
+        this.startTime = performance.now();
         
         for (const test of this.tests) {
             console.log(`テスト実行中: ${test.name}`);
@@ -42,24 +48,74 @@ class TestRunner {
             }
         }
         
-        this.displayResults();
+        this.endTime = performance.now();
+        
+        return {
+            category: this.category,
+            passed: this.passed,
+            failed: this.failed,
+            total: this.tests.length,
+            duration: this.endTime - this.startTime,
+            allPassed: this.failed === 0
+        };
+    }
+}
+
+// テスト結果表示クラス
+class TestResultDisplay {
+    constructor() {
+        this.results = [];
     }
     
-    displayResults() {
+    addResults(testResult, runner) {
+        this.results.push({
+            summary: testResult,
+            details: runner.results
+        });
+    }
+    
+    displayAll() {
         const container = document.getElementById('testResults');
-        let html = '';
+        let html = '<h2>テスト実行結果</h2>';
         
-        for (const result of this.results) {
-            const className = result.passed ? 'test-pass' : 'test-fail';
-            const status = result.passed ? '✓ 成功' : '✗ 失敗';
-            const error = result.error ? ` - ${result.error}` : '';
-            
-            html += `<div class="test-item ${className}">${status}: ${result.name}${error}</div>`;
-        }
+        // 全体サマリー
+        const totalPassed = this.results.reduce((sum, r) => sum + r.summary.passed, 0);
+        const totalFailed = this.results.reduce((sum, r) => sum + r.summary.failed, 0);
+        const totalTests = this.results.reduce((sum, r) => sum + r.summary.total, 0);
+        const totalDuration = this.results.reduce((sum, r) => sum + r.summary.duration, 0);
         
-        html += `<div class="test-summary">
-            テスト結果: 成功 ${this.passed} / 失敗 ${this.failed} / 合計 ${this.tests.length}
+        const overallSuccess = totalFailed === 0;
+        const summaryClass = overallSuccess ? 'test-pass' : 'test-fail';
+        const summaryIcon = overallSuccess ? '🎉' : '⚠️';
+        
+        html += `<div class="overall-summary ${summaryClass}">
+            <h3>${summaryIcon} 全体結果: ${overallSuccess ? '全テスト成功' : 'テスト失敗あり'}</h3>
+            <p>合計: ${totalTests}件 | 成功: ${totalPassed}件 | 失敗: ${totalFailed}件 | 実行時間: ${Math.round(totalDuration)}ms</p>
         </div>`;
+        
+        // カテゴリ別結果
+        for (const result of this.results) {
+            const categoryClass = result.summary.allPassed ? 'category-pass' : 'category-fail';
+            const categoryIcon = result.summary.allPassed ? '✅' : '❌';
+            
+            html += `<div class="test-category ${categoryClass}">
+                <h3>${categoryIcon} ${result.summary.category}</h3>
+                <div class="category-summary">
+                    成功: ${result.summary.passed} / 失敗: ${result.summary.failed} / 合計: ${result.summary.total} | 
+                    実行時間: ${Math.round(result.summary.duration)}ms
+                </div>`;
+            
+            // 詳細結果
+            html += '<div class="test-details">';
+            for (const detail of result.details) {
+                const className = detail.passed ? 'test-pass' : 'test-fail';
+                const status = detail.passed ? '✓' : '✗';
+                const error = detail.error ? ` - ${detail.error}` : '';
+                
+                html += `<div class="test-item ${className}">${status} ${detail.name}${error}</div>`;
+            }
+            html += '</div></div>';
+        }
         
         container.innerHTML = html;
     }
@@ -84,11 +140,11 @@ function assertGreaterThan(actual, expected, message) {
     }
 }
 
-// テスト実行
-const runner = new TestRunner();
+// === システムテスト ===
+const systemTests = new TestRunner('システムテスト');
 
 // 設定ファイルのテスト
-runner.test('設定ファイルの読み込み', () => {
+systemTests.test('設定ファイルの読み込み', () => {
     assert(typeof CANVAS_WIDTH === 'number', 'CANVAS_WIDTHが定義されていません');
     assert(typeof CANVAS_HEIGHT === 'number', 'CANVAS_HEIGHTが定義されていません');
     assertEquals(CANVAS_WIDTH, 1024, 'CANVAS_WIDTHが正しくありません');
@@ -99,25 +155,17 @@ runner.test('設定ファイルの読み込み', () => {
     assertEquals(PLAYER_CONFIG.jumpPower, 18, 'ジャンプ力が正しくありません');
 });
 
-// レベルデータのテスト
-runner.test('レベルデータの読み込み', () => {
-    assert(typeof levelData === 'object', 'levelDataが定義されていません');
-    assert(Array.isArray(levelData.platforms), 'プラットフォーム配列がありません');
-    assert(Array.isArray(levelData.enemies), '敵配列がありません');
-    assert(Array.isArray(levelData.coins), 'コイン配列がありません');
-    assert(levelData.flag && typeof levelData.flag === 'object', 'フラグオブジェクトがありません');
-    
-    // プラットフォームは最低限必要（ゲーム成立のため）
-    assertGreaterThan(levelData.platforms.length, 0, 'プラットフォームが存在しません');
-    
-    // 敵やコインは0個でも問題ない（ゲームクリアには必須ではない）
+// スプリング設定のテスト
+systemTests.test('スプリング設定の読み込み', () => {
+    assert(typeof SPRING_CONFIG === 'object', 'SPRING_CONFIGが定義されていません');
+    assertEquals(SPRING_CONFIG.width, 40, 'スプリング幅が正しくありません');
+    assertEquals(SPRING_CONFIG.height, 40, 'スプリング高さが正しくありません');
+    assertEquals(SPRING_CONFIG.bouncePower, 25, 'スプリング跳躍力が正しくありません');
+    assertEquals(SPRING_CONFIG.animationSpeed, 0.2, 'スプリングアニメーション速度が正しくありません');
 });
 
 // ゲームインスタンスのテスト
-runner.test('ゲームの初期化', () => {
-    // このテストはスキップ（Gameクラスは多くのDOM要素に依存するため）
-    // 代わりに個別のコンポーネントをテスト
-    
+systemTests.test('ゲームの初期化', () => {
     // GameStateのテスト
     const gameState = new GameState();
     assert(gameState, 'GameStateが作成できません');
@@ -134,7 +182,7 @@ runner.test('ゲームの初期化', () => {
 });
 
 // プレイヤーのテスト
-runner.test('プレイヤーの生成と初期状態', () => {
+systemTests.test('プレイヤーの生成と初期状態', () => {
     const player = new Player(100, 300);
     assertEquals(player.x, 100, 'プレイヤーX座標が正しくありません');
     assertEquals(player.y, 300, 'プレイヤーY座標が正しくありません');
@@ -147,7 +195,7 @@ runner.test('プレイヤーの生成と初期状態', () => {
 });
 
 // 入力処理のテスト
-runner.test('入力マネージャーの動作', () => {
+systemTests.test('入力マネージャーの動作', () => {
     const inputManager = new InputManager();
     
     // 初期状態
@@ -179,7 +227,7 @@ function checkCollision(rect1, rect2) {
            rect1.y + rect1.height > rect2.y;
 }
 
-runner.test('AABB衝突判定', () => {
+systemTests.test('AABB衝突判定', () => {
     const rect1 = { x: 0, y: 0, width: 50, height: 50 };
     const rect2 = { x: 25, y: 25, width: 50, height: 50 };
     const rect3 = { x: 100, y: 100, width: 50, height: 50 };
@@ -189,7 +237,7 @@ runner.test('AABB衝突判定', () => {
 });
 
 // プレイヤー移動のテスト
-runner.test('プレイヤーの移動処理', () => {
+systemTests.test('プレイヤーの移動処理', () => {
     const player = new Player(100, 300);
     
     // 右移動
@@ -216,7 +264,7 @@ runner.test('プレイヤーの移動処理', () => {
 });
 
 // 重力のテスト
-runner.test('重力の適用', () => {
+systemTests.test('重力の適用', () => {
     const player = new Player(100, 100);
     const initialY = player.y;
     const initialVelY = player.velY;
@@ -230,7 +278,7 @@ runner.test('重力の適用', () => {
 });
 
 // ゲーム状態遷移のテスト
-runner.test('ゲーム状態の遷移', () => {
+systemTests.test('ゲーム状態の遷移', () => {
     const gameState = new GameState();
     
     // 初期状態
@@ -255,8 +303,25 @@ runner.test('ゲーム状態の遷移', () => {
     assertEquals(gameState.lives, 3, 'resetGameDataでライフがリセットされていません');
 });
 
+// === レベルテスト ===
+const levelTests = new TestRunner('レベルテスト');
+
+// レベルデータのテスト
+levelTests.test('レベルデータの読み込み', () => {
+    assert(typeof levelData === 'object', 'levelDataが定義されていません');
+    assert(Array.isArray(levelData.platforms), 'プラットフォーム配列がありません');
+    assert(Array.isArray(levelData.enemies), '敵配列がありません');
+    assert(Array.isArray(levelData.coins), 'コイン配列がありません');
+    assert(levelData.flag && typeof levelData.flag === 'object', 'フラグオブジェクトがありません');
+    
+    // プラットフォームは最低限必要（ゲーム成立のため）
+    assertGreaterThan(levelData.platforms.length, 0, 'プラットフォームが存在しません');
+    
+    // 敵やコインは0個でも問題ない（ゲームクリアには必須ではない）
+});
+
 // プラットフォーム配置のテスト
-runner.test('プラットフォームの隙間', () => {
+levelTests.test('プラットフォームの隙間', () => {
     let gapFound = false;
     
     // 地面レベルのプラットフォームを確認
@@ -274,19 +339,8 @@ runner.test('プラットフォームの隙間', () => {
     assert(gapFound, 'プラットフォーム間に十分な隙間（100px以上）がありません');
 });
 
-// === Issue #12: レベルデザイン改善のテスト ===
-
-// スプリング設定のテスト
-runner.test('スプリング設定の読み込み', () => {
-    assert(typeof SPRING_CONFIG === 'object', 'SPRING_CONFIGが定義されていません');
-    assertEquals(SPRING_CONFIG.width, 40, 'スプリング幅が正しくありません');
-    assertEquals(SPRING_CONFIG.height, 40, 'スプリング高さが正しくありません');
-    assertEquals(SPRING_CONFIG.bouncePower, 25, 'スプリング跳躍力が正しくありません');
-    assertEquals(SPRING_CONFIG.animationSpeed, 0.2, 'スプリングアニメーション速度が正しくありません');
-});
-
 // 改善されたレベルデータのテスト（必須要素のみ）
-runner.test('改善されたレベルデータの検証', () => {
+levelTests.test('改善されたレベルデータの検証', () => {
     // スプリングデータの配列存在確認（個数は問わない）
     assert(Array.isArray(levelData.springs), 'スプリング配列がありません');
     
@@ -301,7 +355,7 @@ runner.test('改善されたレベルデータの検証', () => {
 });
 
 // 4つのセクションの構造テスト
-runner.test('4セクション構造の確認', () => {
+levelTests.test('4セクション構造の確認', () => {
     // セクション1: チュートリアルエリア（0-800px）
     const section1Platforms = levelData.platforms.filter(p => p.x >= 0 && p.x < 800);
     assertGreaterThan(section1Platforms.length, 0, 'セクション1にプラットフォームが存在しません');
@@ -320,7 +374,7 @@ runner.test('4セクション構造の確認', () => {
 });
 
 // 高所ボーナスエリアのテスト（基本的な存在確認のみ）
-runner.test('高所ボーナスエリアの確認', () => {
+levelTests.test('高所ボーナスエリアの確認', () => {
     // 高所プラットフォームの基本的な存在確認（レベルに高低差があることを確認）
     const platforms = levelData.platforms;
     const minY = Math.min(...platforms.map(p => p.y));
@@ -330,7 +384,7 @@ runner.test('高所ボーナスエリアの確認', () => {
 });
 
 // 垂直チャレンジの構造テスト
-runner.test('垂直チャレンジの構造確認', () => {
+levelTests.test('垂直チャレンジの構造確認', () => {
     // 垂直配置されたプラットフォーム（1800-2100px範囲）
     const verticalPlatforms = levelData.platforms.filter(p => 
         p.x >= 1800 && p.x <= 2100 && p.height === 20 // 空中プラットフォーム
@@ -352,16 +406,33 @@ runner.test('垂直チャレンジの構造確認', () => {
     }
 });
 
-// テストを実行
-window.addEventListener('DOMContentLoaded', () => {
+// テスト実行と結果表示
+window.addEventListener('DOMContentLoaded', async () => {
     // ゲームが初期化された後に実行
-    setTimeout(() => {
+    setTimeout(async () => {
         // ゲームループを停止
         if (window.game) {
             window.game.isRunning = false;
         }
         
-        // テスト実行
-        runner.run();
+        const display = new TestResultDisplay();
+        
+        // システムテストを実行
+        console.log('=== テスト実行開始 ===');
+        const systemResult = await systemTests.run();
+        display.addResults(systemResult, systemTests);
+        
+        // システムテストが全て成功した場合のみレベルテストを実行
+        if (systemResult.allPassed) {
+            console.log('\nシステムテスト成功！レベルテストを実行します...');
+            const levelResult = await levelTests.run();
+            display.addResults(levelResult, levelTests);
+        } else {
+            console.error('\nシステムテストに失敗があるため、レベルテストはスキップされました。');
+        }
+        
+        // 結果を表示
+        display.displayAll();
+        
     }, 500); // ゲーム初期化を待つため遅延を増やす
 });
