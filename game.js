@@ -466,18 +466,18 @@ class ScoreAnimation {
         this.y = y - 30; // オブジェクトより30px上に表示
         this.originalY = this.y;
         this.points = points;
-        this.text = `+${points}`;
+        this.text = `${points}`; // 「+」記号削除
         
-        this.velY = -1; // ゆっくりとした上向きの速度
+        this.velY = -2; // 上向きの速度
         this.alpha = 1.0; // 透明度
         this.isActive = true;
         
         this.lifetime = 0;
-        this.maxLifetime = 3000; // 3秒間表示
-        this.fadeStartTime = 2000; // 2秒後からフェード開始
+        this.maxLifetime = 1000; // 1秒間表示
+        this.moveTime = 300; // 0.3秒間移動
         
         // アニメーション段階
-        this.phase = 'show'; // 'show' -> 'fade' -> 'done'
+        this.phase = 'move'; // 'move' -> 'fade' -> 'done'
     }
     
     update(deltaTime) {
@@ -485,17 +485,17 @@ class ScoreAnimation {
         
         this.lifetime += deltaTime * 1000; // ms に変換
         
-        // フェーズ管理による改善されたアニメーション
-        if (this.lifetime < this.fadeStartTime) {
-            // 表示段階: しばらく見やすく表示
-            this.phase = 'show';
-            this.y += this.velY; // ゆっくり上昇
+        // シンプルなアニメーション: 少し上に移動してから止まってフェードアウト
+        if (this.lifetime < this.moveTime) {
+            // 移動段階: 少し上に移動
+            this.phase = 'move';
+            this.y += this.velY;
             this.alpha = 1.0; // 完全に表示
         } else if (this.lifetime < this.maxLifetime) {
-            // フェード段階: 徐々に消える
+            // フェード段階: 移動停止してフェードアウト
             this.phase = 'fade';
-            this.y += this.velY * 0.5; // より遅い上昇
-            const fadeProgress = (this.lifetime - this.fadeStartTime) / (this.maxLifetime - this.fadeStartTime);
+            // 移動停止
+            const fadeProgress = (this.lifetime - this.moveTime) / (this.maxLifetime - this.moveTime);
             this.alpha = Math.max(0, 1 - fadeProgress);
         } else {
             // 終了
@@ -510,29 +510,21 @@ class ScoreAnimation {
         ctx.save();
         ctx.globalAlpha = this.alpha;
         
-        // より見やすいフォントサイズとスタイル
-        ctx.font = 'bold 20px Arial';
+        // シンプルなフォント
+        ctx.font = 'bold 18px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
         const screenX = this.x - camera.x;
         const screenY = this.y - camera.y;
         
-        // 背景の縁取り（より強調）
+        // 黒い縁取り
         ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 2;
         ctx.strokeText(this.text, screenX, screenY);
         
-        // 影を描画（より強調）
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-        ctx.fillText(this.text, screenX + 2, screenY + 2);
-        
-        // メインテキストを描画（色を点数に応じて変更）
-        if (this.points >= 100) {
-            ctx.fillStyle = '#FF6B35'; // 高得点は赤オレンジ
-        } else {
-            ctx.fillStyle = '#FFD700'; // 通常は金色
-        }
+        // 白いテキスト
+        ctx.fillStyle = '#FFFFFF';
         ctx.fillText(this.text, screenX, screenY);
         
         ctx.restore();
