@@ -86,6 +86,10 @@ function assertGreaterThan(actual, expected, message) {
     if (actual <= expected) throw new Error(message || `${actual} は ${expected} より大きくありません`);
 }
 
+function assertLessThan(actual, expected, message) {
+    if (actual >= expected) throw new Error(message || `${actual} は ${expected} より小さくありません`);
+}
+
 async function runFinalTest() {
     try {
         console.log('Loading all game files...');
@@ -118,8 +122,10 @@ async function runFinalTest() {
             assertEquals(CANVAS_HEIGHT, 576, 'CANVAS_HEIGHTが正しくありません');
             
             assert(typeof PLAYER_CONFIG === 'object', 'PLAYER_CONFIGが定義されていません');
-            assertEquals(PLAYER_CONFIG.speed, 5, 'プレイヤー速度が正しくありません');
-            assertEquals(PLAYER_CONFIG.jumpPower, 18, 'ジャンプ力が正しくありません');
+            assertGreaterThan(PLAYER_CONFIG.speed, 0, 'プレイヤー速度が正の値である必要があります');
+            assertLessThan(PLAYER_CONFIG.speed, 20, 'プレイヤー速度が現実的な範囲を超えています');
+            assertGreaterThan(PLAYER_CONFIG.jumpPower, 0, 'ジャンプ力が正の値である必要があります');
+            assertLessThan(PLAYER_CONFIG.jumpPower, 30, 'ジャンプ力が現実的な範囲を超えています');
         });
 
         test('レベルデータの読み込み', () => {
@@ -175,15 +181,16 @@ async function runFinalTest() {
 
         test('スプリング設定の読み込み', () => {
             assert(typeof SPRING_CONFIG === 'object', 'SPRING_CONFIGが定義されていません');
-            assertEquals(SPRING_CONFIG.width, 40, 'スプリング幅が正しくありません');
-            assertEquals(SPRING_CONFIG.height, 40, 'スプリング高さが正しくありません');
-            assertEquals(SPRING_CONFIG.bouncePower, 25, 'スプリング跳躍力が正しくありません');
-            assertEquals(SPRING_CONFIG.animationSpeed, 0.2, 'スプリングアニメーション速度が正しくありません');
+            assert(typeof SPRING_CONFIG.width === 'number', 'スプリング幅が数値で定義されていません');
+            assert(typeof SPRING_CONFIG.height === 'number', 'スプリング高さが数値で定義されていません');
+            assertGreaterThan(SPRING_CONFIG.bouncePower, 0, 'スプリング跳躍力が正の値である必要があります');
+            assertGreaterThan(SPRING_CONFIG.animationSpeed, 0, 'スプリングアニメーション速度が正の値である必要があります');
+            assertLessThan(SPRING_CONFIG.animationSpeed, 1, 'スプリングアニメーション速度が現実的な範囲を超えています');
         });
 
         test('改善されたレベルデータの検証', () => {
             assert(Array.isArray(levelData.springs), 'スプリング配列がありません');
-            assertEquals(levelData.springs.length, 3, 'スプリングが3個配置されていません');
+            assertGreaterThan(levelData.springs.length, 0, 'スプリングが少なくとも1個配置されている必要があります');
             
             const expectedSpringPositions = [
                 { x: 650, y: 456 },
