@@ -79,7 +79,9 @@ class SVGPlayerRenderer {
         let processedSvg = svgText;
         
         Object.entries(colorVars).forEach(([varName, color]) => {
-            const regex = new RegExp(`var\\(${varName}\\)`, 'g');
+            // より正確な正規表現でCSS変数を置換
+            const escapedVarName = varName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`var\\s*\\(\\s*${escapedVarName}\\s*(?:,\\s*[^)]*)?\\s*\\)`, 'g');
             processedSvg = processedSvg.replace(regex, color);
         });
         
@@ -107,18 +109,28 @@ class SVGPlayerRenderer {
         const filename = this.getSVGFilename(velX, velY, animFrame);
         const colorVars = this.getColorVariables(health);
         
+        console.log(`SVGプレイヤー描画: ${filename}, キャッシュ状況: ${this.svgCache.has(filename)}`);
+        
         // キャッシュされたSVGがあるかチェック
         if (this.svgCache.has(filename)) {
             const svgText = this.svgCache.get(filename);
             const processedSvg = this.applyColorVariables(svgText, colorVars);
+            console.log(`SVG処理完了: ${filename}, 長さ: ${processedSvg.length}`);
             this.renderSVGToCanvasSync(processedSvg, x, y, width, height, health, direction, invulnerable, animFrame);
         } else {
+            console.log(`SVG未読み込み、フォールバック使用: ${filename}`);
             // SVGが読み込まれていない場合はフォールバック
             this.drawFallback(x, y, width, height, health, direction, invulnerable);
             
             // 非同期で読み込み開始（次回フレーム用）
-            this.loadSVG(filename).catch(error => {
-                console.warn(`SVG読み込みエラー: ${filename}`, error);
+            this.loadSVG(filename).then(svgText => {
+                if (svgText) {
+                    console.log(`SVG読み込み成功: ${filename}`);
+                } else {
+                    console.error(`SVG読み込み失敗: ${filename}`);
+                }
+            }).catch(error => {
+                console.error(`SVG読み込みエラー: ${filename}`, error);
             });
         }
     }
@@ -252,14 +264,27 @@ class SVGPlayerRenderer {
         ];
         
         console.log('プレイヤーSVGファイルを事前読み込み中...');
+        console.log('読み込み対象ファイル:', svgFiles);
         
-        const loadPromises = svgFiles.map(filename => this.loadSVG(filename));
+        const loadPromises = svgFiles.map(async (filename) => {
+            try {
+                console.log(`${filename} 読み込み開始`);
+                const result = await this.loadSVG(filename);
+                console.log(`${filename} 読み込み結果:`, result ? '成功' : '失敗');
+                return result;
+            } catch (error) {
+                console.error(`${filename} 読み込みエラー:`, error);
+                throw error;
+            }
+        });
         
         try {
-            await Promise.all(loadPromises);
+            const results = await Promise.all(loadPromises);
             console.log('プレイヤーSVGファイルの事前読み込み完了');
+            console.log('キャッシュ状況:', Array.from(this.svgCache.keys()));
         } catch (error) {
             console.error('SVGファイルの事前読み込みでエラー:', error);
+            throw error;
         }
     }
 }
