@@ -18,15 +18,12 @@ class SVGGraphics {
         this.cache = new Map(); // パスキャッシュ
         
         // プレイヤーグラフィックレンダラーを初期化
-        // SVGファイルベースを優先して品質向上
+        // SVGファイルベースを強制使用（テスト用）
         if (typeof SVGPlayerRenderer !== 'undefined') {
             this.playerRenderer = new SVGPlayerRenderer(ctx);
-            console.log('SVGファイルベースのプレイヤーレンダラーを使用');
-        } else if (typeof PlayerGraphicsRenderer !== 'undefined') {
-            this.playerRenderer = new PlayerGraphicsRenderer(ctx);
-            console.log('コードベースのプレイヤーレンダラーを使用（フォールバック）');
+            console.log('SVGファイルベースのプレイヤーレンダラーを強制使用');
         } else {
-            console.error('プレイヤーレンダラーが見つかりません');
+            console.error('SVGPlayerRendererが見つかりません - SVG化が完了していません');
         }
     }
     

@@ -118,19 +118,20 @@ class SVGPlayerRenderer {
             console.log(`SVG処理完了: ${filename}, 長さ: ${processedSvg.length}`);
             this.renderSVGToCanvasSync(processedSvg, x, y, width, height, health, direction, invulnerable, animFrame);
         } else {
-            console.log(`SVG未読み込み、フォールバック使用: ${filename}`);
-            // SVGが読み込まれていない場合はフォールバック
-            this.drawFallback(x, y, width, height, health, direction, invulnerable);
+            console.log(`❌ SVG未読み込み: ${filename} - 描画をスキップ`);
+            
+            // フォールバック描画を一時的に無効化してSVG問題を特定
+            // this.drawFallback(x, y, width, height, health, direction, invulnerable);
             
             // 非同期で読み込み開始（次回フレーム用）
             this.loadSVG(filename).then(svgText => {
                 if (svgText) {
-                    console.log(`SVG読み込み成功: ${filename}`);
+                    console.log(`✅ SVG読み込み成功: ${filename}`);
                 } else {
-                    console.error(`SVG読み込み失敗: ${filename}`);
+                    console.error(`❌ SVG読み込み失敗: ${filename}`);
                 }
             }).catch(error => {
-                console.error(`SVG読み込みエラー: ${filename}`, error);
+                console.error(`❌ SVG読み込みエラー: ${filename}`, error);
             });
         }
     }
