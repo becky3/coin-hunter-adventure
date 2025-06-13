@@ -463,19 +463,21 @@ class GameState {
 class ScoreAnimation {
     constructor(x, y, points) {
         this.x = x;
-        this.y = y;
-        this.originalY = y;
+        this.y = y - 30; // オブジェクトより30px上に表示
+        this.originalY = this.y;
         this.points = points;
         this.text = `+${points}`;
         
-        this.velY = -2; // 上向きの速度
+        this.velY = -1; // ゆっくりとした上向きの速度
         this.alpha = 1.0; // 透明度
-        this.fadeSpeed = 0.02; // フェード速度
-        this.moveDistance = 50; // 移動距離
         this.isActive = true;
         
         this.lifetime = 0;
-        this.maxLifetime = 2000; // 2秒間
+        this.maxLifetime = 3000; // 3秒間表示
+        this.fadeStartTime = 2000; // 2秒後からフェード開始
+        
+        // アニメーション段階
+        this.phase = 'show'; // 'show' -> 'fade' -> 'done'
     }
     
     update(deltaTime) {
@@ -483,17 +485,21 @@ class ScoreAnimation {
         
         this.lifetime += deltaTime * 1000; // ms に変換
         
-        // 上向きに移動
-        this.y += this.velY;
-        
-        // 移動距離に応じてフェードアウト
-        const moveProgress = (this.originalY - this.y) / this.moveDistance;
-        if (moveProgress > 0.3) { // 30%移動したらフェード開始
-            this.alpha = Math.max(0, 1 - (moveProgress - 0.3) / 0.7);
-        }
-        
-        // 生存時間チェック
-        if (this.lifetime >= this.maxLifetime || this.alpha <= 0) {
+        // フェーズ管理による改善されたアニメーション
+        if (this.lifetime < this.fadeStartTime) {
+            // 表示段階: しばらく見やすく表示
+            this.phase = 'show';
+            this.y += this.velY; // ゆっくり上昇
+            this.alpha = 1.0; // 完全に表示
+        } else if (this.lifetime < this.maxLifetime) {
+            // フェード段階: 徐々に消える
+            this.phase = 'fade';
+            this.y += this.velY * 0.5; // より遅い上昇
+            const fadeProgress = (this.lifetime - this.fadeStartTime) / (this.maxLifetime - this.fadeStartTime);
+            this.alpha = Math.max(0, 1 - fadeProgress);
+        } else {
+            // 終了
+            this.phase = 'done';
             this.isActive = false;
         }
     }
@@ -503,18 +509,31 @@ class ScoreAnimation {
         
         ctx.save();
         ctx.globalAlpha = this.alpha;
-        ctx.fillStyle = '#FFD700'; // ゴールド色
-        ctx.font = 'bold 18px Arial';
+        
+        // より見やすいフォントサイズとスタイル
+        ctx.font = 'bold 20px Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
-        // 影を描画
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.fillText(this.text, this.x - camera.x + 2, this.y - camera.y + 2);
+        const screenX = this.x - camera.x;
+        const screenY = this.y - camera.y;
         
-        // メインテキストを描画
-        ctx.fillStyle = '#FFD700';
-        ctx.fillText(this.text, this.x - camera.x, this.y - camera.y);
+        // 背景の縁取り（より強調）
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(this.text, screenX, screenY);
+        
+        // 影を描画（より強調）
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+        ctx.fillText(this.text, screenX + 2, screenY + 2);
+        
+        // メインテキストを描画（色を点数に応じて変更）
+        if (this.points >= 100) {
+            ctx.fillStyle = '#FF6B35'; // 高得点は赤オレンジ
+        } else {
+            ctx.fillStyle = '#FFD700'; // 通常は金色
+        }
+        ctx.fillText(this.text, screenX, screenY);
         
         ctx.restore();
     }
