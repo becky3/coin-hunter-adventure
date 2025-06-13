@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- スプリング -->
+  <defs>
+    <!-- ベースプレートのグラデーション -->
+    <linearGradient id="baseGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#A0A0A0;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#888888;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#666666;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- トッププレートのグラデーション -->
+    <linearGradient id="topPlateGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6666;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FF4444;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#CC3333;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- スプリングコイルのグラデーション -->
+    <linearGradient id="coilGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#FFFF99;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FFA500;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- グロー効果 -->
+    <filter id="springGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- 圧縮効果のアニメーション用 -->
+    <filter id="compressionGlow">
+      <feGaussianBlur stdDeviation="5" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- ベースプレート -->
+  <rect x="20" y="90" width="60" height="10" fill="url(#baseGradient)" rx="2" />
+  
+  <!-- ベースプレートの縁取り -->
+  <rect x="20" y="90" width="60" height="10" fill="none" stroke="#555555" stroke-width="1" rx="2" />
+  
+  <!-- スプリングコイル（5層） -->
+  <g class="spring-coils" stroke="url(#coilGradient)" stroke-width="4" fill="none" filter="url(#springGlow)">
+    <!-- コイル1 -->
+    <path d="M 30 75 Q 20 65 30 55" class="coil-left-1" />
+    <path d="M 70 75 Q 80 65 70 55" class="coil-right-1" />
+    
+    <!-- コイル2 -->
+    <path d="M 30 60 Q 20 50 30 40" class="coil-left-2" />
+    <path d="M 70 60 Q 80 50 70 40" class="coil-right-2" />
+    
+    <!-- コイル3 -->
+    <path d="M 30 45 Q 20 35 30 25" class="coil-left-3" />
+    <path d="M 70 45 Q 80 35 70 25" class="coil-right-3" />
+    
+    <!-- コイル4 -->
+    <path d="M 30 30 Q 20 20 30 10" class="coil-left-4" />
+    <path d="M 70 30 Q 80 20 70 10" class="coil-right-4" />
+    
+    <!-- 接続部 -->
+    <line x1="30" y1="10" x2="70" y2="10" stroke-width="3" />
+    <line x1="30" y1="25" x2="70" y2="25" stroke-width="2" opacity="0.7" />
+    <line x1="30" y1="40" x2="70" y2="40" stroke-width="2" opacity="0.7" />
+    <line x1="30" y1="55" x2="70" y2="55" stroke-width="2" opacity="0.7" />
+    <line x1="30" y1="75" x2="70" y2="75" stroke-width="3" />
+  </g>
+  
+  <!-- トッププレート -->
+  <rect x="15" y="5" width="70" height="8" fill="url(#topPlateGradient)" rx="3" class="top-plate" filter="url(#springGlow)" />
+  
+  <!-- トッププレートのハイライト -->
+  <rect x="15" y="5" width="70" height="3" fill="rgba(255, 255, 255, 0.4)" rx="3" class="top-plate" />
+  
+  <!-- 圧縮時のエフェクト -->
+  <g class="compression-effect" opacity="0">
+    <circle cx="50" cy="50" r="40" fill="none" stroke="#FFD700" stroke-width="2" opacity="0.5" />
+    <circle cx="50" cy="50" r="30" fill="none" stroke="#FFFF00" stroke-width="1" opacity="0.7" />
+  </g>
+  
+  <!-- アニメーション -->
+  <style>
+    .spring-coils {
+      animation: coilPulse 3s ease-in-out infinite;
+    }
+    
+    .top-plate {
+      animation: plateFloat 2s ease-in-out infinite;
+    }
+    
+    .compression-effect {
+      animation: compressionPulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes coilPulse {
+      0%, 100% { 
+        transform: scaleY(1);
+        filter: url(#springGlow);
+      }
+      50% { 
+        transform: scaleY(1.05);
+        filter: url(#compressionGlow);
+      }
+    }
+    
+    @keyframes plateFloat {
+      0%, 100% { 
+        transform: translateY(0px);
+      }
+      50% { 
+        transform: translateY(-2px);
+      }
+    }
+    
+    @keyframes compressionPulse {
+      0%, 80%, 100% { 
+        opacity: 0;
+        transform: scale(1);
+      }
+      90% { 
+        opacity: 0.8;
+        transform: scale(1.2);
+      }
+    }
+    
+    /* 圧縮状態のクラス（JavaScriptから制御） */
+    .compressed .spring-coils {
+      animation: compress 0.3s ease-out;
+      transform: scaleY(0.7);
+    }
+    
+    .compressed .top-plate {
+      animation: compress-plate 0.3s ease-out;
+      transform: translateY(15px);
+    }
+    
+    .compressed .compression-effect {
+      opacity: 1;
+      animation: compressionBurst 0.5s ease-out;
+    }
+    
+    @keyframes compress {
+      0% { transform: scaleY(1); }
+      50% { transform: scaleY(0.5); }
+      100% { transform: scaleY(0.7); }
+    }
+    
+    @keyframes compress-plate {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(25px); }
+      100% { transform: translateY(15px); }
+    }
+    
+    @keyframes compressionBurst {
+      0% { 
+        opacity: 0;
+        transform: scale(0.5);
+      }
+      50% { 
+        opacity: 1;
+        transform: scale(1.5);
+      }
+      100% { 
+        opacity: 0.3;
+        transform: scale(2);
+      }
+    }
+  </style>
+</svg>

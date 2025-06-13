@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- プレイヤー歩行ポーズ1（前足上げ） -->
+  <defs>
+    <!-- 体のグラデーション -->
+    <linearGradient id="bodyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:var(--cloth-color);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:var(--cloth-color-dark);stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- 肌のグラデーション -->
+    <radialGradient id="skinGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:var(--skin-light);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:var(--skin-color);stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- 帽子のグラデーション -->
+    <linearGradient id="hatGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:var(--hat-color);stop-opacity:1" />
+      <stop offset="100%" style="stop-color:var(--hat-color-dark);stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- 体（楕円、前傾） -->
+  <ellipse cx="52" cy="67" rx="35" ry="25" fill="url(#bodyGradient)" transform="rotate(6 52 67)" />
+  
+  <!-- 頭（楕円、前傾） -->
+  <ellipse cx="55" cy="35" rx="30" ry="26" fill="url(#skinGradient)" />
+  
+  <!-- 帽子本体 -->
+  <path d="M 23 35 A 32 28 0 0 1 87 35 Z" fill="url(#hatGradient)" />
+  
+  <!-- 帽子のつば -->
+  <ellipse cx="70" cy="35" rx="25" ry="10" fill="var(--hat-color-dark)" />
+  
+  <!-- 後ろの手（上に振り） -->
+  <circle cx="15" cy="50" r="6" fill="var(--skin-color)" />
+  
+  <!-- 前の手（下に振り） -->
+  <circle cx="85" cy="65" r="7" fill="var(--skin-color)" />
+  
+  <!-- 後ろの足（地面） -->
+  <circle cx="30" cy="88" r="7" fill="var(--skin-color)" />
+  
+  <!-- 前の足（上げ） -->
+  <circle cx="75" cy="75" r="8" fill="var(--skin-color)" />
+  
+  <!-- 目 -->
+  <circle cx="65" cy="32" r="6" fill="var(--eye-color)" class="eye" />
+  
+  <!-- 鼻 -->
+  <ellipse cx="77" cy="37" rx="2.5" ry="1.5" fill="var(--nose-color)" />
+  
+  <!-- 口 -->
+  <path d="M 69 41 A 6 6 0 0 1 77 41" stroke="var(--mouth-color)" stroke-width="1.5" fill="none" stroke-linecap="round" />
+</svg>

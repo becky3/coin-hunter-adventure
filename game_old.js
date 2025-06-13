@@ -16,18 +16,6 @@ class SVGGraphics {
     constructor(ctx) {
         this.ctx = ctx;
         this.cache = new Map(); // パスキャッシュ
-        
-        // プレイヤーグラフィックレンダラーを初期化
-        // コードベースを優先して確実に動作させる
-        if (typeof PlayerGraphicsRenderer !== 'undefined') {
-            this.playerRenderer = new PlayerGraphicsRenderer(ctx);
-            console.log('コードベースのプレイヤーレンダラーを使用');
-        } else if (typeof SVGPlayerRenderer !== 'undefined') {
-            this.playerRenderer = new SVGPlayerRenderer(ctx);
-            console.log('SVGファイルベースのプレイヤーレンダラーを使用（フォールバック）');
-        } else {
-            console.error('プレイヤーレンダラーが見つかりません');
-        }
     }
     
     // SVGパスを描画する汎用メソッド
@@ -51,44 +39,254 @@ class SVGGraphics {
         this.ctx.restore();
     }
     
-    // プレイヤーキャラクター（SVGファイルベース）
+    // プレイヤーキャラクター（コマ絵切り替え式）
     drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX = 0, velY = 0) {
-        if (this.playerRenderer) {
-            // プレイヤーグラフィックレンダラーに委託
-            this.playerRenderer.drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX, velY);
-        } else {
-            // フォールバック描画
-            this.drawPlayerFallback(x, y, width, height, health, direction, invulnerable);
+        // 自然で温かみのあるカラーパレット（肌色ベース）
+        let baseColor = health === 2 ? '#F4C2A1' : '#F4C2A1'; // 自然な肌色
+        let clothColor = health === 2 ? '#6B8EC8' : '#E3A8C7'; // 青い服/ピンクの服
+        let hatColor = health === 2 ? '#8BC34A' : '#FFB74D'; // 緑の帽子/オレンジの帽子
+        let scale = health === 2 ? 1.0 : 0.85;
+        let actualWidth = width * scale;
+        let actualHeight = height * scale;
+        let offsetY = health === 1 ? height * 0.15 : 0;
+        
+        // アニメーション状態を判定
+        const isMoving = Math.abs(velX) > 0.1;
+        const isJumping = velY < -1;
+        const isOnGround = velY >= -0.1 && velY <= 0.1;
+        
+        let animState = 'idle';
+        if (isJumping) {
+            animState = 'jump';
+        } else if (isMoving && isOnGround) {
+            // 歩行アニメーション（2コマ切り替え）
+            animState = Math.floor(animFrame / 15) % 2 === 0 ? 'walk1' : 'walk2';
         }
-    }
-    
-    // フォールバックプレイヤー描画
-    drawPlayerFallback(x, y, width, height, health, direction, invulnerable) {
-        const scale = health === 2 ? 1.0 : 0.85;
-        const actualWidth = width * scale;
-        const actualHeight = height * scale;
-        const offsetY = health === 1 ? height * 0.15 : 0;
+        
+        const eyeBlink = animFrame % 180 > 175 ? 0.2 : 1.0;
         
         this.ctx.save();
         
+        // 無敵時間中のシンプルな点滅
         if (invulnerable) {
-            this.ctx.globalAlpha = 0.7;
+            this.ctx.globalAlpha = animFrame % 8 < 4 ? 0.6 : 1.0;
         }
         
+        // 向きによる反転
         this.ctx.translate(x + width / 2, y + offsetY);
         if (direction < 0) {
             this.ctx.scale(-1, 1);
         }
         this.ctx.translate(-actualWidth / 2, 0);
         
-        // シンプルな矩形で代替
-        this.ctx.fillStyle = health === 2 ? '#6B8EC8' : '#E3A8C7';
-        this.ctx.fillRect(0, actualHeight * 0.4, actualWidth, actualHeight * 0.6);
-        
-        this.ctx.fillStyle = '#F4C2A1';
-        this.ctx.fillRect(actualWidth * 0.2, 0, actualWidth * 0.6, actualHeight * 0.5);
+        // 状態に応じた描画を呼び出し
+        if (animState === 'jump') {
+            this.drawPlayerJump(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink);
+        } else if (animState === 'walk1') {
+            this.drawPlayerWalk1(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink);
+        } else if (animState === 'walk2') {
+            this.drawPlayerWalk2(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink);
+        } else {
+            this.drawPlayerIdle(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink);
+        }
         
         this.ctx.restore();
+    }
+    
+    // 待機ポーズ（横向き）
+    drawPlayerIdle(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink) {
+        // 体（横向きの楕円）
+        this.ctx.fillStyle = clothColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.5, actualHeight * 0.65, actualWidth * 0.35, actualHeight * 0.25, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 頭（横向きの楕円）
+        this.ctx.fillStyle = baseColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.5, actualHeight * 0.35, actualWidth * 0.3, actualWidth * 0.26, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.drawPlayerSideProfile(actualWidth, actualHeight, hatColor, eyeBlink);
+        
+        // 待機ポーズの手足（横向き）
+        this.ctx.fillStyle = baseColor;
+        // 後手（奥）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.25, actualHeight * 0.58, actualWidth * 0.06, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 前手（手前）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.75, actualHeight * 0.58, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 後足（奥）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.35, actualHeight * 0.85, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 前足（手前）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.65, actualHeight * 0.85, actualWidth * 0.08, 0, 2 * Math.PI);
+        this.ctx.fill();
+    }
+    
+    // 歩行ポーズ1（前足上げ）
+    drawPlayerWalk1(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink) {
+        // 体（歩行時の前傾）
+        this.ctx.fillStyle = clothColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.52, actualHeight * 0.67, actualWidth * 0.35, actualHeight * 0.25, 0.1, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 頭（歩行時の前傾）
+        this.ctx.fillStyle = baseColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.55, actualHeight * 0.35, actualWidth * 0.3, actualWidth * 0.26, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.drawPlayerSideProfile(actualWidth, actualHeight, hatColor, eyeBlink, 0.05);
+        
+        // 歩行ポーズの手足（前足上げ、反対の手前）
+        this.ctx.fillStyle = baseColor;
+        // 後手（上に振り）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.15, actualHeight * 0.50, actualWidth * 0.06, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 前手（下に振り）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.85, actualHeight * 0.65, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 後足（地面）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.3, actualHeight * 0.88, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 前足（上げ）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.75, actualHeight * 0.75, actualWidth * 0.08, 0, 2 * Math.PI);
+        this.ctx.fill();
+    }
+    
+    // 歩行ポーズ2（後足上げ）
+    drawPlayerWalk2(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink) {
+        // 体（歩行時の前傾）
+        this.ctx.fillStyle = clothColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.48, actualHeight * 0.67, actualWidth * 0.35, actualHeight * 0.25, -0.1, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 頭（歩行時の前傾）
+        this.ctx.fillStyle = baseColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.45, actualHeight * 0.35, actualWidth * 0.3, actualWidth * 0.26, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.drawPlayerSideProfile(actualWidth, actualHeight, hatColor, eyeBlink, -0.05);
+        
+        // 歩行ポーズの手足（後足上げ、反対の手前）
+        this.ctx.fillStyle = baseColor;
+        // 前手（上に振り）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.85, actualHeight * 0.50, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 後手（下に振り）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.15, actualHeight * 0.65, actualWidth * 0.06, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 前足（地面）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.7, actualHeight * 0.88, actualWidth * 0.08, 0, 2 * Math.PI);
+        this.ctx.fill();
+        // 後足（上げ）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.25, actualHeight * 0.75, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+    }
+    
+    // ジャンプポーズ（ダイナミック）
+    drawPlayerJump(actualWidth, actualHeight, baseColor, clothColor, hatColor, eyeBlink) {
+        // 体（ジャンプ時の伸び）
+        this.ctx.fillStyle = clothColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.5, actualHeight * 0.6, actualWidth * 0.32, actualHeight * 0.28, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 頭（横向き）
+        this.ctx.fillStyle = baseColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.5, actualHeight * 0.3, actualWidth * 0.3, actualWidth * 0.26, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        this.drawPlayerSideProfile(actualWidth, actualHeight, hatColor, eyeBlink);
+        
+        // ジャンプポーズの手足（非常にダイナミック）
+        this.ctx.fillStyle = baseColor;
+        
+        // 後手（高く上げて後ろに）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.05, actualHeight * 0.25, actualWidth * 0.06, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 前手（高く上げて前に）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.9, actualHeight * 0.2, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 後足（大きく曲げて高く）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.15, actualHeight * 0.65, actualWidth * 0.07, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 前足（前に突き出して高く）
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.85, actualHeight * 0.7, actualWidth * 0.08, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // ジャンプの勢いを表現するエフェクト線
+        this.ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        this.ctx.lineWidth = 2;
+        this.ctx.lineCap = 'round';
+        
+        // 動きの軌跡線（手足の後ろ）
+        this.ctx.beginPath();
+        this.ctx.moveTo(actualWidth * 0.1, actualHeight * 0.3);
+        this.ctx.lineTo(actualWidth * 0.15, actualHeight * 0.35);
+        this.ctx.moveTo(actualWidth * 0.85, actualHeight * 0.25);
+        this.ctx.lineTo(actualWidth * 0.9, actualHeight * 0.3);
+        this.ctx.stroke();
+    }
+    
+    // 横向きの顔（共通）
+    drawPlayerSideProfile(actualWidth, actualHeight, hatColor, eyeBlink, offsetX = 0) {
+        // 帽子（横向き）
+        this.ctx.fillStyle = hatColor;
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * (0.5 + offsetX), actualHeight * 0.35, actualWidth * 0.32, actualWidth * 0.28, 0, Math.PI, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 帽子のつば（横向き）
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * (0.65 + offsetX), actualHeight * 0.35, actualWidth * 0.25, actualWidth * 0.1, 0, 0, Math.PI);
+        this.ctx.fill();
+        
+        // 目（横向きは1つだけ見える）
+        this.ctx.fillStyle = '#2C2C2C';
+        const eyeSize = actualWidth * 0.06;
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * (0.6 + offsetX), actualHeight * 0.32, eyeSize * eyeBlink, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 鼻（横向きの突起）
+        this.ctx.fillStyle = '#E6967A';
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * (0.72 + offsetX), actualHeight * 0.37, actualWidth * 0.025, actualWidth * 0.015, 0, 0, 2 * Math.PI);
+        this.ctx.fill();
+        
+        // 口（横向きの笑顔）
+        this.ctx.strokeStyle = '#8B4513';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.lineCap = 'round';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * (0.68 + offsetX), actualHeight * 0.41, actualWidth * 0.06, 0.1 * Math.PI, 0.5 * Math.PI);
+        this.ctx.stroke();
     }
     
     // ヘルパーメソッド：色を明るくする
@@ -112,7 +310,7 @@ class SVGGraphics {
         const B = (num & 0x0000FF) - amt;
         return '#' + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
             (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
-            (B > 255 ? 255 : B < 0 ? 0 : B) * 0x100).toString(16).slice(1);
+            (B > 255 ? 255 : B < 0 ? 0 : B)).toString(16).slice(1);
     }
     
     // スライムの改良版描画
@@ -687,12 +885,6 @@ class Game {
         this.setupUI();
         this.setupCanvas();
         this.setupResizeHandler();
-        
-        // SVGファイルの事前読み込み
-        this.preloadSVGs().then(() => {
-            console.log('ゲームの初期化完了');
-        });
-        
         this.start();
     }
     
@@ -1603,17 +1795,6 @@ class Game {
             if (hudTop) hudTop.style.display = 'flex';
             // ゲーム開始時にキャンバスサイズを再計算
             this.setupCanvas();
-        }
-    }
-    
-    // SVGファイルの事前読み込み
-    async preloadSVGs() {
-        if (this.svg.playerRenderer && typeof this.svg.playerRenderer.preloadSVGs === 'function') {
-            try {
-                await this.svg.playerRenderer.preloadSVGs();
-            } catch (error) {
-                console.warn('SVG事前読み込みエラー:', error);
-            }
         }
     }
 }
