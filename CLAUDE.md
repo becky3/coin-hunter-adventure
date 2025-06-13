@@ -184,14 +184,14 @@ npm run typecheck
 
 ### Issue操作
 ```bash
-# Issue一覧確認
-gh issue list
+# Issue一覧確認（常に最新情報を取得）
+export GH_TOKEN="$(git config --get remote.origin.url | grep -o 'ghp_[^@]*')" && ./gh_2.40.1_linux_amd64/bin/gh issue list --repo becky3/coin-hunter-adventure
 
 # Issue詳細確認
-gh issue view <issue-number>
+export GH_TOKEN="$(git config --get remote.origin.url | grep -o 'ghp_[^@]*')" && ./gh_2.40.1_linux_amd64/bin/gh issue view <issue-number> --repo becky3/coin-hunter-adventure
 
 # Issueにコメント
-gh issue comment <issue-number> --body "コメント内容"
+export GH_TOKEN="$(git config --get remote.origin.url | grep -o 'ghp_[^@]*')" && ./gh_2.40.1_linux_amd64/bin/gh issue comment <issue-number> --repo becky3/coin-hunter-adventure --body "コメント内容"
 ```
 
 ### PR操作
@@ -210,20 +210,28 @@ gh pr view <pr-number>
 ```
 
 ## 作業ルール
-1. **Issue作業前に必ずコメント**
+
+### 1. Issue選択と作業開始
+1. **GitHubから最新のIssue情報を取得**
+   - ローカルファイルの古い情報に依存しない
+   - 常に `gh issue list` で最新状況を確認
+   
+2. **Issue作業前に必ずコメント**
    - 作業開始の宣言
    - 実装予定の説明
 
-2. **実装前にテスト実行**
+### 2. 開発とテスト
+3. **実装前にテスト実行**
    - 既存機能の動作確認
    - ベースライン設定
 
-3. **PR作成前にテスト成功確認（Issue #29の教訓）**
+4. **PR作成前にテスト成功確認（Issue #29の教訓）**
    - 全テストファイル実行必須: `npm test`, `test.html`, `node final-test.js`
    - 静的チェックではなく実際のテスト実行
    - 1つでも失敗している場合はPR作成禁止
 
-4. **PR更新時のコメント必須**
+### 3. PR管理
+5. **PR更新時のコメント必須**
    - 何を修正したか
    - なぜ修正したか
    - テスト結果
