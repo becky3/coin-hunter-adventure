@@ -459,6 +459,67 @@ class GameState {
     }
 }
 
+// ===== スコアアニメーションクラス =====
+class ScoreAnimation {
+    constructor(x, y, points) {
+        this.x = x;
+        this.y = y;
+        this.originalY = y;
+        this.points = points;
+        this.text = `+${points}`;
+        
+        this.velY = -2; // 上向きの速度
+        this.alpha = 1.0; // 透明度
+        this.fadeSpeed = 0.02; // フェード速度
+        this.moveDistance = 50; // 移動距離
+        this.isActive = true;
+        
+        this.lifetime = 0;
+        this.maxLifetime = 2000; // 2秒間
+    }
+    
+    update(deltaTime) {
+        if (!this.isActive) return;
+        
+        this.lifetime += deltaTime * 1000; // ms に変換
+        
+        // 上向きに移動
+        this.y += this.velY;
+        
+        // 移動距離に応じてフェードアウト
+        const moveProgress = (this.originalY - this.y) / this.moveDistance;
+        if (moveProgress > 0.3) { // 30%移動したらフェード開始
+            this.alpha = Math.max(0, 1 - (moveProgress - 0.3) / 0.7);
+        }
+        
+        // 生存時間チェック
+        if (this.lifetime >= this.maxLifetime || this.alpha <= 0) {
+            this.isActive = false;
+        }
+    }
+    
+    render(ctx, camera) {
+        if (!this.isActive || this.alpha <= 0) return;
+        
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        ctx.fillStyle = '#FFD700'; // ゴールド色
+        ctx.font = 'bold 18px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // 影を描画
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+        ctx.fillText(this.text, this.x - camera.x + 2, this.y - camera.y + 2);
+        
+        // メインテキストを描画
+        ctx.fillStyle = '#FFD700';
+        ctx.fillText(this.text, this.x - camera.x, this.y - camera.y);
+        
+        ctx.restore();
+    }
+}
+
 // ===== プレイヤークラス =====
 class Player {
     constructor(x, y) {
@@ -669,6 +730,7 @@ class Game {
         this.gameTime = 0;
         this.particles = [];
         this.backgroundAnimation = 0;
+        this.scoreAnimations = [];
         
         this.camera = { x: 0, y: 0 };
         this.platforms = [];
@@ -980,6 +1042,9 @@ class Game {
         if (this.damageEffect > 0) {
             this.damageEffect--;
         }
+        
+        // スコアアニメーション更新
+        this.updateScoreAnimations(deltaTime);
     }
     
     handleCollisions() {
@@ -1073,6 +1138,9 @@ class Game {
                 }
                 
                 this.gameState.collectCoin();
+                
+                // スコアアニメーションを作成
+                this.createScoreAnimation(coin.x + coin.width / 2, coin.y, 10);
             }
         });
         
@@ -1289,6 +1357,26 @@ class Game {
         });
     }
     
+    // ===== スコアアニメーション管理 =====
+    createScoreAnimation(x, y, points) {
+        const animation = new ScoreAnimation(x, y, points);
+        this.scoreAnimations.push(animation);
+    }
+    
+    updateScoreAnimations(deltaTime) {
+        // 非アクティブなアニメーションを削除
+        this.scoreAnimations = this.scoreAnimations.filter(animation => {
+            animation.update(deltaTime);
+            return animation.isActive;
+        });
+    }
+    
+    renderScoreAnimations() {
+        this.scoreAnimations.forEach(animation => {
+            animation.render(this.ctx, this.camera);
+        });
+    }
+    
     loseLife() {
         console.log('ダメージを受けました！');
         const isDead = this.player.takeDamage();
@@ -1377,6 +1465,9 @@ class Game {
             this.drawEnemies();
             this.drawPlayer();
             this.drawFlag();
+            
+            // スコアアニメーション描画
+            this.renderScoreAnimations();
         }
         
         // ダメージエフェクト
