@@ -18,13 +18,13 @@ class SVGGraphics {
         this.cache = new Map(); // パスキャッシュ
         
         // プレイヤーグラフィックレンダラーを初期化
-        // コードベースを優先して確実に動作させる
-        if (typeof PlayerGraphicsRenderer !== 'undefined') {
-            this.playerRenderer = new PlayerGraphicsRenderer(ctx);
-            console.log('コードベースのプレイヤーレンダラーを使用');
-        } else if (typeof SVGPlayerRenderer !== 'undefined') {
+        // SVGファイルベースを優先して品質向上
+        if (typeof SVGPlayerRenderer !== 'undefined') {
             this.playerRenderer = new SVGPlayerRenderer(ctx);
-            console.log('SVGファイルベースのプレイヤーレンダラーを使用（フォールバック）');
+            console.log('SVGファイルベースのプレイヤーレンダラーを使用');
+        } else if (typeof PlayerGraphicsRenderer !== 'undefined') {
+            this.playerRenderer = new PlayerGraphicsRenderer(ctx);
+            console.log('コードベースのプレイヤーレンダラーを使用（フォールバック）');
         } else {
             console.error('プレイヤーレンダラーが見つかりません');
         }
@@ -115,7 +115,7 @@ class SVGGraphics {
             (B > 255 ? 255 : B < 0 ? 0 : B) * 0x100).toString(16).slice(1);
     }
     
-    // スライムの改良版描画
+    // スライムのSVGパス描画（改良版）
     drawSlime(x, y, width, height, animTimer) {
         const bounce = Math.sin(animTimer * 0.1) * 2;
         const eyeBlink = animTimer % 180 > 170 ? 0.3 : 1.0;
@@ -123,39 +123,85 @@ class SVGGraphics {
         this.ctx.save();
         this.ctx.translate(x, y + bounce);
         
-        // スライム本体（グラデーション）
+        // スライム本体のSVGパス
+        const bodyPath = this.createSlimeBodyPath(width, height);
+        
+        // 本体グラデーション
         const bodyGradient = this.ctx.createRadialGradient(width / 2, height * 0.7, 0, width / 2, height * 0.7, width * 0.5);
-        bodyGradient.addColorStop(0, '#7FFF7F'); // 明るいグリーン
-        bodyGradient.addColorStop(0.6, '#4CAF50'); // 中間グリーン
-        bodyGradient.addColorStop(1, '#2E7D32'); // 濃いグリーン
+        bodyGradient.addColorStop(0, '#7FFF7F');
+        bodyGradient.addColorStop(0.6, '#4CAF50');
+        bodyGradient.addColorStop(1, '#2E7D32');
         
         this.ctx.fillStyle = bodyGradient;
         this.ctx.shadowColor = '#4CAF50';
         this.ctx.shadowBlur = 8;
-        this.ctx.beginPath();
-        this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
-        this.ctx.fill();
+        this.ctx.fill(bodyPath);
         
-        // スライムの頭部（グラデーション）
+        // 頭部のSVGパス
+        const headPath = this.createSlimeHeadPath(width, height);
+        
+        // 頭部グラデーション
         const headGradient = this.ctx.createRadialGradient(width / 2, height * 0.4, 0, width / 2, height * 0.4, width * 0.4);
         headGradient.addColorStop(0, '#A5FF7F');
         headGradient.addColorStop(0.7, '#4CAF50');
         headGradient.addColorStop(1, '#2E7D32');
         
         this.ctx.fillStyle = headGradient;
-        this.ctx.beginPath();
-        this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
         this.ctx.shadowBlur = 0;
+        this.ctx.fill(headPath);
         
-        // ハイライト効果
+        // ハイライト効果のSVGパス
+        const highlightPath = this.createSlimeHighlightPath(width, height);
         this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.4, height * 0.35, width * 0.15, height * 0.12, 0, 0, Math.PI * 2);
-        this.ctx.fill();
+        this.ctx.fill(highlightPath);
         
-        // 目（改良版）
+        // 目と瞳の描画
+        this.drawSlimeEyes(width, height, eyeBlink);
+        
+        // 口の描画
+        this.drawSlimeMouth(width, height);
+        
+        this.ctx.restore();
+    }
+    
+    // スライム本体のSVGパス作成
+    createSlimeBodyPath(width, height) {
+        const path = new Path2D();
+        // 柔らかい楕円形の本体
+        path.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
+        return path;
+    }
+    
+    // スライム頭部のSVGパス作成
+    createSlimeHeadPath(width, height) {
+        const path = new Path2D();
+        // より有機的な頭部の形状
+        const centerX = width / 2;
+        const centerY = height * 0.4;
+        const radiusX = width * 0.3;
+        const radiusY = height * 0.25;
+        
+        // ベジェ曲線で自然な形状を作成
+        path.moveTo(centerX - radiusX, centerY);
+        path.quadraticCurveTo(centerX - radiusX, centerY - radiusY * 1.2, centerX, centerY - radiusY * 1.1);
+        path.quadraticCurveTo(centerX + radiusX, centerY - radiusY * 1.2, centerX + radiusX, centerY);
+        path.quadraticCurveTo(centerX + radiusX * 0.8, centerY + radiusY * 0.8, centerX, centerY + radiusY);
+        path.quadraticCurveTo(centerX - radiusX * 0.8, centerY + radiusY * 0.8, centerX - radiusX, centerY);
+        path.closePath();
+        
+        return path;
+    }
+    
+    // スライムハイライトのSVGパス作成
+    createSlimeHighlightPath(width, height) {
+        const path = new Path2D();
+        path.ellipse(width * 0.4, height * 0.35, width * 0.15, height * 0.12, 0, 0, Math.PI * 2);
+        return path;
+    }
+    
+    // スライムの目を描画
+    drawSlimeEyes(width, height, eyeBlink) {
+        // 目の白い部分
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         this.ctx.ellipse(width * 0.38, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
@@ -164,7 +210,7 @@ class SVGGraphics {
         this.ctx.ellipse(width * 0.62, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // 瞳（より可愛らしく）
+        // 瞳
         if (eyeBlink > 0.5) {
             this.ctx.fillStyle = '#1A1A1A';
             this.ctx.beginPath();
@@ -179,16 +225,16 @@ class SVGGraphics {
             this.ctx.arc(width * 0.62 - width * 0.015, height * 0.35, width * 0.015, 0, Math.PI * 2);
             this.ctx.fill();
         }
-        
-        // 口（可愛い笑顔）
+    }
+    
+    // スライムの口を描画
+    drawSlimeMouth(width, height) {
         this.ctx.strokeStyle = '#2E7D32';
         this.ctx.lineWidth = 1.5;
         this.ctx.lineCap = 'round';
         this.ctx.beginPath();
         this.ctx.arc(width * 0.5, height * 0.45, width * 0.06, 0.1 * Math.PI, 0.9 * Math.PI);
         this.ctx.stroke();
-        
-        this.ctx.restore();
     }
     
     // 鳥の改良版描画
