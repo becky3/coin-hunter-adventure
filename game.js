@@ -468,13 +468,13 @@ class ScoreAnimation {
         this.points = points;
         this.text = `${points}`; // 「+」記号削除
         
-        this.velY = -2; // 上向きの速度
+        this.velY = -0.7; // より短い上向きの速度（1/3に短縮）
         this.alpha = 1.0; // 透明度
         this.isActive = true;
         
         this.lifetime = 0;
-        this.maxLifetime = 1000; // 1秒間表示
-        this.moveTime = 300; // 0.3秒間移動
+        this.maxLifetime = 500; // 0.5秒間表示
+        this.moveTime = 150; // 0.15秒間移動
         
         // アニメーション段階
         this.phase = 'move'; // 'move' -> 'fade' -> 'done'
@@ -485,9 +485,9 @@ class ScoreAnimation {
         
         this.lifetime += deltaTime * 1000; // ms に変換
         
-        // シンプルなアニメーション: 少し上に移動してから止まってフェードアウト
+        // シンプルなアニメーション: 短く上に移動してから止まってフェードアウト
         if (this.lifetime < this.moveTime) {
-            // 移動段階: 少し上に移動
+            // 移動段階: 短く上に移動
             this.phase = 'move';
             this.y += this.velY;
             this.alpha = 1.0; // 完全に表示
@@ -510,17 +510,17 @@ class ScoreAnimation {
         ctx.save();
         ctx.globalAlpha = this.alpha;
         
-        // シンプルなフォント
-        ctx.font = 'bold 18px Arial';
+        // コミック風の太いフォント
+        ctx.font = 'bold 18px "Comic Sans MS", cursive, Arial';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
         const screenX = this.x - camera.x;
         const screenY = this.y - camera.y;
         
-        // 黒い縁取り
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.8)';
-        ctx.lineWidth = 2;
+        // 太い黒縁取り（コミック風）
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.lineWidth = 3;
         ctx.strokeText(this.text, screenX, screenY);
         
         // 白いテキスト
