@@ -1109,6 +1109,7 @@ class Game {
                         
                         // スコア加算
                         this.gameState.addScore(100);
+                        this.createScoreAnimation(enemy.x + enemy.width / 2, enemy.y, 100);
                         
                         return; // 踏みつけ成功時はダメージを受けない
                     } else {
