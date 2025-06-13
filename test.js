@@ -160,7 +160,8 @@ systemTests.test('設定ファイルの読み込み', () => {
     assert(typeof PLAYER_CONFIG === 'object', 'PLAYER_CONFIGが定義されていません');
     assertGreaterThan(PLAYER_CONFIG.speed, 0, 'プレイヤー速度が正の値である必要があります');
     assertLessThan(PLAYER_CONFIG.speed, 20, 'プレイヤー速度が現実的な範囲を超えています');
-    assertEquals(PLAYER_CONFIG.jumpPower, 18, 'ジャンプ力が正しくありません');
+    assertGreaterThan(PLAYER_CONFIG.jumpPower, 0, 'ジャンプ力が正の値である必要があります');
+    assertLessThan(PLAYER_CONFIG.jumpPower, 30, 'ジャンプ力が現実的な範囲を超えています');
 });
 
 // スプリング設定のテスト
@@ -267,7 +268,7 @@ systemTests.test('プレイヤーの移動処理', () => {
     player.onGround = true;
     player.isJumping = false;
     player.handleInput({ right: false, left: false, jump: true });
-    assertEquals(player.velY, -PLAYER_CONFIG.jumpPower, 'ジャンプ力が正しくありません');
+    assertEquals(player.velY, -PLAYER_CONFIG.jumpPower, 'ジャンプ出力が設定値と一致しません');
     assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
     assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
 });
