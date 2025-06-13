@@ -1,0 +1,67 @@
+<svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+  <!-- 鳥キャラクター -->
+  <defs>
+    <!-- グラデーション定義 -->
+    <radialGradient id="bodyGradient" cx="50%" cy="60%" r="40%">
+      <stop offset="0%" style="stop-color:#E1BEE7;stop-opacity:1" />
+      <stop offset="60%" style="stop-color:#9C27B0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6A1B9A;stop-opacity:1" />
+    </radialGradient>
+    
+    <radialGradient id="headGradient" cx="30%" cy="40%" r="25%">
+      <stop offset="0%" style="stop-color:#F3E5F5;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#BA68C8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8E24AA;stop-opacity:1" />
+    </radialGradient>
+    
+    <linearGradient id="wingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#7B1FA2;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#9C27B0;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#6A1B9A;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="beakGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFB74D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF8F00;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- グロー効果 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- 鳥のボディ -->
+  <ellipse cx="25" cy="30" rx="15" ry="12.5" fill="url(#bodyGradient)" filter="url(#glow)" />
+  
+  <!-- 翼（アニメーション用、デフォルト位置） -->
+  <g transform="translate(25,25)">
+    <ellipse cx="0" cy="0" rx="12.5" ry="7.5" fill="url(#wingGradient)" />
+    
+    <!-- 翼の羽根模様 -->
+    <path d="M -7.5 -2.5 L 7.5 2.5" stroke="#4A148C" stroke-width="1" />
+    <path d="M -5 0 L 10 0" stroke="#4A148C" stroke-width="1" />
+  </g>
+  
+  <!-- 頭 -->
+  <circle cx="15" cy="20" r="10" fill="url(#headGradient)" />
+  
+  <!-- くちばし -->
+  <path d="M 5 20 L 12.5 17.5 L 12.5 22.5 Z" fill="url(#beakGradient)" />
+  
+  <!-- 目の白い部分 -->
+  <ellipse cx="14" cy="17.5" rx="2.5" ry="2.5" fill="white" />
+  
+  <!-- 瞳 -->
+  <circle cx="14.5" cy="17.5" r="1.25" fill="#1A1A1A" />
+  
+  <!-- 瞳のハイライト -->
+  <circle cx="14.25" cy="17" r="0.5" fill="white" />
+  
+  <!-- 頬の模様 -->
+  <ellipse cx="17.5" cy="22.5" rx="2" ry="1.5" fill="rgba(255,193,7,0.4)" />
+</svg>

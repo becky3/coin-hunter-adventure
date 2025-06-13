@@ -1,0 +1,36 @@
+<svg width="30" height="30" viewBox="0 0 30 30" xmlns="http://www.w3.org/2000/svg">
+  <!-- コインアイテム -->
+  <defs>
+    <!-- グラデーション定義 -->
+    <radialGradient id="coinGradient" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" style="stop-color:#FFFF99;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FFFF00;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#B8860B;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- グロー効果 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- コインベース -->
+  <circle cx="15" cy="15" r="12" fill="url(#coinGradient)" filter="url(#glow)" />
+  
+  <!-- コインの縁 -->
+  <circle cx="15" cy="15" r="12" fill="none" stroke="#FFD700" stroke-width="2" />
+  
+  <!-- 内側の縁 -->
+  <circle cx="15" cy="15" r="9" fill="none" stroke="#FFA500" stroke-width="1" />
+  
+  <!-- 中央の記号 -->
+  <text x="15" y="20" font-family="Arial, sans-serif" font-size="18" font-weight="bold" text-anchor="middle" fill="#FF8800">¥</text>
+  
+  <!-- ハイライト効果 -->
+  <ellipse cx="11" cy="10" rx="3" ry="4" fill="rgba(255,255,255,0.6)" />
+</svg>
