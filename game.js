@@ -459,6 +459,78 @@ class GameState {
     }
 }
 
+// ===== スコアアニメーションクラス =====
+class ScoreAnimation {
+    constructor(x, y, points) {
+        this.x = x;
+        this.y = y - 30; // オブジェクトより30px上に表示
+        this.originalY = this.y;
+        this.points = points;
+        this.text = `${points}`; // 「+」記号削除
+        
+        this.velY = -0.7; // より短い上向きの速度（1/3に短縮）
+        this.alpha = 1.0; // 透明度
+        this.isActive = true;
+        
+        this.lifetime = 0;
+        this.maxLifetime = 500; // 0.5秒間表示
+        this.moveTime = 150; // 0.15秒間移動
+        
+        // アニメーション段階
+        this.phase = 'move'; // 'move' -> 'fade' -> 'done'
+    }
+    
+    update(deltaTime) {
+        if (!this.isActive) return;
+        
+        this.lifetime += deltaTime * 1000; // ms に変換
+        
+        // シンプルなアニメーション: 短く上に移動してから止まってフェードアウト
+        if (this.lifetime < this.moveTime) {
+            // 移動段階: 短く上に移動
+            this.phase = 'move';
+            this.y += this.velY;
+            this.alpha = 1.0; // 完全に表示
+        } else if (this.lifetime < this.maxLifetime) {
+            // フェード段階: 移動停止してフェードアウト
+            this.phase = 'fade';
+            // 移動停止
+            const fadeProgress = (this.lifetime - this.moveTime) / (this.maxLifetime - this.moveTime);
+            this.alpha = Math.max(0, 1 - fadeProgress);
+        } else {
+            // 終了
+            this.phase = 'done';
+            this.isActive = false;
+        }
+    }
+    
+    render(ctx, camera) {
+        if (!this.isActive || this.alpha <= 0) return;
+        
+        ctx.save();
+        ctx.globalAlpha = this.alpha;
+        
+        // コミック風の太いフォント
+        ctx.font = 'bold 18px "Comic Sans MS", cursive, Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        const screenX = this.x - camera.x;
+        const screenY = this.y - camera.y;
+        
+        // 太い黒縁取り（コミック風）
+        ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
+        ctx.lineWidth = 3;
+        ctx.strokeText(this.text, screenX, screenY);
+        
+        // 白いテキスト
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(this.text, screenX, screenY);
+        
+        ctx.restore();
+    }
+}
+
 // ===== プレイヤークラス =====
 class Player {
     constructor(x, y) {
@@ -669,6 +741,7 @@ class Game {
         this.gameTime = 0;
         this.particles = [];
         this.backgroundAnimation = 0;
+        this.scoreAnimations = [];
         
         this.camera = { x: 0, y: 0 };
         this.platforms = [];
@@ -980,6 +1053,9 @@ class Game {
         if (this.damageEffect > 0) {
             this.damageEffect--;
         }
+        
+        // スコアアニメーション更新
+        this.updateScoreAnimations(deltaTime);
     }
     
     handleCollisions() {
@@ -1044,6 +1120,7 @@ class Game {
                         
                         // スコア加算
                         this.gameState.addScore(100);
+                        this.createScoreAnimation(enemy.x + enemy.width / 2, enemy.y, 100);
                         
                         return; // 踏みつけ成功時はダメージを受けない
                     } else {
@@ -1073,6 +1150,9 @@ class Game {
                 }
                 
                 this.gameState.collectCoin();
+                
+                // スコアアニメーションを作成
+                this.createScoreAnimation(coin.x + coin.width / 2, coin.y, 10);
             }
         });
         
@@ -1289,6 +1369,26 @@ class Game {
         });
     }
     
+    // ===== スコアアニメーション管理 =====
+    createScoreAnimation(x, y, points) {
+        const animation = new ScoreAnimation(x, y, points);
+        this.scoreAnimations.push(animation);
+    }
+    
+    updateScoreAnimations(deltaTime) {
+        // 非アクティブなアニメーションを削除
+        this.scoreAnimations = this.scoreAnimations.filter(animation => {
+            animation.update(deltaTime);
+            return animation.isActive;
+        });
+    }
+    
+    renderScoreAnimations() {
+        this.scoreAnimations.forEach(animation => {
+            animation.render(this.ctx, this.camera);
+        });
+    }
+    
     loseLife() {
         console.log('ダメージを受けました！');
         const isDead = this.player.takeDamage();
@@ -1377,6 +1477,9 @@ class Game {
             this.drawEnemies();
             this.drawPlayer();
             this.drawFlag();
+            
+            // スコアアニメーション描画
+            this.renderScoreAnimations();
         }
         
         // ダメージエフェクト
