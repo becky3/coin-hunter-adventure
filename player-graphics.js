@@ -91,7 +91,7 @@ const PLAYER_GRAPHICS_CONFIG = {
     
     // アニメーション設定
     animation: {
-        walkFrameDuration: 15,  // 歩行アニメーションのフレーム時間
+        walkFrameDuration: 20,  // 歩行アニメーションのフレーム時間（15 -> 20 に増加して見やすく）
         blinkDuration: 180,     // まばたきの間隔
         blinkFrames: 5          // まばたきの持続フレーム
     }

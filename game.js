@@ -540,7 +540,7 @@ class Player {
     
     updateAnimation() {
         this.animTimer++;
-        if (this.animTimer > 5) { // より滑らかなアニメーション
+        if (this.animTimer > 8) { // アニメーション速度を遅く（5 -> 8）して見やすく
             this.animFrame = (this.animFrame + 1) % 120; // より大きなフレーム範囲
             this.animTimer = 0;
         }
