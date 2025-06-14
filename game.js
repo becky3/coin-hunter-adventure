@@ -44,6 +44,77 @@ class SVGGraphics {
         
         // 全SVGファイルを事前読み込み
         this.preloadAllSVGs();
+        
+        // プロトコルチェックと警告システム
+        this.checkProtocolAndWarn();
+    }
+    
+    // プロトコルチェックと警告表示
+    checkProtocolAndWarn() {
+        if (window.location.protocol === 'file:') {
+            console.error('🚫 CRITICAL ERROR: ゲームがfile://プロトコルで開かれています');
+            console.error('🚫 SVGファイルはCORS制限により読み込めません');
+            console.error('✅ SOLUTION: HTTPサーバーでアクセスしてください');
+            console.error('📝 例: python3 -m http.server 8080 を実行後、http://localhost:8080/ でアクセス');
+            
+            // ビジュアル警告を表示
+            this.showProtocolWarning();
+        }
+    }
+    
+    // プロトコル警告の表示
+    showProtocolWarning() {
+        // 赤いオーバーレイを追加
+        const warningDiv = document.createElement('div');
+        warningDiv.style.position = 'fixed';
+        warningDiv.style.top = '0';
+        warningDiv.style.left = '0';
+        warningDiv.style.width = '100%';
+        warningDiv.style.height = '100%';
+        warningDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+        warningDiv.style.color = 'white';
+        warningDiv.style.fontSize = '24px';
+        warningDiv.style.textAlign = 'center';
+        warningDiv.style.padding = '50px';
+        warningDiv.style.zIndex = '10000';
+        warningDiv.style.display = 'flex';
+        warningDiv.style.flexDirection = 'column';
+        warningDiv.style.justifyContent = 'center';
+        warningDiv.style.alignItems = 'center';
+        
+        warningDiv.innerHTML = `
+            <h1>⚠️ アクセス方法エラー ⚠️</h1>
+            <p>ゲームが file:// プロトコルで開かれています</p>
+            <p>SVGファイルが読み込めないため、グラフィックが表示されません</p>
+            <br>
+            <h2>✅ 解決方法:</h2>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <p><strong>1. HTTPサーバーを起動：</strong></p>
+                <p style="background: #333; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace;">
+                    python3 -m http.server 8080<br>
+                    # または<br>
+                    npx serve .<br>
+                    # または<br>
+                    php -S localhost:8080
+                </p>
+                <p><strong>2. ブラウザでHTTPアクセス：</strong></p>
+                <p style="background: #333; color: #ff0; padding: 10px; border-radius: 5px; font-family: monospace;">
+                    http://localhost:8080/index.html
+                </p>
+            </div>
+            <br>
+            <button onclick="this.parentElement.style.display='none'" 
+                    style="padding: 10px 20px; font-size: 16px; background: white; color: black; border: none; border-radius: 5px; cursor: pointer;">
+                警告を閉じる（フォールバック描画でプレイ）
+            </button>
+        `;
+        
+        document.body.appendChild(warningDiv);
+        
+        // ブラウザアラートも表示
+        setTimeout(() => {
+            alert('ゲームのグラフィックが正常に表示されません。\n\nHTTPサーバーを起動後、http://localhost:8080/ でアクセスしてください。\n\n例: python3 -m http.server 8080');
+        }, 1000);
     }
     
     // 全SVGファイルの事前読み込み

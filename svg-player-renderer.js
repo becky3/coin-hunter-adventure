@@ -40,8 +40,9 @@ class SVGPlayerRenderer {
         if (window.location.protocol === 'file:') {
             console.error(`🚫 CORS ERROR: ゲームがfile://プロトコルで開かれています`);
             console.error(`🚫 SVGファイルの読み込みができません: ${filename}`);
-            console.error(`✅ SOLUTION: HTTPサーバーでアクセスしてください: http://localhost:8080/`);
-            console.error(`✅ または index.html をhttp://localhost:8080/index.html で開いてください`);
+            console.error(`✅ SOLUTION: HTTPサーバーを起動してください`);
+            console.error(`📝 例: python3 -m http.server 8080`);
+            console.error(`📝 その後: http://localhost:8080/ でアクセス`);
             
             // Return null to trigger fallback rendering
             return null;
@@ -145,10 +146,10 @@ class SVGPlayerRenderer {
             console.log(`SVG処理完了: ${filename}, 長さ: ${processedSvg.length}`);
             this.renderSVGToCanvasSync(processedSvg, x, y, width, height, health, direction, invulnerable, animFrame);
         } else {
-            console.log(`❌ SVG未読み込み: ${filename} - 描画をスキップ`);
+            console.log(`❌ SVG未読み込み: ${filename} - フォールバック描画を使用`);
             
-            // フォールバック描画を一時的に無効化してSVG問題を特定
-            // this.drawFallback(x, y, width, height, health, direction, invulnerable);
+            // フォールバック描画を実行
+            this.drawFallback(x, y, width, height, health, direction, invulnerable);
             
             // 非同期で読み込み開始（次回フレーム用）
             this.loadSVG(filename).then(svgText => {

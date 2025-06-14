@@ -36,6 +36,13 @@ class SVGItemRenderer {
             return null;
         }
         
+        // Protocol check
+        if (window.location.protocol === 'file:') {
+            console.error(`🚫 CORS ERROR: アイテムSVGファイルの読み込みができません: ${filename}`);
+            console.error(`📝 HTTPサーバーを起動してください (例: python3 -m http.server 8080)`);
+            return null;
+        }
+        
         console.log(`💎 アイテムSVGファイル読み込み開始: ${filename}`);
         
         const loadPromise = fetch(filename)
@@ -115,7 +122,11 @@ class SVGItemRenderer {
             const svgText = this.svgCache.get(filename);
             this.createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer);
         } else {
-            // 何もない場合は読み込み開始（次フレームで描画される）
+            // 何もない場合はフォールバック描画
+            console.log(`❌ アイテムSVG未読み込み: ${type} - フォールバック描画を使用`);
+            this.drawItemFallback(type, x, y, width, height, animTimer);
+            
+            // 非同期で読み込み開始（次フレームで描画される）
             this.loadSVG(filename).catch(error => {
                 console.error(`アイテムSVG描画エラー (${type}):`, error);
             });
@@ -189,5 +200,79 @@ class SVGItemRenderer {
         }
         
         return processedSVG;
+    }
+    
+    // フォールバック描画
+    drawItemFallback(type, x, y, width, height, animTimer) {
+        if (type === 'coin') {
+            this.drawCoinFallback(x, y, width, height, animTimer);
+        } else if (type === 'flag') {
+            this.drawFlagFallback(x, y, width, height);
+        } else if (type === 'spring') {
+            this.drawSpringFallback(x, y, width, height);
+        }
+    }
+    
+    // コインのフォールバック描画
+    drawCoinFallback(x, y, width, height, animTimer) {
+        const rotation = (animTimer * 0.05) % (Math.PI * 2);
+        this.ctx.save();
+        this.ctx.translate(x + width / 2, y + height / 2);
+        this.ctx.scale(Math.cos(rotation), 1);
+        
+        // コイン
+        this.ctx.fillStyle = '#FFD700';
+        this.ctx.beginPath();
+        this.ctx.arc(0, 0, width * 0.4, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 縁
+        this.ctx.strokeStyle = '#FFA500';
+        this.ctx.lineWidth = 2;
+        this.ctx.stroke();
+        
+        // 中央の記号
+        this.ctx.fillStyle = '#FF8C00';
+        this.ctx.font = `bold ${width * 0.5}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText('¢', 0, 0);
+        
+        this.ctx.restore();
+    }
+    
+    // フラグのフォールバック描画
+    drawFlagFallback(x, y, width, height) {
+        // ポール
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.fillRect(x + width * 0.47, y, width * 0.06, height);
+        
+        // 旗
+        this.ctx.fillStyle = '#FF0000';
+        this.ctx.beginPath();
+        this.ctx.moveTo(x + width * 0.5, y);
+        this.ctx.lineTo(x + width * 0.9, y + height * 0.15);
+        this.ctx.lineTo(x + width * 0.85, y + height * 0.3);
+        this.ctx.lineTo(x + width * 0.5, y + height * 0.4);
+        this.ctx.closePath();
+        this.ctx.fill();
+    }
+    
+    // スプリングのフォールバック描画
+    drawSpringFallback(x, y, width, height) {
+        // ベース
+        this.ctx.fillStyle = '#696969';
+        this.ctx.fillRect(x + width * 0.2, y + height * 0.8, width * 0.6, height * 0.2);
+        
+        // スプリング
+        this.ctx.strokeStyle = '#C0C0C0';
+        this.ctx.lineWidth = 3;
+        this.ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+            const yPos = y + height * 0.8 - i * height * 0.15;
+            this.ctx.moveTo(x + width * 0.25, yPos);
+            this.ctx.lineTo(x + width * 0.75, yPos - height * 0.05);
+        }
+        this.ctx.stroke();
     }
 }

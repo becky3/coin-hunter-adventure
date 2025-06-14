@@ -27,11 +27,10 @@ class SVGEnemyRenderer {
             return this.loadPromises.get(filename);
         }
         
-        // Protocol check for better error messages
+        // Protocol check
         if (window.location.protocol === 'file:') {
-            console.error(`🚫 CORS ERROR: ゲームがfile://プロトコルで開かれています`);
-            console.error(`🚫 敵SVGファイルの読み込みができません: ${filename}`);
-            console.error(`✅ SOLUTION: HTTPサーバーでアクセスしてください: http://localhost:8080/`);
+            console.error(`🚫 CORS ERROR: 敵SVGファイルの読み込みができません: ${filename}`);
+            console.error(`📝 HTTPサーバーを起動してください (例: python3 -m http.server 8080)`);
             return null;
         }
         
@@ -114,7 +113,11 @@ class SVGEnemyRenderer {
             const svgText = this.svgCache.get(filename);
             this.createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer);
         } else {
-            // 何もない場合は読み込み開始（次フレームで描画される）
+            // 何もない場合はフォールバック描画
+            console.log(`❌ 敵SVG未読み込み: ${type} - フォールバック描画を使用`);
+            this.drawEnemyFallback(type, x, y, width, height, animTimer);
+            
+            // 非同期で読み込み開始（次フレームで描画される）
             this.loadSVG(filename).catch(error => {
                 console.error(`敵SVG描画エラー (${type}):`, error);
             });
@@ -182,6 +185,67 @@ class SVGEnemyRenderer {
         }
         
         return processedSVG;
+    }
+    
+    // フォールバック描画
+    drawEnemyFallback(type, x, y, width, height, animTimer) {
+        if (type === 'slime') {
+            this.drawSlimeFallback(x, y, width, height, animTimer);
+        } else if (type === 'bird') {
+            this.drawBirdFallback(x, y, width, height, animTimer);
+        }
+    }
+    
+    // スライムのフォールバック描画
+    drawSlimeFallback(x, y, width, height, animTimer) {
+        const bounce = Math.sin(animTimer * 0.1) * 2;
+        this.ctx.save();
+        this.ctx.translate(x, y + bounce);
+        
+        // 体
+        this.ctx.fillStyle = '#4CAF50';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.7, width * 0.45, height * 0.35, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 目
+        const eyeBlink = animTimer % 180 > 170 ? 0.3 : 1.0;
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width * 0.38, height * 0.45, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
+        this.ctx.ellipse(width * 0.62, height * 0.45, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 瞳
+        this.ctx.fillStyle = 'black';
+        this.ctx.beginPath();
+        this.ctx.arc(width * 0.38, height * 0.47, width * 0.04, 0, Math.PI * 2);
+        this.ctx.arc(width * 0.62, height * 0.47, width * 0.04, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.restore();
+    }
+    
+    // 鳥のフォールバック描画
+    drawBirdFallback(x, y, width, height, animTimer) {
+        const flapOffset = Math.sin(animTimer * 0.3) * 5;
+        this.ctx.save();
+        this.ctx.translate(x, y);
+        
+        // 体
+        this.ctx.fillStyle = '#FF6347';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width * 0.5, height * 0.5, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 翼
+        this.ctx.fillStyle = '#FF7F50';
+        this.ctx.beginPath();
+        this.ctx.ellipse(width * 0.2, height * 0.5 + flapOffset, width * 0.2, height * 0.15, -0.3, 0, Math.PI * 2);
+        this.ctx.ellipse(width * 0.8, height * 0.5 - flapOffset, width * 0.2, height * 0.15, 0.3, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        this.ctx.restore();
     }
     
     // 色の補間
