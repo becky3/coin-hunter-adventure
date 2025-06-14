@@ -243,13 +243,8 @@ class SVGGraphics {
     
     // プレイヤーキャラクター（SVGファイルベース）
     drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX = 0, velY = 0) {
-        if (this.playerRenderer) {
-            // プレイヤーグラフィックレンダラーに委託
-            this.playerRenderer.drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX, velY);
-        } else {
-            // フォールバック描画
-            this.drawPlayerFallback(x, y, width, height, health, direction, invulnerable);
-        }
+        // 常にフォールバック描画を使用（確実性を優先）
+        this.drawPlayerFallback(x, y, width, height, health, direction, invulnerable);
     }
     
     // フォールバックプレイヤー描画
@@ -271,12 +266,67 @@ class SVGGraphics {
         }
         this.ctx.translate(-actualWidth / 2, 0);
         
-        // シンプルな矩形で代替
-        this.ctx.fillStyle = health === 2 ? '#6B8EC8' : '#E3A8C7';
-        this.ctx.fillRect(0, actualHeight * 0.4, actualWidth, actualHeight * 0.6);
+        // 体（シャツ）
+        const bodyGradient = this.ctx.createLinearGradient(0, actualHeight * 0.4, 0, actualHeight);
+        bodyGradient.addColorStop(0, health === 2 ? '#4A90E2' : '#E91E63');
+        bodyGradient.addColorStop(1, health === 2 ? '#2171B5' : '#AD1457');
         
-        this.ctx.fillStyle = '#F4C2A1';
-        this.ctx.fillRect(actualWidth * 0.2, 0, actualWidth * 0.6, actualHeight * 0.5);
+        this.ctx.fillStyle = bodyGradient;
+        this.ctx.fillRect(actualWidth * 0.15, actualHeight * 0.4, actualWidth * 0.7, actualHeight * 0.6);
+        
+        // 頭（肌色）
+        const headGradient = this.ctx.createRadialGradient(actualWidth * 0.5, actualHeight * 0.25, 0, actualWidth * 0.5, actualHeight * 0.25, actualWidth * 0.35);
+        headGradient.addColorStop(0, '#FFDBAC');
+        headGradient.addColorStop(1, '#F4C2A1');
+        
+        this.ctx.fillStyle = headGradient;
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.25, actualWidth * 0.3, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 髪
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.2, actualWidth * 0.32, Math.PI, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 目
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.4, actualHeight * 0.22, actualWidth * 0.05, actualWidth * 0.04, 0, 0, Math.PI * 2);
+        this.ctx.ellipse(actualWidth * 0.6, actualHeight * 0.22, actualWidth * 0.05, actualWidth * 0.04, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 瞳
+        this.ctx.fillStyle = '#333';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.4, actualHeight * 0.22, actualWidth * 0.02, 0, Math.PI * 2);
+        this.ctx.arc(actualWidth * 0.6, actualHeight * 0.22, actualWidth * 0.02, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 鼻
+        this.ctx.fillStyle = '#E8B896';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.27, actualWidth * 0.015, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 口
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.lineCap = 'round';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.31, actualWidth * 0.03, 0.2 * Math.PI, 0.8 * Math.PI);
+        this.ctx.stroke();
+        
+        // 腕
+        this.ctx.fillStyle = headGradient;
+        this.ctx.fillRect(actualWidth * 0.05, actualHeight * 0.45, actualWidth * 0.1, actualHeight * 0.35);
+        this.ctx.fillRect(actualWidth * 0.85, actualHeight * 0.45, actualWidth * 0.1, actualHeight * 0.35);
+        
+        // 足
+        this.ctx.fillStyle = '#654321';
+        this.ctx.fillRect(actualWidth * 0.25, actualHeight * 0.85, actualWidth * 0.15, actualHeight * 0.15);
+        this.ctx.fillRect(actualWidth * 0.6, actualHeight * 0.85, actualWidth * 0.15, actualHeight * 0.15);
         
         this.ctx.restore();
     }
@@ -342,6 +392,10 @@ class SVGGraphics {
         this.ctx.beginPath();
         this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
         this.ctx.fill();
+        
+        // 目と口を描画
+        this.drawSlimeEyes(width, height, eyeBlink);
+        this.drawSlimeMouth(width, height);
         
         this.ctx.restore();
     }
