@@ -36,6 +36,17 @@ class SVGPlayerRenderer {
             return this.loadPromises.get(filename);
         }
         
+        // Protocol check for better error messages
+        if (window.location.protocol === 'file:') {
+            console.error(`🚫 CORS ERROR: ゲームがfile://プロトコルで開かれています`);
+            console.error(`🚫 SVGファイルの読み込みができません: ${filename}`);
+            console.error(`✅ SOLUTION: HTTPサーバーでアクセスしてください: http://localhost:8080/`);
+            console.error(`✅ または index.html をhttp://localhost:8080/index.html で開いてください`);
+            
+            // Return null to trigger fallback rendering
+            return null;
+        }
+        
         console.log(`🌐 SVGファイル読み込み開始: ${filename}`);
         console.log(`📍 現在のURL: ${window.location.href}`);
         console.log(`🎯 読み込み先: ${window.location.origin}/${filename}`);
@@ -46,7 +57,11 @@ class SVGPlayerRenderer {
                 console.log(`📡 response.url: ${response.url}`);
                 console.log(`📡 response.type: ${response.type}`);
                 if (!response.ok) {
-                    throw new Error(`SVGファイル読み込み失敗: ${filename} (Status: ${response.status})`);
+                    if (response.status === 0) {
+                        throw new Error(`CORS/ネットワークエラー: ${filename} - file://プロトコルまたはネットワーク問題 (Status: 0)`);
+                    } else {
+                        throw new Error(`SVGファイル読み込み失敗: ${filename} (Status: ${response.status})`);
+                    }
                 }
                 return response.text();
             })

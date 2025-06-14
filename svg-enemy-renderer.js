@@ -27,13 +27,25 @@ class SVGEnemyRenderer {
             return this.loadPromises.get(filename);
         }
         
+        // Protocol check for better error messages
+        if (window.location.protocol === 'file:') {
+            console.error(`🚫 CORS ERROR: ゲームがfile://プロトコルで開かれています`);
+            console.error(`🚫 敵SVGファイルの読み込みができません: ${filename}`);
+            console.error(`✅ SOLUTION: HTTPサーバーでアクセスしてください: http://localhost:8080/`);
+            return null;
+        }
+        
         console.log(`🐾 敵SVGファイル読み込み開始: ${filename}`);
         
         const loadPromise = fetch(filename)
             .then(response => {
                 console.log(`📡 敵SVG fetch応答: ${filename}, status: ${response.status}`);
                 if (!response.ok) {
-                    throw new Error(`敵SVGファイル読み込み失敗: ${filename} (Status: ${response.status})`);
+                    if (response.status === 0) {
+                        throw new Error(`CORS/ネットワークエラー: ${filename} - file://プロトコルまたはネットワーク問題 (Status: 0)`);
+                    } else {
+                        throw new Error(`敵SVGファイル読み込み失敗: ${filename} (Status: ${response.status})`);
+                    }
                 }
                 return response.text();
             })

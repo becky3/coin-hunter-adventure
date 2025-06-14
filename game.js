@@ -48,6 +48,17 @@ class SVGGraphics {
     
     // 全SVGファイルの事前読み込み
     async preloadAllSVGs() {
+        // Protocol check and user warning
+        if (window.location.protocol === 'file:') {
+            console.error('🚫 CRITICAL: ゲームがfile://プロトコルで開かれています');
+            console.error('🚫 SVGファイルが読み込めないため、グラフィックが表示されません');
+            console.error('✅ 解決方法: http://localhost:8080/ でアクセスしてください');
+            
+            // Show user-friendly warning
+            this.showProtocolWarning();
+            return; // Skip SVG loading
+        }
+        
         console.log('🚀 全SVGファイルの事前読み込み開始...');
         const promises = [];
         
@@ -69,6 +80,43 @@ class SVGGraphics {
         } catch (error) {
             console.error('❌ SVGファイル事前読み込み中にエラー:', error);
         }
+    }
+    
+    // Protocol warning display
+    showProtocolWarning() {
+        // Create a warning overlay on the game canvas
+        if (this.ctx && this.ctx.canvas) {
+            const canvas = this.ctx.canvas;
+            this.ctx.save();
+            
+            // Semi-transparent red overlay
+            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Warning text
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            this.ctx.fillText('⚠️ CORS ERROR', centerX, centerY - 60);
+            this.ctx.font = '18px Arial';
+            this.ctx.fillText('Game is accessed via file:// protocol', centerX, centerY - 20);
+            this.ctx.fillText('SVG files cannot be loaded', centerX, centerY + 10);
+            this.ctx.font = 'bold 20px Arial';
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.fillText('Solution: Access via http://localhost:8080/', centerX, centerY + 50);
+            
+            this.ctx.restore();
+        }
+        
+        // Also show browser alert as backup
+        setTimeout(() => {
+            alert(`⚠️ CORS ERROR\n\nThe game is being accessed via file:// protocol.\nSVG graphics cannot be loaded due to CORS restrictions.\n\nSolution: Please access the game via:\nhttp://localhost:8080/index.html`);
+        }, 1000);
     }
     
     // SVGパスを描画する汎用メソッド
