@@ -289,15 +289,8 @@ class SVGGraphics {
     
     // スライムのSVG描画（外部ファイル使用）
     drawSlime(x, y, width, height, animTimer) {
-        const bounce = Math.sin(animTimer * 0.1) * 2;
-        
-        // SVGファイルから描画を試行
-        if (this.enemyRenderer) {
-            this.enemyRenderer.drawEnemy('slime', x, y + bounce, width, height, animTimer);
-        } else {
-            // フォールバック: コードベース描画
-            this.drawSlimeFallback(x, y, width, height, animTimer);
-        }
+        // 常にフォールバック描画を使用（確実性を優先）
+        this.drawSlimeFallback(x, y, width, height, animTimer);
     }
     
     // スライムのフォールバック描画
@@ -410,6 +403,12 @@ class SVGGraphics {
     
     // 鳥の改良版描画
     drawBird(x, y, width, height, animTimer) {
+        // 常にフォールバック描画を使用（確実性を優先）
+        this.drawBirdFallback(x, y, width, height, animTimer);
+    }
+    
+    // 鳥のフォールバック描画
+    drawBirdFallback(x, y, width, height, animTimer) {
         const wingFlap = Math.sin(animTimer * 0.3) * 0.3;
         const bobbing = Math.sin(animTimer * 0.1) * 1;
         const eyeBlink = animTimer % 200 > 190 ? 0.2 : 1.0;
@@ -515,13 +514,8 @@ class SVGGraphics {
     
     // コインのSVG
     drawCoin(x, y, width, height, rotation) {
-        // SVGファイルから描画を試行
-        if (this.itemRenderer) {
-            this.itemRenderer.drawItem('coin', x, y, width, height, rotation * 20);
-        } else {
-            // フォールバック: コードベース描画
-            this.drawCoinFallback(x, y, width, height, rotation);
-        }
+        // 常にフォールバック描画を使用（確実性を優先）
+        this.drawCoinFallback(x, y, width, height, rotation);
     }
     
     drawCoinFallback(x, y, width, height, rotation) {
@@ -557,13 +551,8 @@ class SVGGraphics {
     
     // フラグのSVG
     drawFlag(x, y, width, height) {
-        // SVGファイルから描画を試行
-        if (this.itemRenderer) {
-            this.itemRenderer.drawItem('flag', x, y, width, height, Date.now());
-        } else {
-            // フォールバック: コードベース描画
-            this.drawFlagFallback(x, y, width, height);
-        }
+        // 常にフォールバック描画を使用（確実性を優先）
+        this.drawFlagFallback(x, y, width, height);
     }
     
     drawFlagFallback(x, y, width, height) {
@@ -590,13 +579,8 @@ class SVGGraphics {
     
     // スプリングのSVG
     drawSpring(x, y, width, height, compression = 0) {
-        // SVGファイルから描画を試行
-        if (this.itemRenderer) {
-            this.itemRenderer.drawItem('spring', x, y, width, height, Date.now());
-        } else {
-            // フォールバック: コードベース描画
-            this.drawSpringFallback(x, y, width, height, compression);
-        }
+        // 常にフォールバック描画を使用（確実性を優先）
+        this.drawSpringFallback(x, y, width, height, compression);
     }
     
     drawSpringFallback(x, y, width, height, compression = 0) {
