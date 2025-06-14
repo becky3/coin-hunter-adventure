@@ -474,14 +474,15 @@ svgRenderingTests.test('ゲーム描画メソッドの動作確認', () => {
     }
 });
 
-// CORS/プロトコル検出テスト（test.html専用）
+// CORS/プロトコル検出テスト
 svgRenderingTests.test('CORS/プロトコル問題の検出', () => {
     const isFileProtocol = window.location.protocol === 'file:';
     
     if (isFileProtocol) {
-        // file://プロトコルの場合：テスト環境として許可
+        // file://プロトコルの場合：警告を表示してテスト失敗
         console.warn('⚠️ file://プロトコルで実行されています。');
-        console.warn('📝 test.htmlではフォールバック描画でテストを実行します。');
+        console.warn('⚠️ SVGファイルの読み込みテストが正しく実行できません。');
+        console.warn('⚠️ フォールバック描画のテストのみ実行されます。');
         
         // SVGGraphicsクラスのプロトコルチェック機能が動作していることを確認
         const svgGraphics = window.game?.svg;
@@ -490,8 +491,8 @@ svgRenderingTests.test('CORS/プロトコル問題の検出', () => {
                 'プロトコルチェック機能が実装されていません');
         }
         
-        // test.htmlでは成功とする（フォールバック描画でテスト可能）
-        assert(true, 'test.htmlではfile://プロトコルでもテスト可能です');
+        // 警告を表示してテスト失敗
+        throw new Error('file://プロトコルで実行されています。完全なテストのためHTTPサーバー経由でアクセスしてください。例: http://localhost:8080/test.html');
     } else {
         // http://またはhttps://プロトコルの場合は正常
         assert(true, 'HTTP/HTTPSプロトコルで正常に実行されています');
