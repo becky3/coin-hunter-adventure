@@ -27,27 +27,39 @@ class SVGPlayerRenderer {
     // SVGファイルを非同期で読み込み
     async loadSVG(filename) {
         if (this.svgCache.has(filename)) {
+            console.log(`🎯 キャッシュからSVG取得: ${filename}`);
             return this.svgCache.get(filename);
         }
         
         if (this.loadPromises.has(filename)) {
+            console.log(`⏳ SVG読み込み中（待機）: ${filename}`);
             return this.loadPromises.get(filename);
         }
         
+        console.log(`🌐 SVGファイル読み込み開始: ${filename}`);
+        console.log(`📍 現在のURL: ${window.location.href}`);
+        console.log(`🎯 読み込み先: ${window.location.origin}/${filename}`);
+        
         const loadPromise = fetch(filename)
             .then(response => {
+                console.log(`📡 fetch応答: ${filename}, status: ${response.status}, ok: ${response.ok}`);
+                console.log(`📡 response.url: ${response.url}`);
+                console.log(`📡 response.type: ${response.type}`);
                 if (!response.ok) {
-                    throw new Error(`SVGファイル読み込み失敗: ${filename}`);
+                    throw new Error(`SVGファイル読み込み失敗: ${filename} (Status: ${response.status})`);
                 }
                 return response.text();
             })
             .then(svgText => {
+                console.log(`✅ SVGテキスト取得成功: ${filename}, 長さ: ${svgText.length}`);
                 this.svgCache.set(filename, svgText);
                 this.loadPromises.delete(filename);
                 return svgText;
             })
             .catch(error => {
-                console.error(error);
+                console.error(`❌ SVG読み込みエラー詳細: ${filename}`, error);
+                console.error(`❌ エラーメッセージ: ${error.message}`);
+                console.error(`❌ エラータイプ: ${error.constructor.name}`);
                 this.loadPromises.delete(filename);
                 return null;
             });

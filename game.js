@@ -25,6 +25,50 @@ class SVGGraphics {
         } else {
             console.error('SVGPlayerRendererが見つかりません - SVG化が完了していません');
         }
+        
+        // 敵キャラクターレンダラーを初期化
+        if (typeof SVGEnemyRenderer !== 'undefined') {
+            this.enemyRenderer = new SVGEnemyRenderer(ctx);
+            console.log('SVGファイルベースの敵レンダラーを使用');
+        } else {
+            console.error('SVGEnemyRendererが見つかりません');
+        }
+        
+        // アイテムレンダラーを初期化
+        if (typeof SVGItemRenderer !== 'undefined') {
+            this.itemRenderer = new SVGItemRenderer(ctx);
+            console.log('SVGファイルベースのアイテムレンダラーを使用');
+        } else {
+            console.error('SVGItemRendererが見つかりません');
+        }
+        
+        // 全SVGファイルを事前読み込み
+        this.preloadAllSVGs();
+    }
+    
+    // 全SVGファイルの事前読み込み
+    async preloadAllSVGs() {
+        console.log('🚀 全SVGファイルの事前読み込み開始...');
+        const promises = [];
+        
+        if (this.playerRenderer && this.playerRenderer.preloadSVGs) {
+            promises.push(this.playerRenderer.preloadSVGs());
+        }
+        
+        if (this.enemyRenderer && this.enemyRenderer.preloadSVGs) {
+            promises.push(this.enemyRenderer.preloadSVGs());
+        }
+        
+        if (this.itemRenderer && this.itemRenderer.preloadSVGs) {
+            promises.push(this.itemRenderer.preloadSVGs());
+        }
+        
+        try {
+            await Promise.all(promises);
+            console.log('✅ 全SVGファイルの事前読み込み完了！');
+        } catch (error) {
+            console.error('❌ SVGファイル事前読み込み中にエラー:', error);
+        }
     }
     
     // SVGパスを描画する汎用メソッド
@@ -112,18 +156,28 @@ class SVGGraphics {
             (B > 255 ? 255 : B < 0 ? 0 : B) * 0x100).toString(16).slice(1);
     }
     
-    // スライムのSVGパス描画（改良版）
+    // スライムのSVG描画（外部ファイル使用）
     drawSlime(x, y, width, height, animTimer) {
+        const bounce = Math.sin(animTimer * 0.1) * 2;
+        
+        // SVGファイルから描画を試行
+        if (this.enemyRenderer) {
+            this.enemyRenderer.drawEnemy('slime', x, y + bounce, width, height, animTimer);
+        } else {
+            // フォールバック: コードベース描画
+            this.drawSlimeFallback(x, y, width, height, animTimer);
+        }
+    }
+    
+    // スライムのフォールバック描画
+    drawSlimeFallback(x, y, width, height, animTimer) {
         const bounce = Math.sin(animTimer * 0.1) * 2;
         const eyeBlink = animTimer % 180 > 170 ? 0.3 : 1.0;
         
         this.ctx.save();
         this.ctx.translate(x, y + bounce);
         
-        // スライム本体のSVGパス
-        const bodyPath = this.createSlimeBodyPath(width, height);
-        
-        // 本体グラデーション
+        // 従来のコードベース描画
         const bodyGradient = this.ctx.createRadialGradient(width / 2, height * 0.7, 0, width / 2, height * 0.7, width * 0.5);
         bodyGradient.addColorStop(0, '#7FFF7F');
         bodyGradient.addColorStop(0.6, '#4CAF50');
@@ -132,12 +186,10 @@ class SVGGraphics {
         this.ctx.fillStyle = bodyGradient;
         this.ctx.shadowColor = '#4CAF50';
         this.ctx.shadowBlur = 8;
-        this.ctx.fill(bodyPath);
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
+        this.ctx.fill();
         
-        // 頭部のSVGパス
-        const headPath = this.createSlimeHeadPath(width, height);
-        
-        // 頭部グラデーション
         const headGradient = this.ctx.createRadialGradient(width / 2, height * 0.4, 0, width / 2, height * 0.4, width * 0.4);
         headGradient.addColorStop(0, '#A5FF7F');
         headGradient.addColorStop(0.7, '#4CAF50');
@@ -145,18 +197,9 @@ class SVGGraphics {
         
         this.ctx.fillStyle = headGradient;
         this.ctx.shadowBlur = 0;
-        this.ctx.fill(headPath);
-        
-        // ハイライト効果のSVGパス
-        const highlightPath = this.createSlimeHighlightPath(width, height);
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        this.ctx.fill(highlightPath);
-        
-        // 目と瞳の描画
-        this.drawSlimeEyes(width, height, eyeBlink);
-        
-        // 口の描画
-        this.drawSlimeMouth(width, height);
+        this.ctx.beginPath();
+        this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
+        this.ctx.fill();
         
         this.ctx.restore();
     }
@@ -341,6 +384,16 @@ class SVGGraphics {
     
     // コインのSVG
     drawCoin(x, y, width, height, rotation) {
+        // SVGファイルから描画を試行
+        if (this.itemRenderer) {
+            this.itemRenderer.drawItem('coin', x, y, width, height, rotation * 20);
+        } else {
+            // フォールバック: コードベース描画
+            this.drawCoinFallback(x, y, width, height, rotation);
+        }
+    }
+    
+    drawCoinFallback(x, y, width, height, rotation) {
         this.ctx.save();
         this.ctx.translate(x + width / 2, y + height / 2);
         this.ctx.scale(Math.cos(rotation), 1); // 回転効果
@@ -373,6 +426,16 @@ class SVGGraphics {
     
     // フラグのSVG
     drawFlag(x, y, width, height) {
+        // SVGファイルから描画を試行
+        if (this.itemRenderer) {
+            this.itemRenderer.drawItem('flag', x, y, width, height, Date.now());
+        } else {
+            // フォールバック: コードベース描画
+            this.drawFlagFallback(x, y, width, height);
+        }
+    }
+    
+    drawFlagFallback(x, y, width, height) {
         // ポール
         this.ctx.fillStyle = '#8B4513';
         this.ctx.fillRect(x + width * 0.47, y, width * 0.06, height);
@@ -396,6 +459,16 @@ class SVGGraphics {
     
     // スプリングのSVG
     drawSpring(x, y, width, height, compression = 0) {
+        // SVGファイルから描画を試行
+        if (this.itemRenderer) {
+            this.itemRenderer.drawItem('spring', x, y, width, height, Date.now());
+        } else {
+            // フォールバック: コードベース描画
+            this.drawSpringFallback(x, y, width, height, compression);
+        }
+    }
+    
+    drawSpringFallback(x, y, width, height, compression = 0) {
         this.ctx.save();
         this.ctx.translate(x, y);
         
