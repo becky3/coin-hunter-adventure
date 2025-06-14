@@ -7,6 +7,7 @@ class SVGEnemyRenderer {
     constructor(ctx) {
         this.ctx = ctx;
         this.svgCache = new Map();
+        this.imageCache = new Map();
         this.loadPromises = new Map();
         
         // SVGファイルマップ
@@ -40,6 +41,8 @@ class SVGEnemyRenderer {
                 console.log(`✅ 敵SVGテキスト取得成功: ${filename}, 長さ: ${svgText.length}`);
                 this.svgCache.set(filename, svgText);
                 this.loadPromises.delete(filename);
+                // 画像もプリロード
+                this.preloadImage(filename, svgText);
                 return svgText;
             })
             .catch(error => {
@@ -50,6 +53,24 @@ class SVGEnemyRenderer {
         
         this.loadPromises.set(filename, loadPromise);
         return loadPromise;
+    }
+    
+    // SVG画像をプリロード
+    preloadImage(filename, svgText) {
+        const base64 = btoa(unescape(encodeURIComponent(svgText)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
+        const img = new Image();
+        
+        img.onload = () => {
+            this.imageCache.set(filename, img);
+            console.log(`✅ 敵画像キャッシュ完了: ${filename}`);
+        };
+        
+        img.onerror = (error) => {
+            console.error(`❌ 敵画像キャッシュエラー: ${filename}`, error);
+        };
+        
+        img.src = dataUrl;
     }
     
     // SVGファイルの事前読み込み
@@ -73,54 +94,61 @@ class SVGEnemyRenderer {
             return;
         }
         
-        // キャッシュから即座に描画
-        if (this.svgCache.has(filename)) {
+        // 画像キャッシュから描画
+        if (this.imageCache.has(filename)) {
+            this.drawCachedImage(filename, x, y, width, height, type, animTimer);
+        } else if (this.svgCache.has(filename)) {
+            // SVGテキストはあるが画像がない場合は作成
             const svgText = this.svgCache.get(filename);
-            this.renderSVG(svgText, x, y, width, height, type, animTimer);
+            this.createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer);
         } else {
-            // キャッシュがない場合は非同期で読み込み（次フレームで描画される）
+            // 何もない場合は読み込み開始（次フレームで描画される）
             this.loadSVG(filename).catch(error => {
                 console.error(`敵SVG描画エラー (${type}):`, error);
             });
         }
     }
     
-    // SVGをCanvasに描画
-    renderSVG(svgText, x, y, width, height, type, animTimer) {
+    // キャッシュされた画像を描画
+    drawCachedImage(filename, x, y, width, height, type, animTimer) {
+        const img = this.imageCache.get(filename);
+        this.ctx.save();
+        
         // アニメーション効果を適用
         if (type === 'slime') {
             // スライムのバウンス効果
             const bounce = Math.sin(animTimer * 0.1) * 2;
             y += bounce;
+        } else if (type === 'bird') {
+            // 鳥の羽ばたき効果
+            const flapScale = 1 + Math.sin(animTimer * 0.3) * 0.05;
+            this.ctx.translate(x + width / 2, y + height / 2);
+            this.ctx.scale(1, flapScale);
+            this.ctx.translate(-x - width / 2, -y - height / 2);
         }
         
-        // CSS変数を適用したSVGを作成
+        this.ctx.drawImage(img, x, y, width, height);
+        this.ctx.restore();
+    }
+    
+    // 画像を作成して描画
+    createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer) {
+        // CSS変数を適用
         const processedSVG = this.applyCSSVariables(svgText, type, animTimer);
         
-        // Base64エンコード
         const base64 = btoa(unescape(encodeURIComponent(processedSVG)));
         const dataUrl = `data:image/svg+xml;base64,${base64}`;
-        
-        // SVGをImageとして描画
         const img = new Image();
         
         img.onload = () => {
-            this.ctx.save();
-            
-            // 鳥の羽ばたき効果
-            if (type === 'bird') {
-                const flapScale = 1 + Math.sin(animTimer * 0.3) * 0.05;
-                this.ctx.translate(x + width / 2, y + height / 2);
-                this.ctx.scale(1, flapScale);
-                this.ctx.translate(-x - width / 2, -y - height / 2);
-            }
-            
-            this.ctx.drawImage(img, x, y, width, height);
-            this.ctx.restore();
+            // 次回用にキャッシュ
+            this.imageCache.set(filename, img);
+            // 即座に描画
+            this.drawCachedImage(filename, x, y, width, height, type, animTimer);
         };
         
         img.onerror = (error) => {
-            console.error(`❌ 敵SVG画像読み込みエラー (${type}):`, error);
+            console.error(`❌ 敵画像作成エラー (${type}):`, error);
         };
         
         img.src = dataUrl;
@@ -131,14 +159,14 @@ class SVGEnemyRenderer {
         let processedSVG = svgText;
         
         if (type === 'slime') {
-            // スライムの目の瞬き
-            const eyeBlink = animTimer % 180 > 170 ? 0.3 : 1.0;
-            processedSVG = processedSVG.replace(/var\(--eye-scale-y\)/g, eyeBlink);
+            // スライムの目の瞬き（SVG要素を直接変更）
+            const eyeBlink = animTimer % 180 > 170;
+            if (eyeBlink) {
+                // 目を閉じる（楕円のry属性を小さくする）
+                processedSVG = processedSVG.replace(/(<ellipse[^>]*cy="17\.5"[^>]*ry=")4"/g, '$10.5"');
+            }
         } else if (type === 'bird') {
-            // 鳥の羽の色変化
-            const wingPhase = Math.sin(animTimer * 0.1) * 0.5 + 0.5;
-            const wingColor = this.interpolateColor('#FF7043', '#FFA726', wingPhase);
-            processedSVG = processedSVG.replace(/var\(--wing-color\)/g, wingColor);
+            // 鳥の羽の色変化はCSSフィルターやグラデーションで実装済み
         }
         
         return processedSVG;

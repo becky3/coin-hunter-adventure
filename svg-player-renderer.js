@@ -197,21 +197,22 @@ class SVGPlayerRenderer {
             this.imageCache = new Map();
         }
         
-        const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(svgBlob);
+        // Base64エンコード
+        const base64 = btoa(unescape(encodeURIComponent(svgText)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
         
         const img = new Image();
         img.onload = () => {
             this.imageCache.set(cacheKey, img);
-            URL.revokeObjectURL(url);
+            // 次のフレームで描画を試行
+            this.drawImageToCanvas(img, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
         };
         
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            console.error('SVG画像の作成に失敗');
+        img.onerror = (error) => {
+            console.error('SVG画像の作成に失敗:', error);
         };
         
-        img.src = url;
+        img.src = dataUrl;
     }
     
     // フォールバック描画（SVG読み込み失敗時）

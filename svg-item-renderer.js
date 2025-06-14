@@ -7,6 +7,7 @@ class SVGItemRenderer {
     constructor(ctx) {
         this.ctx = ctx;
         this.svgCache = new Map();
+        this.imageCache = new Map();
         this.loadPromises = new Map();
         
         // SVGファイルマップ
@@ -41,6 +42,8 @@ class SVGItemRenderer {
                 console.log(`✅ アイテムSVGテキスト取得成功: ${filename}, 長さ: ${svgText.length}`);
                 this.svgCache.set(filename, svgText);
                 this.loadPromises.delete(filename);
+                // 画像もプリロード
+                this.preloadImage(filename, svgText);
                 return svgText;
             })
             .catch(error => {
@@ -51,6 +54,24 @@ class SVGItemRenderer {
         
         this.loadPromises.set(filename, loadPromise);
         return loadPromise;
+    }
+    
+    // SVG画像をプリロード
+    preloadImage(filename, svgText) {
+        const base64 = btoa(unescape(encodeURIComponent(svgText)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
+        const img = new Image();
+        
+        img.onload = () => {
+            this.imageCache.set(filename, img);
+            console.log(`✅ アイテム画像キャッシュ完了: ${filename}`);
+        };
+        
+        img.onerror = (error) => {
+            console.error(`❌ アイテム画像キャッシュエラー: ${filename}`, error);
+        };
+        
+        img.src = dataUrl;
     }
     
     // SVGファイルの事前読み込み
@@ -74,59 +95,68 @@ class SVGItemRenderer {
             return;
         }
         
-        // キャッシュから即座に描画
-        if (this.svgCache.has(filename)) {
+        // 画像キャッシュから描画
+        if (this.imageCache.has(filename)) {
+            this.drawCachedImage(filename, x, y, width, height, type, animTimer);
+        } else if (this.svgCache.has(filename)) {
+            // SVGテキストはあるが画像がない場合は作成
             const svgText = this.svgCache.get(filename);
-            this.renderSVG(svgText, x, y, width, height, type, animTimer);
+            this.createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer);
         } else {
-            // キャッシュがない場合は非同期で読み込み（次フレームで描画される）
+            // 何もない場合は読み込み開始（次フレームで描画される）
             this.loadSVG(filename).catch(error => {
                 console.error(`アイテムSVG描画エラー (${type}):`, error);
             });
         }
     }
     
-    // SVGをCanvasに描画
-    renderSVG(svgText, x, y, width, height, type, animTimer) {
-        // CSS変数を適用したSVGを作成
+    // キャッシュされた画像を描画
+    drawCachedImage(filename, x, y, width, height, type, animTimer) {
+        const img = this.imageCache.get(filename);
+        this.ctx.save();
+        
+        // アニメーション効果を適用
+        if (type === 'coin') {
+            // コインの回転効果
+            const rotation = (animTimer * 0.05) % (Math.PI * 2);
+            const scaleX = Math.cos(rotation);
+            this.ctx.translate(x + width / 2, y + height / 2);
+            this.ctx.scale(scaleX, 1);
+            this.ctx.translate(-x - width / 2, -y - height / 2);
+        } else if (type === 'flag') {
+            // フラグのなびき効果
+            const wave = Math.sin(animTimer * 0.1 + x * 0.01) * 2;
+            y += wave;
+        } else if (type === 'spring') {
+            // スプリングの圧縮効果
+            const compression = 1 - Math.abs(Math.sin(animTimer * 0.1)) * 0.1;
+            this.ctx.translate(x + width / 2, y + height);
+            this.ctx.scale(1, compression);
+            this.ctx.translate(-x - width / 2, -y - height);
+        }
+        
+        this.ctx.drawImage(img, x, y, width, height);
+        this.ctx.restore();
+    }
+    
+    // 画像を作成して描画
+    createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer) {
+        // CSS変数を適用
         const processedSVG = this.applyCSSVariables(svgText, type, animTimer);
         
-        // Base64エンコード
         const base64 = btoa(unescape(encodeURIComponent(processedSVG)));
         const dataUrl = `data:image/svg+xml;base64,${base64}`;
-        
-        // SVGをImageとして描画
         const img = new Image();
         
         img.onload = () => {
-            this.ctx.save();
-            
-            // アニメーション効果を適用
-            if (type === 'coin') {
-                // コインの回転効果
-                const rotation = (animTimer * 0.05) % (Math.PI * 2);
-                const scaleX = Math.cos(rotation);
-                this.ctx.translate(x + width / 2, y + height / 2);
-                this.ctx.scale(scaleX, 1);
-                this.ctx.translate(-x - width / 2, -y - height / 2);
-            } else if (type === 'flag') {
-                // フラグのなびき効果
-                const wave = Math.sin(animTimer * 0.1 + x * 0.01) * 2;
-                y += wave;
-            } else if (type === 'spring') {
-                // スプリングの圧縮効果
-                const compression = 1 - Math.abs(Math.sin(animTimer * 0.1)) * 0.1;
-                this.ctx.translate(x + width / 2, y + height);
-                this.ctx.scale(1, compression);
-                this.ctx.translate(-x - width / 2, -y - height);
-            }
-            
-            this.ctx.drawImage(img, x, y, width, height);
-            this.ctx.restore();
+            // 次回用にキャッシュ
+            this.imageCache.set(filename, img);
+            // 即座に描画
+            this.drawCachedImage(filename, x, y, width, height, type, animTimer);
         };
         
         img.onerror = (error) => {
-            console.error(`❌ アイテムSVG画像読み込みエラー (${type}):`, error);
+            console.error(`❌ アイテム画像作成エラー (${type}):`, error);
         };
         
         img.src = dataUrl;
