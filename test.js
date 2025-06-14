@@ -313,6 +313,191 @@ systemTests.test('ゲーム状態の遷移', () => {
     assertEquals(gameState.lives, 3, 'resetGameDataでライフがリセットされていません');
 });
 
+// === SVGレンダリングテスト ===
+const svgRenderingTests = new TestRunner('SVGレンダリングテスト');
+
+// SVGレンダラークラスの存在確認
+svgRenderingTests.test('SVGレンダラークラスの読み込み確認', () => {
+    // SVGPlayerRendererクラスの確認
+    assert(typeof SVGPlayerRenderer !== 'undefined', 
+        'SVGPlayerRendererクラスが読み込まれていません');
+    
+    // SVGEnemyRendererクラスの確認
+    assert(typeof SVGEnemyRenderer !== 'undefined', 
+        'SVGEnemyRendererクラスが読み込まれていません');
+    
+    // SVGItemRendererクラスの確認
+    assert(typeof SVGItemRenderer !== 'undefined', 
+        'SVGItemRendererクラスが読み込まれていません');
+});
+
+// SVGGraphicsクラスの初期化テスト
+svgRenderingTests.test('SVGGraphicsクラスの初期化', () => {
+    // モックCanvasコンテキストを作成
+    const mockCtx = {
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        scale: () => {},
+        fillRect: () => {},
+        beginPath: () => {},
+        fill: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
+    };
+    
+    // SVGGraphicsクラスのインスタンス化
+    let svgGraphics;
+    try {
+        svgGraphics = new SVGGraphics(mockCtx);
+        assert(svgGraphics, 'SVGGraphicsインスタンスが作成されませんでした');
+    } catch (error) {
+        throw new Error(`SVGGraphics初期化エラー: ${error.message}`);
+    }
+    
+    // レンダラーの初期化状態を確認
+    // playerRendererはnullでも良い（フォールバック描画を使用するため）
+    assert(svgGraphics.playerRenderer !== undefined, 
+        'playerRendererが初期化されていません');
+    
+    assert(svgGraphics.enemyRenderer !== undefined, 
+        'enemyRendererが初期化されていません');
+    
+    assert(svgGraphics.itemRenderer !== undefined, 
+        'itemRendererが初期化されていません');
+});
+
+// SVGレンダラーの個別初期化テスト
+svgRenderingTests.test('個別SVGレンダラーの初期化', () => {
+    const mockCtx = {
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        scale: () => {},
+        fillRect: () => {},
+        beginPath: () => {},
+        fill: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
+    };
+    
+    // SVGPlayerRendererの初期化テスト
+    try {
+        const playerRenderer = new SVGPlayerRenderer(mockCtx);
+        assert(playerRenderer, 'SVGPlayerRendererが作成されませんでした');
+        assert(typeof playerRenderer.drawPlayer === 'function', 
+            'drawPlayerメソッドが存在しません');
+    } catch (error) {
+        throw new Error(`SVGPlayerRenderer初期化エラー: ${error.message}`);
+    }
+    
+    // SVGEnemyRendererの初期化テスト
+    try {
+        const enemyRenderer = new SVGEnemyRenderer(mockCtx);
+        assert(enemyRenderer, 'SVGEnemyRendererが作成されませんでした');
+        assert(typeof enemyRenderer.drawEnemy === 'function', 
+            'drawEnemyメソッドが存在しません');
+    } catch (error) {
+        throw new Error(`SVGEnemyRenderer初期化エラー: ${error.message}`);
+    }
+    
+    // SVGItemRendererの初期化テスト
+    try {
+        const itemRenderer = new SVGItemRenderer(mockCtx);
+        assert(itemRenderer, 'SVGItemRendererが作成されませんでした');
+        assert(typeof itemRenderer.drawItem === 'function', 
+            'drawItemメソッドが存在しません');
+    } catch (error) {
+        throw new Error(`SVGItemRenderer初期化エラー: ${error.message}`);
+    }
+});
+
+// フォールバック描画メソッドの存在確認
+svgRenderingTests.test('フォールバック描画メソッドの確認', () => {
+    const mockCtx = {
+        save: () => {},
+        restore: () => {},
+        translate: () => {},
+        scale: () => {},
+        fillRect: () => {},
+        beginPath: () => {},
+        fill: () => {},
+        stroke: () => {},
+        arc: () => {},
+        ellipse: () => {},
+        fillText: () => {},
+        createRadialGradient: () => ({ addColorStop: () => {} }),
+        createLinearGradient: () => ({ addColorStop: () => {} })
+    };
+    
+    const svgGraphics = new SVGGraphics(mockCtx);
+    
+    // フォールバック描画メソッドの存在確認
+    assert(typeof svgGraphics.drawSlimeFallback === 'function', 
+        'drawSlimeFallbackメソッドが存在しません');
+    
+    assert(typeof svgGraphics.drawBirdFallback === 'function', 
+        'drawBirdFallbackメソッドが存在しません');
+    
+    assert(typeof svgGraphics.drawCoinFallback === 'function', 
+        'drawCoinFallbackメソッドが存在しません');
+    
+    assert(typeof svgGraphics.drawFlagFallback === 'function', 
+        'drawFlagFallbackメソッドが存在しません');
+    
+    assert(typeof svgGraphics.drawSpringFallback === 'function', 
+        'drawSpringFallbackメソッドが存在しません');
+    
+    assert(typeof svgGraphics.drawPlayerFallback === 'function', 
+        'drawPlayerFallbackメソッドが存在しません');
+});
+
+// ゲーム描画メソッドのテスト
+svgRenderingTests.test('ゲーム描画メソッドの動作確認', () => {
+    // Gameインスタンスが存在することを確認
+    assert(window.game, 'window.gameが存在しません');
+    assert(window.game.svg, 'game.svgが存在しません');
+    
+    const svgGraphics = window.game.svg;
+    
+    // 各描画メソッドがエラーなく実行できることを確認
+    try {
+        // モック引数で描画メソッドを呼び出し
+        svgGraphics.drawSlime(0, 0, 40, 40, 0);
+        svgGraphics.drawBird(0, 0, 40, 40, 0);
+        svgGraphics.drawCoin(0, 0, 30, 30, 0);
+        svgGraphics.drawFlag(0, 0, 60, 80);
+        svgGraphics.drawSpring(0, 0, 40, 40, 0);
+        svgGraphics.drawPlayer(0, 0, 32, 48, 2, 1, false, 0, 0, 0);
+    } catch (error) {
+        throw new Error(`描画メソッド実行エラー: ${error.message}`);
+    }
+});
+
+// CORS/プロトコル検出テスト
+svgRenderingTests.test('CORS/プロトコル問題の検出', () => {
+    const isFileProtocol = window.location.protocol === 'file:';
+    
+    if (isFileProtocol) {
+        // file://プロトコルの場合は警告を出すべき
+        console.warn('⚠️ file://プロトコルで実行されています。SVG読み込みに問題が発生する可能性があります。');
+        
+        // SVGGraphicsクラスがCORS警告を適切に出力しているか確認
+        const svgGraphics = window.game?.svg;
+        if (svgGraphics) {
+            // プロトコルチェック機能が動作していることを確認
+            assert(typeof svgGraphics.checkProtocolAndWarn === 'function', 
+                'プロトコルチェック機能が実装されていません');
+        }
+        
+        // テスト失敗: file://プロトコルでの実行は推奨されない
+        throw new Error('ゲームがfile://プロトコルで実行されています。HTTPサーバー経由でアクセスしてください。');
+    } else {
+        // http://またはhttps://プロトコルの場合は正常
+        assert(true, 'HTTP/HTTPSプロトコルで正常に実行されています');
+    }
+});
+
 // === レベルテスト ===
 const levelTests = new TestRunner('レベルテスト');
 
@@ -431,6 +616,11 @@ window.addEventListener('DOMContentLoaded', async () => {
         console.log('=== テスト実行開始 ===');
         const systemResult = await systemTests.run();
         display.addResults(systemResult, systemTests);
+        
+        // SVGレンダリングテストを実行
+        console.log('\nSVGレンダリングテストを実行します...');
+        const svgResult = await svgRenderingTests.run();
+        display.addResults(svgResult, svgRenderingTests);
         
         // システムテストが全て成功した場合のみレベルテストを実行
         if (systemResult.allPassed) {
