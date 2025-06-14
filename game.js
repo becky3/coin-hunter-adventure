@@ -81,8 +81,13 @@ class SVGGraphics {
             console.error('✅ SOLUTION: HTTPサーバーでアクセスしてください');
             console.error('📝 例: python3 -m http.server 8080 を実行後、http://localhost:8080/ でアクセス');
             
-            // ビジュアル警告を表示
-            this.showProtocolWarning();
+            // ビジュアル警告を表示（一度だけ）
+            if (!window._corsWarningShown) {
+                window._corsWarningShown = true;
+                this.showProtocolWarning();
+            }
+        } else {
+            console.log('✅ HTTPサーバー経由でアクセスされています:', window.location.href);
         }
     }
     
@@ -143,14 +148,9 @@ class SVGGraphics {
     
     // 全SVGファイルの事前読み込み
     async preloadAllSVGs() {
-        // Protocol check and user warning
+        // Protocol check - skip SVG loading for file:// protocol
         if (window.location.protocol === 'file:') {
-            console.error('🚫 CRITICAL: ゲームがfile://プロトコルで開かれています');
-            console.error('🚫 SVGファイルが読み込めないため、グラフィックが表示されません');
-            console.error('✅ 解決方法: http://localhost:8080/ でアクセスしてください');
-            
-            // Show user-friendly warning
-            this.showProtocolWarning();
+            console.log('🚫 file://プロトコルのためSVG読み込みをスキップします');
             return; // Skip SVG loading
         }
         
