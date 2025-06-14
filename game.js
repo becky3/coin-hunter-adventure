@@ -40,18 +40,30 @@ class SVGGraphics {
         
         // 敵キャラクターレンダラーを初期化
         if (typeof SVGEnemyRenderer !== 'undefined') {
-            this.enemyRenderer = new SVGEnemyRenderer(ctx);
-            console.log('SVGファイルベースの敵レンダラーを使用');
+            try {
+                this.enemyRenderer = new SVGEnemyRenderer(ctx);
+                console.log('✅ SVGEnemyRenderer初期化成功');
+            } catch (error) {
+                console.error('❌ SVGEnemyRenderer初期化エラー:', error);
+                this.enemyRenderer = null;
+            }
         } else {
-            console.error('SVGEnemyRendererが見つかりません');
+            console.error('❌ SVGEnemyRendererクラスが見つかりません');
+            this.enemyRenderer = null;
         }
         
         // アイテムレンダラーを初期化
         if (typeof SVGItemRenderer !== 'undefined') {
-            this.itemRenderer = new SVGItemRenderer(ctx);
-            console.log('SVGファイルベースのアイテムレンダラーを使用');
+            try {
+                this.itemRenderer = new SVGItemRenderer(ctx);
+                console.log('✅ SVGItemRenderer初期化成功');
+            } catch (error) {
+                console.error('❌ SVGItemRenderer初期化エラー:', error);
+                this.itemRenderer = null;
+            }
         } else {
-            console.error('SVGItemRendererが見つかりません');
+            console.error('❌ SVGItemRendererクラスが見つかりません');
+            this.itemRenderer = null;
         }
         
         // 全SVGファイルを事前読み込み
