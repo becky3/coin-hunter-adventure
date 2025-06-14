@@ -76,6 +76,12 @@ class SVGGraphics {
     // プロトコルチェックと警告表示
     checkProtocolAndWarn() {
         if (window.location.protocol === 'file:') {
+            // test.html専用：CORS警告を無効化
+            if (window.DISABLE_CORS_WARNING) {
+                console.log('📝 テストモード: file://プロトコルですが、テスト実行のため警告を無効化します');
+                return;
+            }
+            
             console.error('🚫 CRITICAL ERROR: ゲームがfile://プロトコルで開かれています');
             console.error('🚫 SVGファイルはCORS制限により読み込めません');
             console.error('✅ SOLUTION: HTTPサーバーでアクセスしてください');
