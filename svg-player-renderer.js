@@ -139,16 +139,24 @@ class SVGPlayerRenderer {
         
         console.log(`SVGプレイヤー描画: ${filename}, キャッシュ状況: ${this.svgCache.has(filename)}`);
         
-        // 常にフォールバック描画を使用（確実性を優先）
-        console.log(`プレイヤー描画: フォールバック描画を使用 (${filename})`);
-        this.drawFallback(x, y, width, height, health, direction, invulnerable);
-        
-        // SVGは将来的な改善として非同期で読み込み
-        if (!this.svgCache.has(filename)) {
-            this.loadSVG(filename).catch(error => {
-                console.error(`❌ SVG読み込みエラー: ${filename}`, error);
-            });
+        // SVGが利用可能な場合は使用、そうでなければエラー
+        if (this.svgCache.has(filename)) {
+            console.log(`SVG描画を使用: ${filename}`);
+            this.drawFromSVGCache(x, y, width, height, health, direction, invulnerable, animFrame, filename);
+        } else {
+            throw new Error(`プレイヤーSVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);
         }
+    }
+    
+    // SVGキャッシュから描画
+    drawFromSVGCache(x, y, width, height, health, direction, invulnerable, animFrame, filename) {
+        const svgText = this.svgCache.get(filename);
+        if (!svgText) {
+            throw new Error(`SVGファイル（${filename}）がキャッシュに存在しません`);
+        }
+        
+        // SVGテキストを使って描画
+        this.renderSVGToCanvasSync(svgText, x, y, width, height, health, direction, invulnerable, animFrame);
     }
     
     // SVGをCanvasに同期描画（キャッシュされた画像使用）

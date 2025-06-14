@@ -107,22 +107,20 @@ class SVGItemRenderer {
     }
     
     // アイテム描画
-    drawItem(type, x, y, width, height, animTimer = 0) {
+    drawItem(type, x, y, width, height, animData = {}) {
+        const animTimer = animData.rotation || animData.compression || 0;
         const filename = this.svgFiles[type];
         if (!filename) {
             console.warn(`未知のアイテムタイプ: ${type}`);
             return;
         }
         
-        // 常にフォールバック描画を使用（確実性を優先）
-        console.log(`アイテム描画: フォールバック描画を使用 (${type})`);
-        this.drawItemFallback(type, x, y, width, height, animTimer);
-        
-        // SVGは将来的な改善として非同期で読み込み
-        if (!this.svgCache.has(filename)) {
-            this.loadSVG(filename).catch(error => {
-                console.error(`アイテムSVG描画エラー (${type}):`, error);
-            });
+        // SVGが利用可能な場合は使用、そうでなければエラー
+        if (this.svgCache.has(filename)) {
+            console.log(`SVG描画を使用: ${filename}`);
+            this.drawCachedImage(filename, x, y, width, height, type, animTimer);
+        } else {
+            throw new Error(`アイテムSVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);
         }
     }
     
