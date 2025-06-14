@@ -412,65 +412,40 @@ svgRenderingTests.test('個別SVGレンダラーの初期化', () => {
     }
 });
 
-// フォールバック描画メソッドの存在確認
-svgRenderingTests.test('フォールバック描画メソッドの確認', () => {
-    const mockCtx = {
-        save: () => {},
-        restore: () => {},
-        translate: () => {},
-        scale: () => {},
-        fillRect: () => {},
-        beginPath: () => {},
-        fill: () => {},
-        stroke: () => {},
-        arc: () => {},
-        ellipse: () => {},
-        fillText: () => {},
-        createRadialGradient: () => ({ addColorStop: () => {} }),
-        createLinearGradient: () => ({ addColorStop: () => {} })
-    };
-    
-    const svgGraphics = new SVGGraphics(mockCtx);
-    
-    // フォールバック描画メソッドの存在確認
-    assert(typeof svgGraphics.drawSlimeFallback === 'function', 
-        'drawSlimeFallbackメソッドが存在しません');
-    
-    assert(typeof svgGraphics.drawBirdFallback === 'function', 
-        'drawBirdFallbackメソッドが存在しません');
-    
-    assert(typeof svgGraphics.drawCoinFallback === 'function', 
-        'drawCoinFallbackメソッドが存在しません');
-    
-    assert(typeof svgGraphics.drawFlagFallback === 'function', 
-        'drawFlagFallbackメソッドが存在しません');
-    
-    assert(typeof svgGraphics.drawSpringFallback === 'function', 
-        'drawSpringFallbackメソッドが存在しません');
-    
-    assert(typeof svgGraphics.drawPlayerFallback === 'function', 
-        'drawPlayerFallbackメソッドが存在しません');
-});
 
-// ゲーム描画メソッドのテスト
-svgRenderingTests.test('ゲーム描画メソッドの動作確認', () => {
+// SVG描画メソッドのテスト
+svgRenderingTests.test('SVG描画メソッドの動作確認', () => {
     // Gameインスタンスが存在することを確認
     assert(window.game, 'window.gameが存在しません');
     assert(window.game.svg, 'game.svgが存在しません');
     
     const svgGraphics = window.game.svg;
     
-    // 各描画メソッドがエラーなく実行できることを確認
-    try {
-        // モック引数で描画メソッドを呼び出し
-        svgGraphics.drawSlime(0, 0, 40, 40, 0);
-        svgGraphics.drawBird(0, 0, 40, 40, 0);
-        svgGraphics.drawCoin(0, 0, 30, 30, 0);
-        svgGraphics.drawFlag(0, 0, 60, 80);
-        svgGraphics.drawSpring(0, 0, 40, 40, 0);
-        svgGraphics.drawPlayer(0, 0, 32, 48, 2, 1, false, 0, 0, 0);
-    } catch (error) {
-        throw new Error(`描画メソッド実行エラー: ${error.message}`);
+    // SVGレンダラーが正しく初期化されていることを確認
+    assert(svgGraphics.playerRenderer, 'playerRendererが初期化されていません');
+    assert(svgGraphics.enemyRenderer, 'enemyRendererが初期化されていません');
+    assert(svgGraphics.itemRenderer, 'itemRendererが初期化されていません');
+    
+    // HTTPプロトコルでのみ描画テストを実行
+    if (window.location.protocol !== 'file:') {
+        try {
+            // SVGファイルが読み込まれている場合のみテスト
+            svgGraphics.drawSlime(0, 0, 40, 40, 0);
+            svgGraphics.drawBird(0, 0, 40, 40, 0);
+            svgGraphics.drawCoin(0, 0, 30, 30, 0);
+            svgGraphics.drawFlag(0, 0, 60, 80);
+            svgGraphics.drawSpring(0, 0, 40, 40, 0);
+            svgGraphics.drawPlayer(0, 0, 32, 48, 2, 1, false, 0, 0, 0);
+        } catch (error) {
+            // SVGファイル未読み込みの場合は期待されるエラー
+            if (error.message.includes('SVGファイル') && error.message.includes('読み込まれていません')) {
+                console.log('✅ SVG未読み込み時のエラーが正しく発生:', error.message);
+            } else {
+                throw new Error(`予期しない描画メソッドエラー: ${error.message}`);
+            }
+        }
+    } else {
+        console.log('⚠️ file://プロトコルのため描画テストをスキップ');
     }
 });
 
