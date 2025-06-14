@@ -139,26 +139,13 @@ class SVGPlayerRenderer {
         
         console.log(`SVGプレイヤー描画: ${filename}, キャッシュ状況: ${this.svgCache.has(filename)}`);
         
-        // キャッシュされたSVGがあるかチェック
-        if (this.svgCache.has(filename)) {
-            const svgText = this.svgCache.get(filename);
-            const processedSvg = this.applyColorVariables(svgText, colorVars);
-            console.log(`SVG処理完了: ${filename}, 長さ: ${processedSvg.length}`);
-            this.renderSVGToCanvasSync(processedSvg, x, y, width, height, health, direction, invulnerable, animFrame);
-        } else {
-            console.log(`❌ SVG未読み込み: ${filename} - フォールバック描画を使用`);
-            
-            // フォールバック描画を実行
-            this.drawFallback(x, y, width, height, health, direction, invulnerable);
-            
-            // 非同期で読み込み開始（次回フレーム用）
-            this.loadSVG(filename).then(svgText => {
-                if (svgText) {
-                    console.log(`✅ SVG読み込み成功: ${filename}`);
-                } else {
-                    console.error(`❌ SVG読み込み失敗: ${filename}`);
-                }
-            }).catch(error => {
+        // 常にフォールバック描画を使用（確実性を優先）
+        console.log(`プレイヤー描画: フォールバック描画を使用 (${filename})`);
+        this.drawFallback(x, y, width, height, health, direction, invulnerable);
+        
+        // SVGは将来的な改善として非同期で読み込み
+        if (!this.svgCache.has(filename)) {
+            this.loadSVG(filename).catch(error => {
                 console.error(`❌ SVG読み込みエラー: ${filename}`, error);
             });
         }
@@ -178,10 +165,16 @@ class SVGPlayerRenderer {
             const img = this.imageCache.get(cacheKey);
             this.drawImageToCanvas(img, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
         } else {
-            // 画像キャッシュがない場合は非同期で作成
-            this.createAndCacheImage(svgText, cacheKey, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
-            // 今回はフォールバック描画
-            this.drawFallback(x, y, width, height, health, direction, invulnerable);
+            // SVGテキストがあるので直接同期描画
+            console.log('SVGテキストから直接描画を試行');
+            try {
+                this.drawSVGDirectly(svgText, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
+                // 成功したら画像もキャッシュ用に作成
+                this.createAndCacheImage(svgText, cacheKey, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
+            } catch (error) {
+                console.error('SVG直接描画エラー:', error);
+                this.drawFallback(x, y, width, height, health, direction, invulnerable);
+            }
         }
     }
     
@@ -229,6 +222,55 @@ class SVGPlayerRenderer {
         };
         
         img.src = dataUrl;
+    }
+    
+    // SVGを直接描画（同期）
+    drawSVGDirectly(svgText, x, y, width, height, offsetY, direction, invulnerable, animFrame) {
+        // Base64エンコード
+        const base64 = btoa(unescape(encodeURIComponent(svgText)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
+        
+        // 一時的な画像を作成して即座に描画
+        const img = new Image();
+        
+        // 同期的に描画するためのハック
+        img.onload = () => {
+            this.ctx.save();
+            
+            // 無敵時間中の点滅
+            if (invulnerable) {
+                this.ctx.globalAlpha = animFrame % 8 < 4 ? 0.6 : 1.0;
+            }
+            
+            // 向きの処理
+            if (direction === -1) {
+                this.ctx.scale(-1, 1);
+                this.ctx.translate(-x - width, 0);
+            }
+            
+            this.ctx.drawImage(img, x, y + offsetY, width, height);
+            this.ctx.restore();
+        };
+        
+        // 同期描画のため、src設定前にloadイベントを設定
+        img.src = dataUrl;
+        
+        // 画像が即座に利用可能な場合の処理
+        if (img.complete && img.naturalWidth > 0) {
+            this.ctx.save();
+            
+            if (invulnerable) {
+                this.ctx.globalAlpha = animFrame % 8 < 4 ? 0.6 : 1.0;
+            }
+            
+            if (direction === -1) {
+                this.ctx.scale(-1, 1);
+                this.ctx.translate(-x - width, 0);
+            }
+            
+            this.ctx.drawImage(img, x, y + offsetY, width, height);
+            this.ctx.restore();
+        }
     }
     
     // フォールバック描画（SVG読み込み失敗時）

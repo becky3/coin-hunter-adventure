@@ -17,13 +17,25 @@ class SVGGraphics {
         this.ctx = ctx;
         this.cache = new Map(); // パスキャッシュ
         
+        // クラス定義の確認
+        console.log('=== SVGレンダラークラス確認 ===');
+        console.log('SVGPlayerRenderer:', typeof SVGPlayerRenderer);
+        console.log('SVGEnemyRenderer:', typeof SVGEnemyRenderer);
+        console.log('SVGItemRenderer:', typeof SVGItemRenderer);
+        console.log('==========================');
+        
         // プレイヤーグラフィックレンダラーを初期化
-        // SVGファイルベースを強制使用（テスト用）
         if (typeof SVGPlayerRenderer !== 'undefined') {
-            this.playerRenderer = new SVGPlayerRenderer(ctx);
-            console.log('SVGファイルベースのプレイヤーレンダラーを強制使用');
+            try {
+                this.playerRenderer = new SVGPlayerRenderer(ctx);
+                console.log('✅ SVGPlayerRenderer初期化成功');
+            } catch (error) {
+                console.error('❌ SVGPlayerRenderer初期化エラー:', error);
+                this.playerRenderer = null;
+            }
         } else {
-            console.error('SVGPlayerRendererが見つかりません - SVG化が完了していません');
+            console.error('❌ SVGPlayerRendererクラスが見つかりません');
+            this.playerRenderer = null;
         }
         
         // 敵キャラクターレンダラーを初期化

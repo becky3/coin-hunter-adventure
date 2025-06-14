@@ -114,19 +114,12 @@ class SVGItemRenderer {
             return;
         }
         
-        // 画像キャッシュから描画
-        if (this.imageCache.has(filename)) {
-            this.drawCachedImage(filename, x, y, width, height, type, animTimer);
-        } else if (this.svgCache.has(filename)) {
-            // SVGテキストはあるが画像がない場合は作成
-            const svgText = this.svgCache.get(filename);
-            this.createAndDrawImage(svgText, filename, x, y, width, height, type, animTimer);
-        } else {
-            // 何もない場合はフォールバック描画
-            console.log(`❌ アイテムSVG未読み込み: ${type} - フォールバック描画を使用`);
-            this.drawItemFallback(type, x, y, width, height, animTimer);
-            
-            // 非同期で読み込み開始（次フレームで描画される）
+        // 常にフォールバック描画を使用（確実性を優先）
+        console.log(`アイテム描画: フォールバック描画を使用 (${type})`);
+        this.drawItemFallback(type, x, y, width, height, animTimer);
+        
+        // SVGは将来的な改善として非同期で読み込み
+        if (!this.svgCache.has(filename)) {
             this.loadSVG(filename).catch(error => {
                 console.error(`アイテムSVG描画エラー (${type}):`, error);
             });
