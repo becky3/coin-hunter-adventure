@@ -876,7 +876,8 @@ class InputManager {
             left: this.keys['ArrowLeft'] || this.keys['KeyA'],
             right: this.keys['ArrowRight'] || this.keys['KeyD'],
             jump: this.keys['Space'] || this.keys['KeyW'] || this.keys['ArrowUp'],
-            pause: this.keys['Escape'] || this.keys['KeyP']
+            pause: this.keys['Escape'] || this.keys['KeyP'],
+            debug: this.keys['Digit2'] || this.keys['ShiftLeft'] // @キー（Shift+2）の検出
         };
     }
 
@@ -915,6 +916,9 @@ class Game {
         this.particles = [];
         this.backgroundAnimation = 0;
         this.scoreAnimations = [];
+        
+        // デバッグ表示制御
+        this.showJumpDebug = false;
         
         this.camera = { x: 0, y: 0 };
         this.platforms = [];
@@ -1189,10 +1193,16 @@ class Game {
         // モダンデザイン用の時間を更新
         this.gameTime += deltaTime;
         
-        if (!this.gameState.isPlaying()) return;
-        
         // 入力状態を更新
         this.inputManager.update();
+        
+        // デバッグ表示切り替え（@キー = Shift+2）
+        if (this.inputManager.isKeyJustPressed('Digit2')) {
+            this.showJumpDebug = !this.showJumpDebug;
+            console.log(`🛠️ ジャンプデバッグ表示: ${this.showJumpDebug ? 'ON' : 'OFF'} (@キーまたは2キーで切り替え)`);
+        }
+        
+        if (!this.gameState.isPlaying()) return;
         
         // タイマー更新
         const timeUp = this.gameState.updateTime(deltaTime);
@@ -1932,6 +1942,11 @@ class Game {
     // ジャンプ統計をリアルタイムで表示
     renderJumpStats() {
         try {
+            // デバッグ表示がオフの場合は何もしない
+            if (!this.showJumpDebug) {
+                return;
+            }
+            
             // 確実にコンテキストを取得
             const ctx = this.ctx;
             if (!ctx) {
@@ -1961,7 +1976,11 @@ class Game {
             
             let y = 28;
             ctx.fillText('🚨 ジャンプデバッグ表示 🚨', 15, y);
-            y += 22;
+            y += 18;
+            ctx.font = '11px monospace';
+            ctx.fillStyle = 'lightgray';
+            ctx.fillText('(2キーで切り替え)', 15, y);
+            y += 18;
             
             // 設定値の表示
             ctx.font = '13px monospace';
