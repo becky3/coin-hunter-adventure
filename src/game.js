@@ -859,6 +859,20 @@ class InputManager {
                 e.preventDefault();
             }
             this.keys[e.code] = true;
+            
+            // @キーの直接検出とデバッグ切り替え
+            if (e.key === '@') {
+                console.log('@キーが押されました！');
+                if (window.game) {
+                    window.game.showJumpDebug = !window.game.showJumpDebug;
+                    console.log(`🛠️ ジャンプデバッグ表示: ${window.game.showJumpDebug ? 'ON' : 'OFF'} (@キーで切り替え)`);
+                }
+            }
+            
+            // デバッグ用: キーコードをログ出力
+            if (e.key === '@' || e.code === 'Digit2' || e.shiftKey) {
+                console.log(`キー検出: key="${e.key}", code="${e.code}", shift=${e.shiftKey}`);
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -1196,10 +1210,10 @@ class Game {
         // 入力状態を更新
         this.inputManager.update();
         
-        // デバッグ表示切り替え（@キー = Shift+2）
-        if (this.inputManager.isKeyJustPressed('Digit2')) {
+        // デバッグ表示切り替え（2キーまたは@キー）
+        if (this.inputManager.isKeyJustPressed('Digit2') || this.inputManager.isKeyJustPressed('KeyD')) {
             this.showJumpDebug = !this.showJumpDebug;
-            console.log(`🛠️ ジャンプデバッグ表示: ${this.showJumpDebug ? 'ON' : 'OFF'} (@キーまたは2キーで切り替え)`);
+            console.log(`🛠️ ジャンプデバッグ表示: ${this.showJumpDebug ? 'ON' : 'OFF'} (2キーまたはDキーで切り替え)`);
         }
         
         if (!this.gameState.isPlaying()) return;
@@ -1979,7 +1993,7 @@ class Game {
             y += 18;
             ctx.font = '11px monospace';
             ctx.fillStyle = 'lightgray';
-            ctx.fillText('(2キーで切り替え)', 15, y);
+            ctx.fillText('(@キーまたは2キーで切り替え)', 15, y);
             y += 18;
             
             // 設定値の表示
