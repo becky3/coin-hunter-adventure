@@ -123,12 +123,12 @@ class SVGPlayerRenderer {
         const isOnGround = velY >= -0.1 && velY <= 0.1;
         
         if (isJumping) {
-            return 'player-jump.svg';
+            return '../assets/player-jump.svg';
         } else if (isMoving && isOnGround) {
             const walkFrame = Math.floor(animFrame / 15) % 2;
-            return walkFrame === 0 ? 'player-walk1.svg' : 'player-walk2.svg';
+            return walkFrame === 0 ? '../assets/player-walk1.svg' : '../assets/player-walk2.svg';
         } else {
-            return 'player-idle.svg';
+            return '../assets/player-idle.svg';
         }
     }
     
@@ -337,10 +337,10 @@ class SVGPlayerRenderer {
     // SVGファイルの事前読み込み
     async preloadSVGs() {
         const svgFiles = [
-            'player-idle.svg',
-            'player-walk1.svg',
-            'player-walk2.svg',
-            'player-jump.svg'
+            '../assets/player-idle.svg',
+            '../assets/player-walk1.svg',
+            '../assets/player-walk2.svg',
+            '../assets/player-jump.svg'
         ];
         
         console.log('プレイヤーSVGファイルを事前読み込み中...');

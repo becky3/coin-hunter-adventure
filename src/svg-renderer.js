@@ -13,19 +13,19 @@ class SVGRenderer {
         // SVGファイルマッピング
         this.svgFiles = {
             player: {
-                idle: 'player-idle.svg',
-                walk1: 'player-walk1.svg',
-                walk2: 'player-walk2.svg',
-                jump: 'player-jump.svg'
+                idle: '../assets/player-idle.svg',
+                walk1: '../assets/player-walk1.svg',
+                walk2: '../assets/player-walk2.svg',
+                jump: '../assets/player-jump.svg'
             },
             enemies: {
-                slime: 'slime.svg',
-                bird: 'bird.svg'
+                slime: '../assets/slime.svg',
+                bird: '../assets/bird.svg'
             },
             objects: {
-                coin: 'coin.svg',
-                flag: 'flag.svg',
-                spring: 'spring.svg'
+                coin: '../assets/coin.svg',
+                flag: '../assets/flag.svg',
+                spring: '../assets/spring.svg'
             }
         };
         

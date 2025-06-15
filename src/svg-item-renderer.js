@@ -12,9 +12,9 @@ class SVGItemRenderer {
         
         // SVGファイルマップ
         this.svgFiles = {
-            coin: 'coin.svg',
-            flag: 'flag.svg',
-            spring: 'spring.svg'
+            coin: '../assets/coin.svg',
+            flag: '../assets/flag.svg',
+            spring: '../assets/spring.svg'
         };
     }
     
