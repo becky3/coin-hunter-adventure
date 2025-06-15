@@ -132,7 +132,7 @@ class SVGItemRenderer {
         // アニメーション効果を適用
         if (type === 'coin') {
             // コインの回転効果
-            const rotation = (animTimer * 0.05) % (Math.PI * 2);
+            const rotation = animTimer % (Math.PI * 2);
             const scaleX = Math.cos(rotation);
             this.ctx.translate(x + width / 2, y + height / 2);
             this.ctx.scale(scaleX, 1);
@@ -206,7 +206,7 @@ class SVGItemRenderer {
     
     // コインのフォールバック描画
     drawCoinFallback(x, y, width, height, animTimer) {
-        const rotation = (animTimer * 0.05) % (Math.PI * 2);
+        const rotation = animTimer % (Math.PI * 2);
         this.ctx.save();
         this.ctx.translate(x + width / 2, y + height / 2);
         this.ctx.scale(Math.cos(rotation), 1);
