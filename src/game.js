@@ -755,6 +755,7 @@ class Player {
     }
     
     reset() {
+        console.log(`プレイヤーリセット: (${this.x}, ${this.y}) -> (${PLAYER_CONFIG.spawnX}, ${PLAYER_CONFIG.spawnY})`);
         this.x = PLAYER_CONFIG.spawnX;
         this.y = PLAYER_CONFIG.spawnY;
         this.velX = 0;
@@ -1187,16 +1188,37 @@ class Game {
                 // 下から衝突
                 else if (this.player.velY < 0 && 
                          playerBounds.y > platform.y) {
-                    this.player.y = platform.y + platform.height;
+                    const newY = platform.y + platform.height;
+                    console.log(`プレイヤーY座標変更: ${this.player.y} -> ${newY} (プラットフォーム下側衝突)`);
+                    // 座標範囲チェック
+                    if (newY >= 0 && newY <= CANVAS_HEIGHT - this.player.height) {
+                        this.player.y = newY;
+                    } else {
+                        console.warn(`異常なY座標を検出、変更をスキップ: ${newY}`);
+                    }
                     this.player.velY = 0;
                 }
                 // 横から衝突
                 else if (playerBounds.x < platform.x && this.player.velX > 0) {
-                    this.player.x = platform.x - playerBounds.width;
+                    const newX = platform.x - playerBounds.width;
+                    console.log(`プレイヤーX座標変更: ${this.player.x} -> ${newX} (プラットフォーム左側衝突)`);
+                    // 座標範囲チェック
+                    if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
+                        this.player.x = newX;
+                    } else {
+                        console.warn(`異常なX座標を検出、変更をスキップ: ${newX}`);
+                    }
                     this.player.velX = 0;
                 }
                 else if (playerBounds.x > platform.x && this.player.velX < 0) {
-                    this.player.x = platform.x + platform.width;
+                    const newX = platform.x + platform.width;
+                    console.log(`プレイヤーX座標変更: ${this.player.x} -> ${newX} (プラットフォーム右側衝突)`);
+                    // 座標範囲チェック
+                    if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
+                        this.player.x = newX;
+                    } else {
+                        console.warn(`異常なX座標を検出、変更をスキップ: ${newX}`);
+                    }
                     this.player.velX = 0;
                 }
             }
@@ -1340,11 +1362,14 @@ class Game {
         
         // プレイヤーの境界チェック
         if (this.player.x < 0) {
+            console.log(`プレイヤーX座標修正: ${this.player.x} -> 0 (左境界)`);
             this.player.x = 0;
             this.player.velX = 0;
         }
         if (this.player.x + this.player.width > worldWidth) {
-            this.player.x = worldWidth - this.player.width;
+            const newX = worldWidth - this.player.width;
+            console.log(`プレイヤーX座標修正: ${this.player.x} -> ${newX} (右境界)`);
+            this.player.x = newX;
             this.player.velX = 0;
         }
         
