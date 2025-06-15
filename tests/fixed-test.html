@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>修正版ゲームテスト</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #1a1a1a;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .test-results {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .overall-summary {
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .overall-summary.test-pass {
+            background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+            border: 2px solid #28a745;
+        }
+        
+        .overall-summary.test-fail {
+            background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+            border: 2px solid #dc3545;
+        }
+        
+        .test-category {
+            margin-bottom: 25px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+        }
+        
+        .test-category.category-pass h3 {
+            background-color: #e7f5e7;
+            color: #155724;
+        }
+        
+        .test-category.category-fail h3 {
+            background-color: #fde7e9;
+            color: #721c24;
+        }
+        
+        .test-category h3 {
+            margin: 0;
+            padding: 15px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 1.4em;
+        }
+        
+        .category-summary {
+            padding: 12px 20px;
+            background-color: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-size: 0.95em;
+            color: #6c757d;
+        }
+        
+        .test-details {
+            background-color: #fff;
+            padding: 10px 20px 15px;
+        }
+        
+        .test-item {
+            margin: 8px 0;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 0.95em;
+        }
+        
+        .test-pass {
+            background-color: #e7f5e7;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        
+        .test-fail {
+            background-color: #fde7e9;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        
+        #gameCanvas {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <h1>修正版ゲームテストスイート</h1>
+    
+    <div class="test-results" id="testResults">
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>テストを初期化中...</p>
+        </div>
+    </div>
+    
+    <!-- テスト用の隠しCanvas -->
+    <canvas id="gameCanvas" width="1024" height="576"></canvas>
+    
+    <!-- テスト環境フラグ設定 -->
+    <script>
+        window.DISABLE_CORS_WARNING = true;
+        window.TEST_MODE = true;
+    </script>
+    
+    <!-- ゲームスクリプト -->
+    <script src="../src/config.js"></script>
+    <script src="../src/levels.js"></script>
+    <script src="../src/music.js"></script>
+    <script src="../src/player-graphics.js"></script>
+    <script src="../src/svg-renderer.js"></script>
+    <script src="../src/svg-player-renderer.js"></script>
+    <script src="../src/svg-enemy-renderer.js"></script>
+    <script src="../src/svg-item-renderer.js"></script>
+    <script src="../src/game.js"></script>
+    
+    <script>
+        // 修正版テストスクリプト
+        console.log('=== 修正版テスト開始 ===');
+        
+        // テスト結果表示クラス
+        class TestResultDisplay {
+            constructor() {
+                this.results = [];
+            }
+            
+            addResults(testResult, runner) {
+                this.results.push({
+                    summary: testResult,
+                    details: runner.results
+                });
+            }
+            
+            displayAll() {
+                const container = document.getElementById('testResults');
+                let html = '<h2>テスト実行結果</h2>';
+                
+                // 全体サマリー
+                const totalPassed = this.results.reduce((sum, r) => sum + r.summary.passed, 0);
+                const totalFailed = this.results.reduce((sum, r) => sum + r.summary.failed, 0);
+                const totalTests = this.results.reduce((sum, r) => sum + r.summary.total, 0);
+                
+                const overallSuccess = totalFailed === 0;
+                const summaryClass = overallSuccess ? 'test-pass' : 'test-fail';
+                const summaryIcon = overallSuccess ? '🎉' : '⚠️';
+                
+                html += `<div class="overall-summary ${summaryClass}">
+                    <h3>${summaryIcon} 全体結果: ${overallSuccess ? '全テスト成功' : 'テスト失敗あり'}</h3>
+                    <p>合計: ${totalTests}件 | 成功: ${totalPassed}件 | 失敗: ${totalFailed}件</p>
+                </div>`;
+                
+                // カテゴリ別結果
+                for (const result of this.results) {
+                    const categoryClass = result.summary.allPassed ? 'category-pass' : 'category-fail';
+                    const categoryIcon = result.summary.allPassed ? '✅' : '❌';
+                    
+                    html += `<div class="test-category ${categoryClass}">
+                        <h3>${categoryIcon} ${result.summary.category}</h3>
+                        <div class="category-summary">
+                            成功: ${result.summary.passed} / 失敗: ${result.summary.failed} / 合計: ${result.summary.total}
+                        </div>`;
+                    
+                    // 詳細結果
+                    html += '<div class="test-details">';
+                    for (const detail of result.details) {
+                        const className = detail.passed ? 'test-pass' : 'test-fail';
+                        const status = detail.passed ? '✓' : '✗';
+                        const error = detail.error ? ` - ${detail.error}` : '';
+                        
+                        html += `<div class="test-item ${className}">${status} ${detail.name}${error}</div>`;
+                    }
+                    html += '</div></div>';
+                }
+                
+                container.innerHTML = html;
+                console.log('テスト結果表示完了');
+            }
+        }
+        
+        // テストランナークラス
+        class TestRunner {
+            constructor(category) {
+                this.category = category;
+                this.tests = [];
+                this.results = [];
+                this.passed = 0;
+                this.failed = 0;
+            }
+            
+            test(name, fn) {
+                this.tests.push({ name, fn });
+            }
+            
+            async run() {
+                console.log(`\\n=== ${this.category} ===`);
+                
+                for (const test of this.tests) {
+                    try {
+                        await test.fn();
+                        this.results.push({
+                            name: test.name,
+                            passed: true,
+                            error: null
+                        });
+                        this.passed++;
+                        console.log(`✓ ${test.name}`);
+                    } catch (error) {
+                        this.results.push({
+                            name: test.name,
+                            passed: false,
+                            error: error.message
+                        });
+                        this.failed++;
+                        console.error(`✗ ${test.name}: ${error.message}`);
+                    }
+                }
+                
+                return {
+                    category: this.category,
+                    passed: this.passed,
+                    failed: this.failed,
+                    total: this.tests.length,
+                    allPassed: this.failed === 0
+                };
+            }
+        }
+        
+        // アサーション関数
+        function assert(condition, message) {
+            if (!condition) {
+                throw new Error(message || 'アサーション失敗');
+            }
+        }
+        
+        function assertEquals(actual, expected, message) {
+            if (actual !== expected) {
+                throw new Error(message || `期待値: ${expected}, 実際: ${actual}`);
+            }
+        }
+        
+        // 待機時間を短縮した基本テスト
+        const basicTests = new TestRunner('基本機能テスト');
+        
+        basicTests.test('設定ファイルの読み込み', () => {
+            assert(typeof CANVAS_WIDTH === 'number', 'CANVAS_WIDTHが定義されていません');
+            assert(typeof PLAYER_CONFIG === 'object', 'PLAYER_CONFIGが定義されていません');
+            assertEquals(CANVAS_WIDTH, 1024, 'CANVAS_WIDTHが正しくありません');
+        });
+        
+        basicTests.test('レベルデータの読み込み', () => {
+            assert(typeof levelData === 'object', 'levelDataが定義されていません');
+            assert(Array.isArray(levelData.platforms), 'プラットフォーム配列がありません');
+            assert(levelData.platforms.length > 0, 'プラットフォームが存在しません');
+        });
+        
+        basicTests.test('ゲームクラスの初期化', () => {
+            assert(typeof GameState !== 'undefined', 'GameStateクラスが定義されていません');
+            assert(typeof Player !== 'undefined', 'Playerクラスが定義されていません');
+            assert(typeof InputManager !== 'undefined', 'InputManagerクラスが定義されていません');
+            
+            // 実際にインスタンス化テスト
+            const gameState = new GameState();
+            assertEquals(gameState.state, 'start', 'GameState初期状態が正しくありません');
+            
+            const player = new Player(100, 200);
+            assertEquals(player.x, 100, 'Player X座標が正しくありません');
+            assertEquals(player.y, 200, 'Player Y座標が正しくありません');
+        });
+        
+        basicTests.test('プレイヤー基本動作', () => {
+            const player = new Player(100, 300);
+            
+            // 右移動
+            player.handleInput({ right: true, left: false, jump: false });
+            assertEquals(player.velX, PLAYER_CONFIG.speed, '右移動速度が正しくありません');
+            
+            // ジャンプ（パラメータ調整に対応）
+            player.onGround = true;
+            player.isJumping = false;
+            player.handleInput({ right: false, left: false, jump: true });
+            assert(player.velY < 0, 'ジャンプ時の垂直速度が負ではありません');
+        });
+        
+        // 高速でテスト実行
+        async function runFastTests() {
+            console.log('高速テスト実行開始');
+            
+            const display = new TestResultDisplay();
+            
+            try {
+                const basicResult = await basicTests.run();
+                display.addResults(basicResult, basicTests);
+                
+                // 結果を表示
+                display.displayAll();
+                
+                console.log('=== テスト完了 ===');
+                
+                // テスト完了の印をグローバルに設定
+                window.TEST_COMPLETED = true;
+                
+            } catch (error) {
+                console.error('テスト実行エラー:', error);
+                document.getElementById('testResults').innerHTML = `
+                    <div class="overall-summary test-fail">
+                        <h3>⚠️ テスト実行エラー</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // より短い遅延でテスト実行
+        document.addEventListener('DOMContentLoaded', function() {
+            // 必要なオブジェクトが読み込まれるまで待機
+            let attempts = 0;
+            const maxAttempts = 20;
+            
+            function checkAndRun() {
+                attempts++;
+                
+                if (typeof CANVAS_WIDTH !== 'undefined' && 
+                    typeof levelData !== 'undefined' && 
+                    typeof GameState !== 'undefined') {
+                    // 全て読み込まれた場合
+                    console.log('必要なオブジェクト読み込み完了、テスト実行');
+                    setTimeout(runFastTests, 100);
+                } else if (attempts < maxAttempts) {
+                    // まだ読み込まれていない場合は再試行
+                    console.log(`読み込み待機中... (${attempts}/${maxAttempts})`);
+                    setTimeout(checkAndRun, 200);
+                } else {
+                    // タイムアウト
+                    console.error('読み込みタイムアウト、エラー表示');
+                    document.getElementById('testResults').innerHTML = `
+                        <div class="overall-summary test-fail">
+                            <h3>⚠️ 読み込みタイムアウト</h3>
+                            <p>必要なスクリプトが読み込まれませんでした。</p>
+                            <p>CANVAS_WIDTH: ${typeof CANVAS_WIDTH}</p>
+                            <p>levelData: ${typeof levelData}</p>
+                            <p>GameState: ${typeof GameState}</p>
+                        </div>
+                    `;
+                }
+            }
+            
+            checkAndRun();
+        });
+    </script>
+</body>
+</html>

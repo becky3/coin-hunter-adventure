@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>最小テスト - JavaScriptエラー特定</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .log { 
+            background: white; 
+            padding: 10px; 
+            margin: 5px 0; 
+            border-left: 4px solid #007bff; 
+        }
+        .error { border-left-color: #dc3545; background: #fff5f5; }
+        .success { border-left-color: #28a745; background: #f0fff4; }
+        .warning { border-left-color: #ffc107; background: #fffbf0; }
+    </style>
+</head>
+<body>
+    <h1>最小テスト - スクリプト読み込み確認</h1>
+    <div id="log-container">
+        <div class="log">テスト開始...</div>
+    </div>
+
+    <script>
+        // ログ関数
+        function log(message, type = 'log') {
+            const container = document.getElementById('log-container');
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            container.appendChild(div);
+            console.log(message);
+        }
+
+        // エラーキャッチ
+        window.addEventListener('error', (e) => {
+            log(`❌ JavaScript Error: ${e.message} (${e.filename}:${e.lineno})`, 'error');
+        });
+
+        // Promise rejection キャッチ
+        window.addEventListener('unhandledrejection', (e) => {
+            log(`❌ Promise Rejection: ${e.reason}`, 'error');
+        });
+
+        log('✅ 基本JavaScript実行開始');
+    </script>
+
+    <!-- 1つずつスクリプトを読み込み、各段階でチェック -->
+    <script src="../src/config.js"></script>
+    <script>
+        log('📁 config.js読み込み試行完了');
+        if (typeof CANVAS_WIDTH !== 'undefined') {
+            log(`✅ CANVAS_WIDTH確認: ${CANVAS_WIDTH}`, 'success');
+        } else {
+            log('❌ CANVAS_WIDTH未定義', 'error');
+        }
+        if (typeof PLAYER_CONFIG !== 'undefined') {
+            log(`✅ PLAYER_CONFIG確認: ${JSON.stringify(PLAYER_CONFIG)}`, 'success');
+        } else {
+            log('❌ PLAYER_CONFIG未定義', 'error');
+        }
+    </script>
+
+    <script src="../src/levels.js"></script>
+    <script>
+        log('📁 levels.js読み込み試行完了');
+        if (typeof levelData !== 'undefined') {
+            log(`✅ levelData確認: プラットフォーム${levelData.platforms?.length || 0}個`, 'success');
+        } else {
+            log('❌ levelData未定義', 'error');
+        }
+    </script>
+
+    <script src="../src/music.js"></script>
+    <script>
+        log('📁 music.js読み込み完了');
+    </script>
+
+    <script src="../src/player-graphics.js"></script>
+    <script>
+        log('📁 player-graphics.js読み込み完了');
+    </script>
+
+    <script src="../src/svg-renderer.js"></script>
+    <script>
+        log('📁 svg-renderer.js読み込み完了');
+    </script>
+
+    <script src="../src/svg-player-renderer.js"></script>
+    <script>
+        log('📁 svg-player-renderer.js読み込み完了');
+        if (typeof SVGPlayerRenderer !== 'undefined') {
+            log('✅ SVGPlayerRenderer定義確認', 'success');
+        } else {
+            log('❌ SVGPlayerRenderer未定義', 'error');
+        }
+    </script>
+
+    <script src="../src/svg-enemy-renderer.js"></script>
+    <script>
+        log('📁 svg-enemy-renderer.js読み込み完了');
+    </script>
+
+    <script src="../src/svg-item-renderer.js"></script>
+    <script>
+        log('📁 svg-item-renderer.js読み込み完了');
+    </script>
+
+    <script src="../src/game.js"></script>
+    <script>
+        log('📁 game.js読み込み試行完了');
+        
+        // クラス定義チェック
+        const classes = ['GameState', 'Player', 'InputManager', 'Game'];
+        classes.forEach(className => {
+            if (typeof window[className] !== 'undefined') {
+                log(`✅ ${className}クラス定義確認`, 'success');
+            } else {
+                log(`❌ ${className}クラス未定義`, 'error');
+            }
+        });
+
+        // 実際のインスタンス化テスト
+        try {
+            log('🧪 クラステスト開始');
+            
+            const gameState = new GameState();
+            log(`✅ GameState作成成功: 初期状態=${gameState.state}`, 'success');
+            
+            const player = new Player(100, 200);
+            log(`✅ Player作成成功: 位置=(${player.x}, ${player.y})`, 'success');
+            
+            const inputManager = new InputManager();
+            log(`✅ InputManager作成成功`, 'success');
+            
+            // 基本動作テスト
+            player.handleInput({ right: true, left: false, jump: false });
+            log(`✅ Player右移動テスト: velX=${player.velX}`, 'success');
+            
+            player.onGround = true;
+            player.isJumping = false;
+            player.handleInput({ right: false, left: false, jump: true });
+            log(`✅ Playerジャンプテスト: velY=${player.velY}`, player.velY < 0 ? 'success' : 'warning');
+            
+            log('🎉 基本機能テスト全て成功！', 'success');
+            
+        } catch (error) {
+            log(`❌ クラステストエラー: ${error.message}`, 'error');
+            log(`スタック: ${error.stack}`, 'error');
+        }
+
+        // window.game の存在確認
+        setTimeout(() => {
+            if (typeof window.game !== 'undefined') {
+                log('✅ window.game初期化確認', 'success');
+            } else {
+                log('⚠️ window.game未初期化（通常動作）', 'warning');
+            }
+            
+            log('🏁 テスト完了', 'success');
+        }, 1000);
+    </script>
+</body>
+</html>
