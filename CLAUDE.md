@@ -64,6 +64,11 @@ python3 -m http.server 8080
    - PR本文に "Closes #<issue-number>" を含める
    - 詳細な実装内容や問題解決の報告はPRで行う
 
+### 作業終了時
+5. **HTTPサーバーを停止**
+   - 作業終了を指示された場合はHTTPサーバーを停止
+   - `pkill -f "python3 -m http.server"` でプロセス終了
+
 ## 開発時の注意事項
 
 1. **HTTPサーバー必須**: SVGファイル読み込みのため、必ずHTTPサーバー経由でアクセス
