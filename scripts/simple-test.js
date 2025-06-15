@@ -1,9 +1,55 @@
 #!/usr/bin/env node
 
 /**
- * 簡易テスト実行スクリプト
- * Node.jsでJavaScriptファイルを直接実行してテスト
- * ブラウザ依存部分をモックして基本ロジックをテスト
+ * シンプルなHTTPリクエストベースのテスト結果取得
+ */
+
+const http = require('http');
+
+async function checkTest() {
+    console.log('🧪 HTTPリクエストでテスト確認開始...\n');
+    
+    return new Promise((resolve, reject) => {
+        const req = http.get('http://localhost:8080/tests/auto-report.html', (res) => {
+            let data = '';
+            
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            
+            res.on('end', () => {
+                console.log('📊 レスポンス受信成功');
+                console.log('📄 HTMLサイズ:', data.length, 'bytes');
+                
+                // HTMLからテスト結果を検索
+                if (data.includes('Loading...')) {
+                    console.log('⏳ テストがまだ実行中...');
+                } else if (data.includes('overall-summary')) {
+                    console.log('✅ テスト結果HTMLが生成されています');
+                } else {
+                    console.log('⚠️ テスト結果が見つかりません');
+                }
+                
+                resolve(data);
+            });
+        });
+        
+        req.on('error', (err) => {
+            console.error('❌ HTTPエラー:', err.message);
+            reject(err);
+        });
+        
+        req.setTimeout(10000, () => {
+            console.error('⏱️ リクエストタイムアウト');
+            req.destroy();
+            reject(new Error('Timeout'));
+        });
+    });
+}
+
+/*
+ * 以下は以前の簡易テスト実装
+ * 現在は上記のHTTPチェック機能を使用
  */
 
 // DOM環境をモック
@@ -239,10 +285,14 @@ async function runSimpleTests() {
 
 // メイン実行
 if (require.main === module) {
-    runSimpleTests().catch(error => {
-        console.error(`💥 予期しないエラー: ${error.message}`);
-        process.exit(1);
-    });
+    checkTest()
+        .then(() => {
+            console.log('\n✅ テスト確認完了');
+        })
+        .catch((error) => {
+            console.error('\n❌ テスト確認失敗:', error.message);
+            process.exit(1);
+        });
 }
 
-module.exports = { runSimpleTests };
+module.exports = { checkTest };

@@ -21,5 +21,8 @@
   },
   "lint-staged": {
     "*.js": "eslint --fix"
+  },
+  "dependencies": {
+    "puppeteer": "^24.10.1"
   }
 }

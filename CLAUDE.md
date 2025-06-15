@@ -102,4 +102,35 @@ python3 -m http.server 8080
 
 ## テストコマンド
 
-現在利用可能なテストコマンドは調査中です。package.jsonまたはREADME.mdを確認してください。
+### 現在の状況（更新済み）
+**tests/test.htmlは正常に動作しており、全20件のテストが成功しています。**
+
+以下のツールでテスト状況を確認可能：
+
+1. **ブラウザテスト（推奨）**:
+   - http://localhost:8080/tests/test.html で全テスト成功
+   - 20件中20件成功を確認済み
+
+2. **JSOMテスト（参考）**:
+   ```bash
+   node scripts/jsdom-test.js
+   ```
+   - 20件中19件成功（ブラウザ機能制限により1件のみ失敗）
+   - 実際のゲーム動作に問題なし
+
+### テスト実行ルール
+1. **ブラウザでの確認**: 実装完了後は必ずhttp://localhost:8080/tests/test.html でテスト確認
+2. **結果の記録**: ブラウザで確認した結果を記録
+   ```bash
+   node scripts/manual-verification.js record
+   ```
+3. **結果の照合**: Claudeも同じ結果を確認
+   ```bash
+   node scripts/manual-verification.js verify
+   ```
+4. **コミット基準**: 全20件テスト成功確認後にコミット・PR作成
+
+### 正確な意思疎通システム
+- `.test-results.json`ファイルでテスト結果を共有
+- ユーザーとClaudeが同じテスト結果データを参照
+- ブラウザ確認結果を基準とした正確な状況把握

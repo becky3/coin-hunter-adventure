@@ -1,7 +1,6 @@
 /**
  * ゲームテストスイート
  * システムテストとレベルテストを分離して段階的に実行
- * UPDATED: 2025-06-15 - ジャンプテスト修正版
  */
 
 // テストフレームワーク拡張版
@@ -268,8 +267,8 @@ systemTests.test('プレイヤーの移動処理', () => {
     // ジャンプ（地面にいる状態で）
     player.onGround = true;
     player.isJumping = false;
+    player.jumpButtonHeldTime = 0;  // ジャンプボタン保持時間をリセット
     player.handleInput({ right: false, left: false, jump: true });
-    // ジャンプ値は調整可能なので、負の値であることのみ確認 (2025-06-15 updated)
     assert(player.velY < 0, 'ジャンプ時の垂直速度が負でありません');
     assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
     assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
@@ -579,132 +578,43 @@ levelTests.test('垂直チャレンジの構造確認', () => {
     }
 });
 
-// テスト実行と結果表示 - 修正版（同期的な実行でタイムアウト回避）
-function runAllTests() {
-    try {
-        console.log('=== テスト実行開始 ===');
-        
-        // ゲームループを停止
-        if (window.game && window.game.isRunning) {
-            window.game.isRunning = false;
+// テスト実行と結果表示
+window.addEventListener('DOMContentLoaded', async () => {
+    // ゲームが初期化された後に実行
+    setTimeout(async () => {
+        try {
+            // ゲームループを停止
+            if (window.game) {
+                window.game.isRunning = false;
+            }
+        } catch (e) {
+            console.log('ゲーム停止エラー（無視）:', e.message);
         }
         
         const display = new TestResultDisplay();
         
-        // 同期的にテストを実行（awaitを使わない）
-        console.log('システムテストを実行します...');
-        systemTests.run().then(systemResult => {
-            display.addResults(systemResult, systemTests);
-            
-            console.log('SVGレンダリングテストを実行します...');
-            return svgRenderingTests.run();
-        }).then(svgResult => {
-            display.addResults(svgResult, svgRenderingTests);
-            
-            // システムテストが全て成功した場合のみレベルテストを実行
-            const systemResult = display.results.find(r => r.summary.category === 'システムテスト');
-            if (systemResult && systemResult.summary.allPassed) {
-                console.log('システムテスト成功！レベルテストを実行します...');
-                return levelTests.run();
-            } else {
-                console.log('システムテストに失敗があるため、レベルテストはスキップされました。');
-                return Promise.resolve({ category: 'レベルテスト', passed: 0, failed: 0, total: 0, allPassed: true });
-            }
-        }).then(levelResult => {
-            if (levelResult.total > 0) {
-                display.addResults(levelResult, levelTests);
-            }
-            
-            // 結果を表示
-            display.displayAll();
-            console.log('=== テスト完了 ===');
-            
-            // テスト完了フラグを設定
-            window.TEST_COMPLETED = true;
-            
-        }).catch(error => {
-            console.error('テスト実行エラー:', error);
-            const container = document.getElementById('testResults');
-            if (container) {
-                container.innerHTML = `
-                    <div class="overall-summary test-fail">
-                        <h3>⚠️ テスト実行エラー</h3>
-                        <p>${error.message}</p>
-                        <p>スタック: ${error.stack || 'なし'}</p>
-                    </div>
-                `;
-            }
-        });
+        // システムテストを実行
+        console.log('=== テスト実行開始 ===');
+        const systemResult = await systemTests.run();
+        display.addResults(systemResult, systemTests);
         
-    } catch (error) {
-        console.error('テスト初期化エラー:', error);
-        const container = document.getElementById('testResults');
-        if (container) {
-            container.innerHTML = `
-                <div class="overall-summary test-fail">
-                    <h3>⚠️ テスト初期化エラー</h3>
-                    <p>${error.message}</p>
-                </div>
-            `;
-        }
-    }
-}
-
-// 必要なオブジェクトの読み込み確認とテスト実行
-function checkAndRunTests() {
-    const requiredObjects = [
-        'CANVAS_WIDTH',
-        'PLAYER_CONFIG', 
-        'levelData',
-        'GameState',
-        'Player',
-        'InputManager'
-    ];
-    
-    const missing = requiredObjects.filter(name => typeof window[name] === 'undefined');
-    
-    if (missing.length === 0) {
-        console.log('✅ 全ての必要なオブジェクトが読み込まれました');
-        runAllTests();
-    } else {
-        console.log(`❌ 未読み込み: ${missing.join(', ')}`);
-        const container = document.getElementById('testResults');
-        if (container) {
-            container.innerHTML = `
-                <div class="overall-summary test-fail">
-                    <h3>⚠️ 必要なオブジェクトが読み込まれていません</h3>
-                    <p>未読み込み: ${missing.join(', ')}</p>
-                    <p>ファイルの読み込み順序または内容を確認してください。</p>
-                </div>
-            `;
-        }
-    }
-}
-
-// DOMContentLoaded後に段階的に確認
-window.addEventListener('DOMContentLoaded', () => {
-    console.log('DOM読み込み完了、テスト準備開始');
-    
-    // 短い間隔で必要なオブジェクトの読み込みを確認
-    let attempts = 0;
-    const maxAttempts = 10;
-    
-    const checkInterval = setInterval(() => {
-        attempts++;
-        console.log(`読み込み確認中... (${attempts}/${maxAttempts})`);
+        // SVGレンダリングテストを実行
+        console.log('\nSVGレンダリングテストを実行します...');
+        const svgResult = await svgRenderingTests.run();
+        display.addResults(svgResult, svgRenderingTests);
         
-        if (typeof CANVAS_WIDTH !== 'undefined' && 
-            typeof levelData !== 'undefined' && 
-            typeof GameState !== 'undefined') {
-            
-            clearInterval(checkInterval);
-            console.log('必要なオブジェクト読み込み完了、テスト開始');
-            setTimeout(checkAndRunTests, 100);
-            
-        } else if (attempts >= maxAttempts) {
-            clearInterval(checkInterval);
-            console.log('読み込みタイムアウト、強制実行');
-            checkAndRunTests();
+        // システムテストが全て成功した場合のみレベルテストを実行
+        if (systemResult.allPassed) {
+            console.log('\nシステムテスト成功！レベルテストを実行します...');
+            const levelResult = await levelTests.run();
+            display.addResults(levelResult, levelTests);
+        } else {
+            console.error('\nシステムテストに失敗があるため、レベルテストはスキップされました。');
         }
-    }, 300);
+        
+        // 結果を表示
+        display.displayAll();
+        console.log('\n🏁 テスト完了');
+        
+    }, 500); // ゲーム初期化を待つため遅延を増やす
 });
