@@ -732,8 +732,8 @@ class Player {
                 
                 // 最大保持時間内なら継続的な上昇力を付与
                 if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
-                    // 重力を強力に相殺して上昇を維持（倍率を3.5倍に増加）
-                    this.velY -= GRAVITY * 3.5; // 重力の3.5倍を相殺で高いジャンプ実現
+                    // 重力を相殺して上昇を維持（倍率を1.8倍に調整）
+                    this.velY -= GRAVITY * 1.8; // 重力の1.8倍を相殺で適度な高さに調整
                     console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}, gravity=${GRAVITY}`);
                 } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 最大時間に達したら上昇を停止
