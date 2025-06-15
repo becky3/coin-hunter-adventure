@@ -924,6 +924,7 @@ class Game {
         this.gameState = new GameState();
         this.inputManager = new InputManager();
         this.player = new Player();
+        this.levelLoader = new LevelLoader(); // レベルローダーを追加
         
         // モダンデザイン用の時間とエフェクト
         this.gameTime = 0;
@@ -1004,6 +1005,59 @@ class Game {
     }
     
     initLevel() {
+        // 現在のステージデータを使用（LevelLoaderが読み込み済みの場合）
+        const stageData = this.levelLoader.getCurrentStageData();
+        
+        if (stageData) {
+            // JSONデータから読み込み
+            this.loadLevelFromJSON(stageData);
+        } else {
+            // フォールバック: 従来のlevelDataを使用
+            this.loadLevelFromLegacy(levelData);
+        }
+    }
+    
+    loadLevelFromJSON(stageData) {
+        this.platforms = stageData.platforms || [];
+        
+        this.enemies = (stageData.enemies || []).map(e => ({
+            ...e,
+            ...ENEMY_CONFIG[e.type],
+            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
+            direction: e.type === 'bird' ? -1 : 1,
+            animTimer: 0,
+            originalX: e.x,
+            originalY: e.y
+        }));
+        
+        this.coins = (stageData.coins || []).map(c => ({
+            ...c,
+            ...COIN_CONFIG,
+            collected: false,
+            rotation: 0,
+            floatOffset: 0,
+            baseY: c.y
+        }));
+        
+        this.flag = stageData.goal || { x: 2900, y: 396 };
+        
+        // スプリングの初期化
+        this.springs = (stageData.springs || []).map(s => ({
+            ...s,
+            ...SPRING_CONFIG,
+            compression: 0,
+            triggered: false,
+            cooldown: 0
+        }));
+        
+        // プレイヤーの初期位置を設定
+        if (stageData.playerSpawn) {
+            this.player.x = stageData.playerSpawn.x;
+            this.player.y = stageData.playerSpawn.y;
+        }
+    }
+    
+    loadLevelFromLegacy(levelData) {
         this.platforms = levelData.platforms;
         this.enemies = levelData.enemies.map(e => ({
             ...e,
@@ -1111,12 +1165,28 @@ class Game {
     }
     
     
-    startGame() {
+    async startGame() {
         console.log('ゲームを開始します');
         
         // ゲームスタート効果音を再生
         if (this.musicSystem.isInitialized) {
             this.musicSystem.playGameStartSound();
+        }
+        
+        try {
+            // ステージデータを読み込む（初回のみ）
+            if (!this.levelLoader.getCurrentStageData()) {
+                // ステージリストを読み込む
+                const stageList = await this.levelLoader.loadStageList();
+                this.levelLoader.loadProgress(); // 保存された進行状況を読み込む
+                
+                // 最初のステージを読み込む
+                const firstStageId = stageList.currentStage || 'stage1';
+                await this.levelLoader.loadStage(firstStageId);
+            }
+        } catch (error) {
+            console.error('ステージ読み込みエラー:', error);
+            // エラー時は従来のlevelDataを使用
         }
         
         // ゲームデータをリセット（状態は変更しない）
@@ -1150,6 +1220,48 @@ class Game {
     }
     
     resetLevel() {
+        // 現在のステージデータを確認
+        const stageData = this.levelLoader.getCurrentStageData();
+        
+        if (stageData) {
+            // JSONデータからリセット
+            this.resetLevelFromJSON(stageData);
+        } else {
+            // フォールバック: 従来のlevelDataを使用
+            this.resetLevelFromLegacy();
+        }
+    }
+    
+    resetLevelFromJSON(stageData) {
+        // コインをリセット
+        this.coins.forEach(coin => {
+            coin.collected = false;
+            coin.rotation = 0;
+            coin.floatOffset = 0;
+        });
+        
+        // 敵をリセット（初期状態に復元）
+        this.enemies = (stageData.enemies || []).map(e => ({
+            ...e,
+            ...ENEMY_CONFIG[e.type],
+            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
+            direction: e.type === 'bird' ? -1 : 1,
+            animTimer: 0,
+            originalX: e.x,
+            originalY: e.y
+        }));
+        
+        // スプリングをリセット
+        this.springs = (stageData.springs || []).map(s => ({
+            ...s,
+            ...SPRING_CONFIG,
+            compression: 0,
+            triggered: false,
+            cooldown: 0
+        }));
+    }
+    
+    resetLevelFromLegacy() {
         // コインをリセット
         this.coins.forEach(coin => {
             coin.collected = false;
