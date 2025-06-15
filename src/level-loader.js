@@ -211,3 +211,13 @@ class LevelLoader {
 if (typeof window !== 'undefined') {
     window.LevelLoader = LevelLoader;
 }
+
+// Node.js環境でも利用可能にする
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = LevelLoader;
+}
+
+// グローバルスコープにも追加（テスト環境用）
+if (typeof global !== 'undefined') {
+    global.LevelLoader = LevelLoader;
+}
