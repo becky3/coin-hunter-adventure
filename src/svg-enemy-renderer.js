@@ -12,8 +12,8 @@ class SVGEnemyRenderer {
         
         // SVGファイルマップ
         this.svgFiles = {
-            slime: 'slime.svg',
-            bird: 'bird.svg'
+            slime: '../assets/slime.svg',
+            bird: '../assets/bird.svg'
         };
     }
     
