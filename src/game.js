@@ -628,6 +628,12 @@ class Player {
         this.jumpTime = 0;
         this.canVariableJump = false;
         
+        // ジャンプ計測用
+        this.jumpStartY = 0;
+        this.jumpMaxHeight = 0;
+        this.jumpButtonHoldTime = 0;
+        this.lastJumpStats = null;
+        
         this.invulnerable = false;
         this.invulnerabilityTime = 0;
         
@@ -647,6 +653,14 @@ class Player {
         
         this.x += this.velX;
         this.y += this.velY;
+        
+        // ジャンプ高さ計測
+        if (this.isJumping) {
+            const currentHeight = this.jumpStartY - this.y;
+            if (currentHeight > this.jumpMaxHeight) {
+                this.jumpMaxHeight = currentHeight;
+            }
+        }
         
         // 大幅な座標変更または異常な座標を検出
         if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
@@ -697,6 +711,11 @@ class Player {
             this.jumpTime = 0;
             this.canVariableJump = true;
             
+            // ジャンプ計測開始
+            this.jumpStartY = this.y;
+            this.jumpMaxHeight = 0;
+            this.jumpButtonHoldTime = 0;
+            
             // ジャンプ効果音を再生（ゲームインスタンスを参照）
             if (window.game && window.game.musicSystem && window.game.musicSystem.isInitialized) {
                 window.game.musicSystem.playJumpSound();
@@ -709,6 +728,7 @@ class Player {
             
             // ジャンプボタンが押されている間の処理
             if (input.jump) {
+                this.jumpButtonHoldTime++;
                 // 最大保持時間まではジャンプを継続
                 if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 最大時間に達したら上昇を停止
@@ -800,6 +820,23 @@ class Player {
             width: this.width,
             height: this.height
         };
+    }
+    
+    // ジャンプ統計を記録する
+    recordJumpStats() {
+        this.lastJumpStats = {
+            buttonHoldTime: this.jumpButtonHoldTime,
+            actualJumpTime: this.jumpTime,
+            maxHeight: this.jumpMaxHeight,
+            heightInPlayerUnits: (this.jumpMaxHeight / this.height).toFixed(1)
+        };
+        
+        console.log(`🦘 ジャンプ統計:`, {
+            'ボタン保持時間': `${this.jumpButtonHoldTime}フレーム (${(this.jumpButtonHoldTime * 16.67).toFixed(0)}ms)`,
+            '実際のジャンプ時間': `${this.jumpTime}フレーム`,
+            '最高到達高さ': `${this.jumpMaxHeight.toFixed(1)}px`,
+            'プレイヤー単位': `${this.lastJumpStats.heightInPlayerUnits}人分`
+        });
     }
 }
 
@@ -1202,6 +1239,15 @@ class Game {
                     playerBounds.y + playerBounds.height > platform.y) {
                     this.player.y = platform.y - playerBounds.height;
                     this.player.velY = 0;
+                    
+                    // ジャンプから着地した場合、統計を記録
+                    if (this.player.isJumping) {
+                        this.player.recordJumpStats();
+                        this.player.isJumping = false;
+                        this.player.jumpButtonPressed = false;
+                        this.player.canVariableJump = false;
+                    }
+                    
                     onPlatform = true;
                 }
                 // 下から衝突
@@ -1621,6 +1667,9 @@ class Game {
         // 画面クリア
         this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         
+        // ジャンプ統計デバッグ表示
+        this.renderJumpStats();
+        
         // 背景
         this.drawBackground();
         
@@ -1873,6 +1922,51 @@ class Game {
                 console.warn('SVG事前読み込みエラー:', error);
             }
         }
+    }
+    
+    // ジャンプ統計をリアルタイムで表示
+    renderJumpStats() {
+        const ctx = this.ctx;
+        ctx.save();
+        
+        // 背景
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        ctx.fillRect(10, 10, 320, 160);
+        
+        // テキスト設定
+        ctx.fillStyle = 'white';
+        ctx.font = '14px monospace';
+        
+        let y = 30;
+        ctx.fillText('=== ジャンプ統計デバッグ ===', 20, y);
+        y += 20;
+        
+        // 現在のジャンプ状態
+        if (this.player.isJumping) {
+            ctx.fillStyle = 'yellow';
+            ctx.fillText(`ジャンプ中...`, 20, y);
+            y += 16;
+            ctx.fillText(`ボタン保持: ${this.player.jumpButtonHoldTime}f (${(this.player.jumpButtonHoldTime * 16.67).toFixed(0)}ms)`, 20, y);
+            y += 16;
+            ctx.fillText(`ジャンプ時間: ${this.player.jumpTime}f`, 20, y);
+            y += 16;
+            ctx.fillText(`現在の高さ: ${(this.player.jumpStartY - this.player.y).toFixed(1)}px`, 20, y);
+            y += 16;
+        }
+        
+        // 最後のジャンプ統計
+        if (this.player.lastJumpStats) {
+            ctx.fillStyle = 'lightgreen';
+            ctx.fillText('前回のジャンプ:', 20, y);
+            y += 16;
+            ctx.fillText(`ボタン保持: ${this.player.lastJumpStats.buttonHoldTime}f (${(this.player.lastJumpStats.buttonHoldTime * 16.67).toFixed(0)}ms)`, 20, y);
+            y += 16;
+            ctx.fillText(`最高高さ: ${this.player.lastJumpStats.maxHeight.toFixed(1)}px`, 20, y);
+            y += 16;
+            ctx.fillText(`身長比: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 20, y);
+        }
+        
+        ctx.restore();
     }
 }
 
