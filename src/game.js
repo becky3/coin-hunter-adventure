@@ -712,8 +712,9 @@ class Player {
             
             // 最初の数フレームは猶予期間（人間の反応速度を考慮）
             if (this.jumpTime <= PLAYER_CONFIG.jumpGraceFrames) {
-                // 猶予期間中は追加の上昇力を与えない
-                console.log(`猶予期間中: ${this.jumpTime}/${PLAYER_CONFIG.jumpGraceFrames}フレーム`);
+                // 猶予期間中は追加の重力をかけて早く落下させる
+                this.velY += GRAVITY * 0.5; // 追加の重力
+                console.log(`猶予期間中: ${this.jumpTime}/${PLAYER_CONFIG.jumpGraceFrames}フレーム, 追加重力適用`);
             } else if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
                 const oldVelY = this.velY;
                 // 重力を相殺しつつ、追加の上昇力を付与
