@@ -729,8 +729,13 @@ class Player {
             // ジャンプボタンが押されている間の処理
             if (input.jump) {
                 this.jumpButtonHoldTime++;
-                // 最大保持時間まではジャンプを継続
-                if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
+                
+                // 最大保持時間内なら継続的な上昇力を付与
+                if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
+                    // 重力を強力に相殺して上昇を維持
+                    this.velY -= GRAVITY * 2.0; // 重力の2倍を相殺
+                    console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}`);
+                } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 最大時間に達したら上昇を停止
                     this.velY = 0;
                     this.canVariableJump = false;
@@ -1667,9 +1672,6 @@ class Game {
         // 画面クリア
         this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         
-        // ジャンプ統計デバッグ表示
-        this.renderJumpStats();
-        
         // 背景
         this.drawBackground();
         
@@ -1693,6 +1695,9 @@ class Game {
             this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             this.ctx.restore();
         }
+        
+        // デバッグ表示を最前面に
+        this.renderJumpStats();
     }
     
     drawBackground() {
