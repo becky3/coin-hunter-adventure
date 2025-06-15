@@ -48,7 +48,7 @@ var COIN_CONFIG = {
     width: 30,
     height: 30,
     value: 10,
-    rotationSpeed: 0.05  // コイン回転速度
+    rotationSpeed: 0.025  // コイン回転速度
 };
 
 // スプリング設定
