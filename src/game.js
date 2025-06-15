@@ -7,9 +7,8 @@
 if (typeof CANVAS_WIDTH !== 'undefined') {
     console.log('game.js loaded, CANVAS_WIDTH:', CANVAS_WIDTH);
 }
-if (typeof levelData !== 'undefined' && levelData.platforms) {
-    console.log('game.js loaded, levelData platforms count:', levelData.platforms.length);
-}
+// ステージシステム初期化ログ
+console.log('game.js loaded - JSONベースステージシステム対応');
 
 // ===== SVGグラフィックシステム =====
 class SVGGraphics {
@@ -1611,18 +1610,10 @@ class Game {
             // 敵の落下判定
             if (enemy.y > worldHeight) {
                 console.log('敵が穴に落ちました');
-                // 敵を初期位置にリセット - 正しい敵を特定するため元のインデックスを使用
-                const originalEnemies = levelData.enemies;
-                const originalIndex = originalEnemies.findIndex(e => 
-                    e.type === enemy.type && e.x === enemy.originalX && e.y === enemy.originalY
-                );
-                
-                if (originalIndex !== -1) {
-                    const originalEnemy = originalEnemies[originalIndex];
-                    enemy.x = originalEnemy.x;
-                    enemy.y = originalEnemy.y;
-                    enemy.velY = 0;
-                }
+                // 敵を初期位置にリセット
+                enemy.x = enemy.originalX;
+                enemy.y = enemy.originalY;
+                enemy.velY = 0;
             }
         });
     }
