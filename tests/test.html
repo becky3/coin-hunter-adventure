@@ -258,17 +258,31 @@ npm run serve
         window.DISABLE_CORS_WARNING = true;
     </script>
     
-    <!-- ゲームスクリプト -->
-    <script src="../src/config.js"></script>
-    <script src="../src/levels.js"></script>
-    <script src="../src/music.js"></script>
-    <script src="../src/player-graphics.js"></script>
-    <script src="../src/svg-player-renderer.js"></script>
-    <script src="../src/svg-enemy-renderer.js"></script>
-    <script src="../src/svg-item-renderer.js"></script>
-    <script src="../src/game.js"></script>
-    <script src="test-levelplay-simple.js"></script>
-    <script src="test.js?v=20250615"></script>
+    <!-- キャッシュバスティング自動システム -->
+    <script>
+        // 開発中のキャッシュ問題を解決する自動バージョニング
+        const CACHE_VERSION = Date.now();
+        console.log('🔄 キャッシュバスティング版:', CACHE_VERSION);
+        
+        function addScript(src) {
+            const script = document.createElement('script');
+            script.src = src + '?v=' + CACHE_VERSION;
+            document.currentScript.parentNode.insertBefore(script, document.currentScript.nextSibling);
+        }
+        
+        // 必要なスクリプトを順次追加
+        addScript('../src/config.js');
+        addScript('../src/levels.js');
+        addScript('../src/music.js');
+        addScript('../src/player-graphics.js');
+        addScript('../src/svg-renderer.js');
+        addScript('../src/svg-player-renderer.js');
+        addScript('../src/svg-enemy-renderer.js');
+        addScript('../src/svg-item-renderer.js');
+        addScript('../src/game.js');
+        addScript('test-levelplay-simple.js');
+        addScript('test.js');
+    </script>
     
     <script>
         // 簡易レベルテスト実行関数
