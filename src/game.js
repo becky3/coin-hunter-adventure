@@ -642,8 +642,22 @@ class Player {
         this.velY += GRAVITY;
         this.velY = Math.min(this.velY, 20);
         
+        // 座標変更前のログ
+        const oldX = this.x, oldY = this.y;
+        
         this.x += this.velX;
         this.y += this.velY;
+        
+        // 大幅な座標変更または異常な座標を検出
+        if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
+            this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50) {
+            console.error(`🚨 異常な座標変更/位置を検出:`, {
+                before: {x: oldX, y: oldY},
+                after: {x: this.x, y: this.y},
+                vel: {x: this.velX, y: this.velY},
+                jump: {isJumping: this.isJumping, onGround: this.onGround, canVariable: this.canVariableJump}
+            });
+        }
         
         if (this.invulnerable) {
             this.invulnerabilityTime--;
@@ -694,13 +708,18 @@ class Player {
             this.jumpButtonPressed = true;
             this.jumpTime++;
             
+            console.log(`可変ジャンプ処理: time=${this.jumpTime}, velY=${this.velY}, pos=(${this.x}, ${this.y})`);
+            
             // 最大ジャンプ時間内で、上昇中の場合のみ可変ジャンプ効果を適用
             if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
+                const oldVelY = this.velY;
                 // 重力の一部を相殺して滞空時間を延長
                 this.velY -= GRAVITY * 0.3; // 重力の30%を相殺
+                console.log(`可変ジャンプ効果: velY ${oldVelY} -> ${this.velY}`);
             } else {
                 // 最大時間に達したら可変ジャンプ終了
                 this.canVariableJump = false;
+                console.log(`可変ジャンプ終了: 最大時間到達`);
             }
         }
         
