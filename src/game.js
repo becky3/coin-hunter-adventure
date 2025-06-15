@@ -687,10 +687,10 @@ class Player {
             this.direction = 1;
         }
         
-        // 可変ジャンプロジック
+        // マリオ式ジャンプロジック
         if (input.jump && this.onGround && !this.isJumping) {
-            // ジャンプ開始 - 非常に小さな初速で開始
-            this.velY = -3; // 固定の小さな初速（プレイヤー高さの約1/4程度のジャンプ）
+            // ジャンプ開始 - 通常の初速で開始
+            this.velY = -PLAYER_CONFIG.jumpPower;
             this.onGround = false;
             this.isJumping = true;
             this.jumpButtonPressed = true;
@@ -703,47 +703,35 @@ class Player {
             }
         }
         
-        // 可変ジャンプ処理（空中でボタンが押され続けている間）
-        if (input.jump && this.isJumping && this.canVariableJump && this.velY < 0) {
-            this.jumpButtonPressed = true;
+        // マリオ式ジャンプ継続処理
+        if (this.isJumping && this.jumpButtonPressed) {
             this.jumpTime++;
             
-            console.log(`可変ジャンプ処理: time=${this.jumpTime}, velY=${this.velY}, pos=(${this.x}, ${this.y})`);
-            
-            // ボタンを押し続けている時のみ上昇力を追加
-            if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
-                const oldVelY = this.velY;
-                
-                // 最初の数フレームから強い上昇力を与える（長押し時）
-                if (this.jumpTime < 3) {
-                    // 初期ブースト
-                    this.velY = -PLAYER_CONFIG.minJumpPower;
-                } else {
-                    // 継続的な上昇力
-                    this.velY -= GRAVITY * 1.5; // 重力の150%相殺
-                    
-                    // 最大速度に達していなければ追加の上昇力
-                    if (Math.abs(this.velY) < PLAYER_CONFIG.jumpPower) {
-                        this.velY -= 0.8;
-                    }
+            // ジャンプボタンが押されている間の処理
+            if (input.jump) {
+                // 最大保持時間まではジャンプを継続
+                if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
+                    // 最大時間に達したら上昇を停止
+                    this.velY = 0;
+                    this.canVariableJump = false;
+                    console.log(`ジャンプ最大時間到達: velY -> 0`);
                 }
-                console.log(`可変ジャンプ効果: velY ${oldVelY} -> ${this.velY}, time=${this.jumpTime}`);
             } else {
-                // 最大時間に達したら可変ジャンプ終了
+                // ボタンが離された時
+                if (this.jumpTime >= PLAYER_CONFIG.minJumpTime && this.velY < 0) {
+                    // 最小時間経過後なら上昇を即座に停止
+                    this.velY = 0;
+                    console.log(`ジャンプボタン離し: time=${this.jumpTime}, velY -> 0`);
+                }
+                // 最小時間前に離した場合は、最小時間まで上昇を継続
+                this.jumpButtonPressed = false;
                 this.canVariableJump = false;
-                console.log(`可変ジャンプ終了: 最大時間到達`);
             }
         }
         
-        // ジャンプボタンが離された時
+        // ジャンプ状態のリセット
         if (!input.jump) {
-            if (this.jumpButtonPressed && this.isJumping && this.velY < 0) {
-                // 上昇中にボタンを離した場合、上昇速度を減衰
-                this.velY *= PLAYER_CONFIG.jumpDecayRate;
-            }
-            this.isJumping = false;
             this.jumpButtonPressed = false;
-            this.canVariableJump = false;
         }
     }
     
