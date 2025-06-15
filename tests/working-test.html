@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動作確認テスト - 自動レポート付き</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+        .summary {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e9ecef;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        #gameCanvas { display: none; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>動作確認テスト</h1>
+        <div id="test-output">
+            <div class="info test-result">テスト準備中...</div>
+        </div>
+    </div>
+
+    <!-- Canvas要素 -->
+    <canvas id="gameCanvas" width="1024" height="576"></canvas>
+
+    <!-- スクリプト読み込み -->
+    <script src="../src/config.js"></script>
+    <script src="../src/levels.js"></script>
+    <script src="../src/music.js"></script>
+    <script src="../src/player-graphics.js"></script>
+    <script src="../src/svg-renderer.js"></script>
+    <script src="../src/svg-player-renderer.js"></script>
+    <script src="../src/svg-enemy-renderer.js"></script>
+    <script src="../src/svg-item-renderer.js"></script>
+    <script src="../src/game.js"></script>
+    <script src="test-levelplay-simple.js"></script>
+
+    <script>
+        // CORS警告を無効化
+        window.DISABLE_CORS_WARNING = true;
+        
+        // 出力先
+        const output = document.getElementById('test-output');
+        output.innerHTML = ''; // クリア
+        
+        // テスト結果格納
+        const results = {
+            total: 0,
+            passed: 0,
+            failed: 0,
+            details: []
+        };
+        
+        // 結果追加関数
+        function addResult(message, success) {
+            const div = document.createElement('div');
+            div.className = `test-result ${success ? 'success' : 'error'}`;
+            div.textContent = message;
+            output.appendChild(div);
+            
+            results.total++;
+            if (success) {
+                results.passed++;
+            } else {
+                results.failed++;
+            }
+            results.details.push({ message, success });
+        }
+        
+        // エラーハンドラ
+        window.onerror = function(msg, file, line) {
+            addResult(`JavaScript Error: ${msg} (${file}:${line})`, false);
+            return true;
+        };
+        
+        // テスト実行関数
+        function runTests() {
+            // システムテスト
+            addResult('=== システムテスト開始 ===', true);
+            
+            // 1. 設定ファイルの読み込み
+            if (typeof CANVAS_WIDTH === 'number' && CANVAS_WIDTH === 1024) {
+                addResult('✓ CANVAS_WIDTH正常 (1024)', true);
+            } else {
+                addResult(`✗ CANVAS_WIDTH異常 (値: ${typeof CANVAS_WIDTH !== 'undefined' ? CANVAS_WIDTH : '未定義'})`, false);
+            }
+            
+            if (typeof PLAYER_CONFIG === 'object' && PLAYER_CONFIG !== null) {
+                addResult(`✓ PLAYER_CONFIG正常 (speed: ${PLAYER_CONFIG.speed})`, true);
+            } else {
+                addResult('✗ PLAYER_CONFIG異常', false);
+            }
+            
+            // 2. レベルデータの読み込み
+            if (typeof levelData === 'object' && Array.isArray(levelData.platforms)) {
+                addResult(`✓ levelData正常 (プラットフォーム: ${levelData.platforms.length}個)`, true);
+            } else {
+                addResult('✗ levelData異常', false);
+            }
+            
+            // 3. ゲームクラスの初期化
+            try {
+                const gameState = new GameState();
+                if (gameState.state === 'start') {
+                    addResult('✓ GameState初期化成功', true);
+                } else {
+                    addResult(`✗ GameState初期状態異常 (${gameState.state})`, false);
+                }
+            } catch (e) {
+                addResult(`✗ GameState初期化失敗: ${e.message}`, false);
+            }
+            
+            try {
+                const player = new Player(100, 200);
+                if (player.x === 100 && player.y === 200) {
+                    addResult('✓ Player初期化成功', true);
+                } else {
+                    addResult('✗ Player初期化異常', false);
+                }
+                
+                // プレイヤー移動テスト
+                player.handleInput({ right: true, left: false, jump: false });
+                if (player.velX === PLAYER_CONFIG.speed) {
+                    addResult('✓ プレイヤー右移動正常', true);
+                } else {
+                    addResult(`✗ プレイヤー右移動異常 (velX: ${player.velX})`, false);
+                }
+                
+                // ジャンプテスト
+                player.onGround = true;
+                player.isJumping = false;
+                player.handleInput({ right: false, left: false, jump: true });
+                if (player.velY < 0) {
+                    addResult(`✓ プレイヤージャンプ正常 (velY: ${player.velY})`, true);
+                } else {
+                    addResult(`✗ プレイヤージャンプ異常 (velY: ${player.velY})`, false);
+                }
+            } catch (e) {
+                addResult(`✗ Player関連エラー: ${e.message}`, false);
+            }
+            
+            // SVGレンダリングテスト
+            addResult('=== SVGレンダリングテスト ===', true);
+            
+            if (typeof SVGPlayerRenderer !== 'undefined') {
+                addResult('✓ SVGPlayerRenderer定義確認', true);
+            } else {
+                addResult('✗ SVGPlayerRenderer未定義', false);
+            }
+            
+            if (typeof SVGEnemyRenderer !== 'undefined') {
+                addResult('✓ SVGEnemyRenderer定義確認', true);
+            } else {
+                addResult('✗ SVGEnemyRenderer未定義', false);
+            }
+            
+            // レベルテスト（基本のみ）
+            addResult('=== レベルテスト ===', true);
+            
+            if (levelData.platforms && levelData.platforms.length > 10) {
+                addResult(`✓ プラットフォーム数十分 (${levelData.platforms.length}個)`, true);
+            } else {
+                addResult(`✗ プラットフォーム数不足 (${levelData.platforms ? levelData.platforms.length : 0}個)`, false);
+            }
+            
+            if (levelData.flag && levelData.flag.x > 2000) {
+                addResult(`✓ ゴール位置適切 (x: ${levelData.flag.x})`, true);
+            } else {
+                addResult(`✗ ゴール位置問題 (x: ${levelData.flag ? levelData.flag.x : '未定義'})`, false);
+            }
+            
+            // 結果サマリー
+            const summaryDiv = document.createElement('div');
+            summaryDiv.className = 'summary';
+            summaryDiv.innerHTML = `
+                <h2>テスト結果サマリー</h2>
+                <p>合計: ${results.total}件</p>
+                <p>成功: ${results.passed}件</p>
+                <p>失敗: ${results.failed}件</p>
+                <p>成功率: ${((results.passed / results.total) * 100).toFixed(1)}%</p>
+            `;
+            output.appendChild(summaryDiv);
+            
+            // テスト完了通知（自動レポート用）
+            if (window.parent !== window) {
+                window.parent.postMessage({
+                    type: 'test-complete',
+                    results: results
+                }, '*');
+            }
+            
+            // コンソールにも出力
+            console.log('テスト完了:', results);
+            
+            // グローバル変数に保存（取得用）
+            window.TEST_COMPLETE_RESULTS = results;
+        }
+        
+        // DOMロード後に実行
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(runTests, 1000); // 1秒後に実行
+        });
+    </script>
+</body>
+</html>

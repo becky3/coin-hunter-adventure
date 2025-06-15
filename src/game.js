@@ -623,6 +623,17 @@ class Player {
         this.isJumping = false;
         this.isDead = false;
         
+        // 可変ジャンプ用プロパティ
+        this.jumpButtonPressed = false;
+        this.jumpTime = 0;
+        this.canVariableJump = false;
+        
+        // ジャンプ計測用
+        this.jumpStartY = 0;
+        this.jumpMaxHeight = 0;
+        this.jumpButtonHoldTime = 0;
+        this.lastJumpStats = null;
+        
         this.invulnerable = false;
         this.invulnerabilityTime = 0;
         
@@ -637,8 +648,30 @@ class Player {
         this.velY += GRAVITY;
         this.velY = Math.min(this.velY, 20);
         
+        // 座標変更前のログ
+        const oldX = this.x, oldY = this.y;
+        
         this.x += this.velX;
         this.y += this.velY;
+        
+        // ジャンプ高さ計測
+        if (this.isJumping) {
+            const currentHeight = this.jumpStartY - this.y;
+            if (currentHeight > this.jumpMaxHeight) {
+                this.jumpMaxHeight = currentHeight;
+            }
+        }
+        
+        // 大幅な座標変更または異常な座標を検出
+        if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
+            this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50) {
+            console.error(`🚨 異常な座標変更/位置を検出:`, {
+                before: {x: oldX, y: oldY},
+                after: {x: this.x, y: this.y},
+                vel: {x: this.velX, y: this.velY},
+                jump: {isJumping: this.isJumping, onGround: this.onGround, canVariable: this.canVariableJump}
+            });
+        }
         
         if (this.invulnerable) {
             this.invulnerabilityTime--;
@@ -668,10 +701,20 @@ class Player {
             this.direction = 1;
         }
         
+        // マリオ式ジャンプロジック
         if (input.jump && this.onGround && !this.isJumping) {
-            this.velY = -this.jumpPower;
+            // ジャンプ開始 - 通常の初速で開始
+            this.velY = -PLAYER_CONFIG.jumpPower;
             this.onGround = false;
             this.isJumping = true;
+            this.jumpButtonPressed = true;
+            this.jumpTime = 0;
+            this.canVariableJump = true;
+            
+            // ジャンプ計測開始
+            this.jumpStartY = this.y;
+            this.jumpMaxHeight = 0;
+            this.jumpButtonHoldTime = 0;
             
             // ジャンプ効果音を再生（ゲームインスタンスを参照）
             if (window.game && window.game.musicSystem && window.game.musicSystem.isInitialized) {
@@ -679,8 +722,41 @@ class Player {
             }
         }
         
+        // マリオ式ジャンプ継続処理
+        if (this.isJumping && this.jumpButtonPressed) {
+            this.jumpTime++;
+            
+            // ジャンプボタンが押されている間の処理
+            if (input.jump) {
+                this.jumpButtonHoldTime++;
+                
+                // 最大保持時間内なら継続的な上昇力を付与
+                if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
+                    // 重力を相殺して上昇を維持（倍率を1.8倍に調整）
+                    this.velY -= GRAVITY * 1.8; // 重力の1.8倍を相殺で適度な高さに調整
+                    console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}, gravity=${GRAVITY}`);
+                } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
+                    // 最大時間に達したら上昇を停止
+                    this.velY = 0;
+                    this.canVariableJump = false;
+                    console.log(`ジャンプ最大時間到達: velY -> 0`);
+                }
+            } else {
+                // ボタンが離された時
+                if (this.jumpTime >= PLAYER_CONFIG.minJumpTime && this.velY < 0) {
+                    // 最小時間経過後なら上昇を即座に停止
+                    this.velY = 0;
+                    console.log(`ジャンプボタン離し: time=${this.jumpTime}, velY -> 0`);
+                }
+                // 最小時間前に離した場合は、最小時間まで上昇を継続
+                this.jumpButtonPressed = false;
+                this.canVariableJump = false;
+            }
+        }
+        
+        // ジャンプ状態のリセット
         if (!input.jump) {
-            this.isJumping = false;
+            this.jumpButtonPressed = false;
         }
     }
     
@@ -723,6 +799,7 @@ class Player {
     }
     
     reset() {
+        console.log(`プレイヤーリセット: (${this.x}, ${this.y}) -> (${PLAYER_CONFIG.spawnX}, ${PLAYER_CONFIG.spawnY})`);
         this.x = PLAYER_CONFIG.spawnX;
         this.y = PLAYER_CONFIG.spawnY;
         this.velX = 0;
@@ -734,6 +811,11 @@ class Player {
         this.onGround = false;
         this.isJumping = false;
         this.direction = 1;
+        
+        // 可変ジャンプ用プロパティのリセット
+        this.jumpButtonPressed = false;
+        this.jumpTime = 0;
+        this.canVariableJump = false;
     }
     
     getBounds() {
@@ -743,6 +825,23 @@ class Player {
             width: this.width,
             height: this.height
         };
+    }
+    
+    // ジャンプ統計を記録する
+    recordJumpStats() {
+        this.lastJumpStats = {
+            buttonHoldTime: this.jumpButtonHoldTime,
+            actualJumpTime: this.jumpTime,
+            maxHeight: this.jumpMaxHeight,
+            heightInPlayerUnits: (this.jumpMaxHeight / this.height).toFixed(1)
+        };
+        
+        console.log(`🦘 ジャンプ統計:`, {
+            'ボタン保持時間': `${this.jumpButtonHoldTime}フレーム (${(this.jumpButtonHoldTime * 16.67).toFixed(0)}ms)`,
+            '実際のジャンプ時間': `${this.jumpTime}フレーム`,
+            '最高到達高さ': `${this.jumpMaxHeight.toFixed(1)}px`,
+            'プレイヤー単位': `${this.lastJumpStats.heightInPlayerUnits}人分`
+        });
     }
 }
 
@@ -760,6 +859,20 @@ class InputManager {
                 e.preventDefault();
             }
             this.keys[e.code] = true;
+            
+            // @キーの直接検出とデバッグ切り替え
+            if (e.key === '@') {
+                console.log('@キーが押されました！');
+                if (window.game) {
+                    window.game.showJumpDebug = !window.game.showJumpDebug;
+                    console.log(`🛠️ ジャンプデバッグ表示: ${window.game.showJumpDebug ? 'ON' : 'OFF'} (@キーで切り替え)`);
+                }
+            }
+            
+            // デバッグ用: キーコードをログ出力
+            if (e.key === '@' || e.code === 'Digit2' || e.shiftKey) {
+                console.log(`キー検出: key="${e.key}", code="${e.code}", shift=${e.shiftKey}`);
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -777,7 +890,8 @@ class InputManager {
             left: this.keys['ArrowLeft'] || this.keys['KeyA'],
             right: this.keys['ArrowRight'] || this.keys['KeyD'],
             jump: this.keys['Space'] || this.keys['KeyW'] || this.keys['ArrowUp'],
-            pause: this.keys['Escape'] || this.keys['KeyP']
+            pause: this.keys['Escape'] || this.keys['KeyP'],
+            debug: this.keys['Digit2'] || this.keys['ShiftLeft'] // @キー（Shift+2）の検出
         };
     }
 
@@ -816,6 +930,9 @@ class Game {
         this.particles = [];
         this.backgroundAnimation = 0;
         this.scoreAnimations = [];
+        
+        // デバッグ表示制御
+        this.showJumpDebug = false;
         
         this.camera = { x: 0, y: 0 };
         this.platforms = [];
@@ -1090,10 +1207,16 @@ class Game {
         // モダンデザイン用の時間を更新
         this.gameTime += deltaTime;
         
-        if (!this.gameState.isPlaying()) return;
-        
         // 入力状態を更新
         this.inputManager.update();
+        
+        // デバッグ表示切り替え（2キーまたは@キー）
+        if (this.inputManager.isKeyJustPressed('Digit2') || this.inputManager.isKeyJustPressed('KeyD')) {
+            this.showJumpDebug = !this.showJumpDebug;
+            console.log(`🛠️ ジャンプデバッグ表示: ${this.showJumpDebug ? 'ON' : 'OFF'} (2キーまたはDキーで切り替え)`);
+        }
+        
+        if (!this.gameState.isPlaying()) return;
         
         // タイマー更新
         const timeUp = this.gameState.updateTime(deltaTime);
@@ -1145,21 +1268,51 @@ class Game {
                     playerBounds.y + playerBounds.height > platform.y) {
                     this.player.y = platform.y - playerBounds.height;
                     this.player.velY = 0;
+                    
+                    // ジャンプから着地した場合、統計を記録
+                    if (this.player.isJumping) {
+                        this.player.recordJumpStats();
+                        this.player.isJumping = false;
+                        this.player.jumpButtonPressed = false;
+                        this.player.canVariableJump = false;
+                    }
+                    
                     onPlatform = true;
                 }
                 // 下から衝突
                 else if (this.player.velY < 0 && 
                          playerBounds.y > platform.y) {
-                    this.player.y = platform.y + platform.height;
+                    const newY = platform.y + platform.height;
+                    console.log(`プレイヤーY座標変更: ${this.player.y} -> ${newY} (プラットフォーム下側衝突)`);
+                    // 座標範囲チェック
+                    if (newY >= 0 && newY <= CANVAS_HEIGHT - this.player.height) {
+                        this.player.y = newY;
+                    } else {
+                        console.warn(`異常なY座標を検出、変更をスキップ: ${newY}`);
+                    }
                     this.player.velY = 0;
                 }
                 // 横から衝突
                 else if (playerBounds.x < platform.x && this.player.velX > 0) {
-                    this.player.x = platform.x - playerBounds.width;
+                    const newX = platform.x - playerBounds.width;
+                    console.log(`プレイヤーX座標変更: ${this.player.x} -> ${newX} (プラットフォーム左側衝突)`);
+                    // 座標範囲チェック
+                    if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
+                        this.player.x = newX;
+                    } else {
+                        console.warn(`異常なX座標を検出、変更をスキップ: ${newX}`);
+                    }
                     this.player.velX = 0;
                 }
                 else if (playerBounds.x > platform.x && this.player.velX < 0) {
-                    this.player.x = platform.x + platform.width;
+                    const newX = platform.x + platform.width;
+                    console.log(`プレイヤーX座標変更: ${this.player.x} -> ${newX} (プラットフォーム右側衝突)`);
+                    // 座標範囲チェック
+                    if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
+                        this.player.x = newX;
+                    } else {
+                        console.warn(`異常なX座標を検出、変更をスキップ: ${newX}`);
+                    }
                     this.player.velX = 0;
                 }
             }
@@ -1303,11 +1456,14 @@ class Game {
         
         // プレイヤーの境界チェック
         if (this.player.x < 0) {
+            console.log(`プレイヤーX座標修正: ${this.player.x} -> 0 (左境界)`);
             this.player.x = 0;
             this.player.velX = 0;
         }
         if (this.player.x + this.player.width > worldWidth) {
-            this.player.x = worldWidth - this.player.width;
+            const newX = worldWidth - this.player.width;
+            console.log(`プレイヤーX座標修正: ${this.player.x} -> ${newX} (右境界)`);
+            this.player.x = newX;
             this.player.velX = 0;
         }
         
@@ -1563,6 +1719,9 @@ class Game {
             this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
             this.ctx.restore();
         }
+        
+        // デバッグ表示を最前面に
+        this.renderJumpStats();
     }
     
     drawBackground() {
@@ -1791,6 +1950,130 @@ class Game {
             } catch (error) {
                 console.warn('SVG事前読み込みエラー:', error);
             }
+        }
+    }
+    
+    // ジャンプ統計をリアルタイムで表示
+    renderJumpStats() {
+        try {
+            // デバッグ表示がオフの場合は何もしない
+            if (!this.showJumpDebug) {
+                return;
+            }
+            
+            // 確実にコンテキストを取得
+            const ctx = this.ctx;
+            if (!ctx) {
+                console.error('❌ renderJumpStats: ctxが未定義');
+                return;
+            }
+            
+            // ゲーム状態が'playing'の時のみ表示
+            if (this.gameState.state !== 'playing') {
+                return;
+            }
+            
+            ctx.save();
+            
+            // 強制的に見えるデバッグ表示（赤い背景で目立たせる）
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
+            ctx.fillRect(5, 5, 400, 250);
+            
+            // 白い枠線
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(5, 5, 400, 250);
+            
+            // テキスト設定
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px Arial';
+            
+            let y = 28;
+            ctx.fillText('🚨 ジャンプデバッグ表示 🚨', 15, y);
+            y += 18;
+            ctx.font = '11px monospace';
+            ctx.fillStyle = 'lightgray';
+            ctx.fillText('(@キーまたは2キーで切り替え)', 15, y);
+            y += 18;
+            
+            // 設定値の表示
+            ctx.font = '13px monospace';
+            ctx.fillStyle = 'yellow';
+            ctx.fillText('⚙️ 設定値:', 15, y);
+            y += 16;
+            ctx.fillStyle = 'white';
+            ctx.fillText(`jumpPower: ${PLAYER_CONFIG.jumpPower}`, 15, y);
+            y += 14;
+            ctx.fillText(`minJumpTime: ${PLAYER_CONFIG.minJumpTime}f`, 15, y);
+            y += 14;
+            ctx.fillText(`maxJumpTime: ${PLAYER_CONFIG.maxJumpTime}f`, 15, y);
+            y += 14;
+            ctx.fillText(`gravity: ${GRAVITY}`, 15, y);
+            y += 18;
+            
+            // プレイヤー状態の詳細表示
+            ctx.fillStyle = 'lightblue';
+            ctx.fillText('🎮 プレイヤー状態:', 15, y);
+            y += 16;
+            
+            if (this.player) {
+                ctx.fillStyle = 'white';
+                ctx.fillText(`Player位置: (${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)})`, 15, y);
+                y += 14;
+                ctx.fillText(`isJumping: ${this.player.isJumping}`, 15, y);
+                y += 14;
+                ctx.fillText(`onGround: ${this.player.onGround}`, 15, y);
+                y += 14;
+                ctx.fillText(`velY: ${this.player.velY.toFixed(2)}`, 15, y);
+                y += 14;
+                ctx.fillText(`jumpButtonPressed: ${this.player.jumpButtonPressed}`, 15, y);
+                y += 14;
+                
+                // 現在のジャンプ状態
+                if (this.player.isJumping) {
+                    ctx.fillStyle = 'yellow';
+                    ctx.fillText(`🦘 ジャンプ中!`, 15, y);
+                    y += 14;
+                    ctx.fillText(`ボタン保持: ${this.player.jumpButtonHoldTime}f`, 15, y);
+                    y += 14;
+                    ctx.fillText(`ジャンプ時間: ${this.player.jumpTime}f`, 15, y);
+                    y += 14;
+                    if (this.player.jumpStartY !== undefined) {
+                        const currentHeight = this.player.jumpStartY - this.player.y;
+                        ctx.fillText(`現在高さ: ${currentHeight.toFixed(1)}px`, 15, y);
+                        y += 14;
+                        const heightInUnits = (currentHeight / PLAYER_CONFIG.height).toFixed(1);
+                        ctx.fillText(`身長比: ${heightInUnits}人分`, 15, y);
+                        y += 14;
+                    }
+                }
+                
+                // 最後のジャンプ統計
+                if (this.player.lastJumpStats) {
+                    ctx.fillStyle = 'lightgreen';
+                    ctx.fillText('📊 前回のジャンプ:', 15, y);
+                    y += 14;
+                    ctx.fillText(`保持: ${this.player.lastJumpStats.buttonHoldTime}f`, 15, y);
+                    y += 14;
+                    ctx.fillText(`高さ: ${this.player.lastJumpStats.maxHeight.toFixed(1)}px`, 15, y);
+                    y += 14;
+                    ctx.fillText(`身長比: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 15, y);
+                    y += 14;
+                }
+            } else {
+                ctx.fillStyle = 'red';
+                ctx.fillText('❌ Player未定義', 15, y);
+            }
+            
+            ctx.restore();
+            // 1回だけコンソールログを出力
+            if (!this._debugLogShown) {
+                console.log('✅ renderJumpStats正常実行開始');
+                this._debugLogShown = true;
+            }
+        } catch (error) {
+            console.error('❌ renderJumpStats エラー:', error);
+            console.error('Stack:', error.stack);
         }
     }
 }

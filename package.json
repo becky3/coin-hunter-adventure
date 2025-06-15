@@ -13,13 +13,16 @@
     "typecheck": "echo 'No TypeScript configured'",
     "prepare": "husky install"
   },
-  "dependencies": {},
   "devDependencies": {
     "eslint": "^8.57.0",
     "husky": "^9.0.11",
+    "jsdom": "^26.1.0",
     "lint-staged": "^15.2.0"
   },
   "lint-staged": {
     "*.js": "eslint --fix"
+  },
+  "dependencies": {
+    "puppeteer": "^24.10.1"
   }
 }
