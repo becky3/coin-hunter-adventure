@@ -623,6 +623,11 @@ class Player {
         this.isJumping = false;
         this.isDead = false;
         
+        // 可変ジャンプ用プロパティ
+        this.jumpButtonPressed = false;
+        this.jumpTime = 0;
+        this.canVariableJump = false;
+        
         this.invulnerable = false;
         this.invulnerabilityTime = 0;
         
@@ -668,10 +673,15 @@ class Player {
             this.direction = 1;
         }
         
+        // 可変ジャンプロジック
         if (input.jump && this.onGround && !this.isJumping) {
+            // ジャンプ開始
             this.velY = -this.jumpPower;
             this.onGround = false;
             this.isJumping = true;
+            this.jumpButtonPressed = true;
+            this.jumpTime = 0;
+            this.canVariableJump = true;
             
             // ジャンプ効果音を再生（ゲームインスタンスを参照）
             if (window.game && window.game.musicSystem && window.game.musicSystem.isInitialized) {
@@ -679,8 +689,30 @@ class Player {
             }
         }
         
+        // 可変ジャンプ処理（空中でボタンが押され続けている間）
+        if (input.jump && this.isJumping && this.canVariableJump && this.velY < 0) {
+            this.jumpButtonPressed = true;
+            this.jumpTime++;
+            
+            // 最大ジャンプ時間内で、上昇中の場合のみ可変ジャンプ効果を適用
+            if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
+                // 重力の一部を相殺して滞空時間を延長
+                this.velY -= GRAVITY * 0.3; // 重力の30%を相殺
+            } else {
+                // 最大時間に達したら可変ジャンプ終了
+                this.canVariableJump = false;
+            }
+        }
+        
+        // ジャンプボタンが離された時
         if (!input.jump) {
+            if (this.jumpButtonPressed && this.isJumping && this.velY < 0) {
+                // 上昇中にボタンを離した場合、上昇速度を減衰
+                this.velY *= PLAYER_CONFIG.jumpDecayRate;
+            }
             this.isJumping = false;
+            this.jumpButtonPressed = false;
+            this.canVariableJump = false;
         }
     }
     
@@ -734,6 +766,11 @@ class Player {
         this.onGround = false;
         this.isJumping = false;
         this.direction = 1;
+        
+        // 可変ジャンプ用プロパティのリセット
+        this.jumpButtonPressed = false;
+        this.jumpTime = 0;
+        this.canVariableJump = false;
     }
     
     getBounds() {
