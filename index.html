@@ -209,58 +209,15 @@
         }
     </script>
 
-    <!-- キャッシュバスティング自動システム (開発用) -->
-    <script>
-        // 開発中のキャッシュ問題を解決する自動バージョニング
-        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        
-        if (isDevelopment) {
-            const CACHE_VERSION = Date.now();
-            console.log('🔄 開発モード: キャッシュバスティング版', CACHE_VERSION);
-            
-            function addScript(src) {
-                const script = document.createElement('script');
-                script.src = src + '?v=' + CACHE_VERSION;
-                document.currentScript.parentNode.insertBefore(script, document.currentScript.nextSibling);
-            }
-            
-            // 開発時は常に最新ファイルを読み込み
-            addScript('src/config.js');
-            addScript('src/levels.js');
-            addScript('src/music.js');
-            addScript('src/player-graphics.js');
-            addScript('src/svg-renderer.js');
-            addScript('src/svg-player-renderer.js');
-            addScript('src/svg-enemy-renderer.js');
-            addScript('src/svg-item-renderer.js');
-            addScript('src/game.js');
-        } else {
-            // 本番環境では通常読み込み
-            console.log('🚀 本番モード: 通常読み込み');
-        }
-    </script>
-    
-    <!-- 本番環境用 (localhost以外でのみ読み込み) -->
-    <script>
-        if (!window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
-            const scripts = [
-                'src/config.js',
-                'src/levels.js', 
-                'src/music.js',
-                'src/player-graphics.js',
-                'src/svg-renderer.js',
-                'src/svg-player-renderer.js',
-                'src/svg-enemy-renderer.js',
-                'src/svg-item-renderer.js',
-                'src/game.js'
-            ];
-            
-            scripts.forEach(src => {
-                const script = document.createElement('script');
-                script.src = src;
-                document.head.appendChild(script);
-            });
-        }
-    </script>
+    <!-- ゲームスクリプト -->
+    <script src="src/config.js"></script>
+    <script src="src/levels.js"></script>
+    <script src="src/music.js"></script>
+    <script src="src/player-graphics.js"></script>
+    <script src="src/svg-renderer.js"></script>
+    <script src="src/svg-player-renderer.js"></script>
+    <script src="src/svg-enemy-renderer.js"></script>
+    <script src="src/svg-item-renderer.js"></script>
+    <script src="src/game.js"></script>
 </body>
 </html>

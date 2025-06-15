@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>即座テスト結果</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>即座テスト結果</h1>
+    <div id="output"></div>
+
+    <!-- 基本的なスクリプト読み込み -->
+    <script src="../src/config.js"></script>
+    <script src="../src/levels.js"></script>
+    
+    <script>
+        // エラーキャッチ
+        window.onerror = function(msg, file, line) {
+            document.getElementById('output').innerHTML += 
+                `<div class="error">❌ JavaScript Error: ${msg} (${file}:${line})</div>`;
+        };
+        
+        // CORS警告無効化
+        window.DISABLE_CORS_WARNING = true;
+        
+        let output = '';
+        
+        // 即座にテスト実行
+        output += '<h2>📊 テスト結果</h2>';
+        
+        let total = 0;
+        let passed = 0;
+        let failed = 0;
+        
+        // CANVAS_WIDTH テスト
+        total++;
+        if (typeof CANVAS_WIDTH !== 'undefined') {
+            output += `<div class="success">✅ CANVAS_WIDTH = ${CANVAS_WIDTH}</div>`;
+            passed++;
+        } else {
+            output += `<div class="error">❌ CANVAS_WIDTH 未定義</div>`;
+            failed++;
+        }
+        
+        // PLAYER_CONFIG テスト
+        total++;
+        if (typeof PLAYER_CONFIG !== 'undefined') {
+            output += `<div class="success">✅ PLAYER_CONFIG 定義済み (speed: ${PLAYER_CONFIG.speed})</div>`;
+            passed++;
+        } else {
+            output += `<div class="error">❌ PLAYER_CONFIG 未定義</div>`;
+            failed++;
+        }
+        
+        // levelData テスト
+        total++;
+        if (typeof levelData !== 'undefined' && levelData.platforms) {
+            output += `<div class="success">✅ levelData 定義済み (プラットフォーム: ${levelData.platforms.length}個)</div>`;
+            passed++;
+        } else {
+            output += `<div class="error">❌ levelData 未定義</div>`;
+            failed++;
+        }
+        
+        // 結果表示
+        output += `<h3>合計: ${total}件 | 成功: ${passed}件 | 失敗: ${failed}件</h3>`;
+        
+        if (failed === 0) {
+            output += '<div class="success">🎉 基本ファイル読み込み成功！</div>';
+        } else {
+            output += `<div class="error">⚠️ ${failed}件の問題があります</div>`;
+        }
+        
+        document.getElementById('output').innerHTML = output;
+        
+        // グローバル結果設定
+        window.INSTANT_TEST_RESULT = {
+            total: total,
+            passed: passed,
+            failed: failed,
+            status: failed === 0 ? 'success' : 'failed'
+        };
+    </script>
+</body>
+</html>

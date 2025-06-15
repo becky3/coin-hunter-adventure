@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>シンプル動作テスト</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f5f5f5; }
+        .result { padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .info { background: #d1ecf1; color: #0c5460; }
+    </style>
+</head>
+<body>
+    <h1>シンプル動作テスト</h1>
+    <div id="results">テスト実行中...</div>
+
+    <!-- 直接script読み込み（キャッシュバスティング付き） -->
+    <script src="../src/config.js?test=1"></script>
+    <script src="../src/levels.js?test=1"></script>
+    <script src="../src/music.js?test=1"></script>
+    <script src="../src/player-graphics.js?test=1"></script>
+    <script src="../src/svg-renderer.js?test=1"></script>
+    <script src="../src/svg-player-renderer.js?test=1"></script>
+    <script src="../src/svg-enemy-renderer.js?test=1"></script>
+    <script src="../src/svg-item-renderer.js?test=1"></script>
+    <script src="../src/game.js?test=1"></script>
+    
+    <script>
+        // CORS警告を無効化
+        window.DISABLE_CORS_WARNING = true;
+        
+        // 結果表示関数
+        function addResult(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+            console.log(message);
+        }
+        
+        // テスト実行
+        setTimeout(() => {
+            addResult('=== シンプルテスト開始 ===');
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            try {
+                // 基本設定テスト
+                if (typeof CANVAS_WIDTH !== 'undefined') {
+                    addResult(`✅ CANVAS_WIDTH = ${CANVAS_WIDTH}`, 'success');
+                    successCount++;
+                } else {
+                    addResult('❌ CANVAS_WIDTH未定義', 'error');
+                    errorCount++;
+                }
+                
+                if (typeof PLAYER_CONFIG !== 'undefined') {
+                    addResult(`✅ PLAYER_CONFIG = ${JSON.stringify(PLAYER_CONFIG)}`, 'success');
+                    successCount++;
+                } else {
+                    addResult('❌ PLAYER_CONFIG未定義', 'error');
+                    errorCount++;
+                }
+                
+                // レベルデータテスト
+                if (typeof levelData !== 'undefined' && levelData.platforms) {
+                    addResult(`✅ levelData = プラットフォーム${levelData.platforms.length}個`, 'success');
+                    successCount++;
+                } else {
+                    addResult('❌ levelData未定義', 'error');
+                    errorCount++;
+                }
+                
+                // クラステスト
+                const classes = ['GameState', 'Player', 'InputManager'];
+                classes.forEach(className => {
+                    if (typeof window[className] !== 'undefined') {
+                        addResult(`✅ ${className}クラス定義済み`, 'success');
+                        successCount++;
+                    } else {
+                        addResult(`❌ ${className}クラス未定義`, 'error');
+                        errorCount++;
+                    }
+                });
+                
+                // 実際のインスタンス化テスト
+                try {
+                    const gameState = new GameState();
+                    addResult(`✅ GameState作成成功: 状態=${gameState.state}`, 'success');
+                    successCount++;
+                    
+                    const player = new Player(100, 200);
+                    addResult(`✅ Player作成成功: 位置=(${player.x}, ${player.y})`, 'success');
+                    successCount++;
+                    
+                    // 移動テスト
+                    player.handleInput({ right: true, left: false, jump: false });
+                    addResult(`✅ Player右移動: velX=${player.velX}`, 'success');
+                    successCount++;
+                    
+                    // ジャンプテスト
+                    player.onGround = true;
+                    player.isJumping = false;
+                    player.handleInput({ right: false, left: false, jump: true });
+                    const jumpResult = player.velY < 0 ? 'success' : 'error';
+                    addResult(`${jumpResult === 'success' ? '✅' : '❌'} Playerジャンプ: velY=${player.velY}`, jumpResult);
+                    if (jumpResult === 'success') successCount++; else errorCount++;
+                    
+                } catch (error) {
+                    addResult(`❌ インスタンス化エラー: ${error.message}`, 'error');
+                    errorCount++;
+                }
+                
+                // 結果まとめ
+                addResult('=== テスト結果 ===');
+                addResult(`合計: ${successCount + errorCount}件 | 成功: ${successCount}件 | 失敗: ${errorCount}件`, 
+                         errorCount === 0 ? 'success' : 'error');
+                
+                if (errorCount === 0) {
+                    addResult('🎉 全テスト成功！', 'success');
+                } else {
+                    addResult(`⚠️ ${errorCount}件のテストが失敗しています`, 'error');
+                }
+                
+                // グローバルに結果を設定
+                window.TEST_RESULTS = {
+                    total: successCount + errorCount,
+                    passed: successCount,
+                    failed: errorCount,
+                    status: errorCount === 0 ? 'success' : 'failed'
+                };
+                
+                addResult('テスト完了');
+                
+            } catch (error) {
+                addResult(`💥 テスト実行エラー: ${error.message}`, 'error');
+                window.TEST_RESULTS = {
+                    total: 0,
+                    passed: 0,
+                    failed: 1,
+                    status: 'error',
+                    error: error.message
+                };
+            }
+        }, 2000); // 2秒待機してからテスト実行
+    </script>
+</body>
+</html>
