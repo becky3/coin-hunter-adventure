@@ -689,8 +689,8 @@ class Player {
         
         // 可変ジャンプロジック
         if (input.jump && this.onGround && !this.isJumping) {
-            // ジャンプ開始 - 最小ジャンプ力で開始
-            this.velY = -PLAYER_CONFIG.minJumpPower; // 最小ジャンプ力で開始
+            // ジャンプ開始 - 非常に小さな初速で開始
+            this.velY = -3; // 固定の小さな初速（プレイヤー高さの約1/4程度のジャンプ）
             this.onGround = false;
             this.isJumping = true;
             this.jumpButtonPressed = true;
@@ -710,21 +710,24 @@ class Player {
             
             console.log(`可変ジャンプ処理: time=${this.jumpTime}, velY=${this.velY}, pos=(${this.x}, ${this.y})`);
             
-            // 最初の数フレームは猶予期間（人間の反応速度を考慮）
-            if (this.jumpTime <= PLAYER_CONFIG.jumpGraceFrames) {
-                // 猶予期間中は追加の重力をかけて早く落下させる
-                this.velY += GRAVITY * 0.5; // 追加の重力
-                console.log(`猶予期間中: ${this.jumpTime}/${PLAYER_CONFIG.jumpGraceFrames}フレーム, 追加重力適用`);
-            } else if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
+            // ボタンを押し続けている時のみ上昇力を追加
+            if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
                 const oldVelY = this.velY;
-                // 重力を相殺しつつ、追加の上昇力を付与
-                this.velY -= GRAVITY * 1.0; // 重力を完全に相殺
                 
-                // ジャンプ中期まで追加の上昇力を付与（最大jumpPowerまで）
-                if (this.jumpTime < 15 && Math.abs(this.velY) < PLAYER_CONFIG.jumpPower) {
-                    this.velY -= 1.2; // 追加の上昇力（0.8 -> 1.2で強化）
+                // 最初の数フレームから強い上昇力を与える（長押し時）
+                if (this.jumpTime < 3) {
+                    // 初期ブースト
+                    this.velY = -PLAYER_CONFIG.minJumpPower;
+                } else {
+                    // 継続的な上昇力
+                    this.velY -= GRAVITY * 1.5; // 重力の150%相殺
+                    
+                    // 最大速度に達していなければ追加の上昇力
+                    if (Math.abs(this.velY) < PLAYER_CONFIG.jumpPower) {
+                        this.velY -= 0.8;
+                    }
                 }
-                console.log(`可変ジャンプ効果: velY ${oldVelY} -> ${this.velY}`);
+                console.log(`可変ジャンプ効果: velY ${oldVelY} -> ${this.velY}, time=${this.jumpTime}`);
             } else {
                 // 最大時間に達したら可変ジャンプ終了
                 this.canVariableJump = false;
