@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ジャンプメカニクス テスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #2c3e50;
+            color: white;
+            text-align: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+        
+        .instructions {
+            background: rgba(52, 73, 94, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+        
+        .instructions ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin: 5px 0;
+        }
+        
+        canvas {
+            border: 2px solid #e74c3c;
+            display: block;
+            margin: 20px auto;
+            background: black;
+        }
+        
+        .controls {
+            margin: 20px 0;
+        }
+        
+        button {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            margin: 0 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #c0392b;
+        }
+        
+        .status {
+            background: rgba(52, 73, 94, 0.8);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🦘 ジャンプメカニクス テスト</h1>
+        
+        <div class="instructions">
+            <h3>📋 テスト手順:</h3>
+            <ul>
+                <li><strong>短いタップ:</strong> スペースキーを素早く押して離す（人間の反応限界約100-200ms）</li>
+                <li><strong>長押し:</strong> スペースキーを1秒程度押し続ける</li>
+                <li><strong>移動:</strong> ←→キーで左右移動</li>
+                <li><strong>期待値:</strong> 短いタップ = 1-2人分の高さ、長押し = 4-5人分の高さ</li>
+            </ul>
+        </div>
+        
+        <div class="controls">
+            <button onclick="startTest()">ゲーム開始</button>
+            <button onclick="resetTest()">リセット</button>
+        </div>
+        
+        <canvas id="gameCanvas" width="1024" height="576"></canvas>
+        
+        <div class="status" id="statusDisplay">
+            ゲーム開始ボタンを押してください...
+        </div>
+    </div>
+
+    <!-- ゲームスクリプトの読み込み -->
+    <script>
+        // CORS警告を無効化（テスト用）
+        window.DISABLE_CORS_WARNING = true;
+    </script>
+    <script src="src/config.js"></script>
+    <script src="src/levels.js"></script>
+    <script src="src/music.js"></script>
+    <script src="src/svg-renderer.js"></script>
+    <script src="src/svg-player-renderer.js"></script>
+    <script src="src/svg-enemy-renderer.js"></script>
+    <script src="src/svg-item-renderer.js"></script>
+    <script src="src/game.js"></script>
+    
+    <script>
+        let testGame;
+        
+        function startTest() {
+            console.log('🧪 ジャンプテスト開始');
+            
+            if (testGame) {
+                testGame.startGame();
+            } else {
+                // ゲームインスタンスを作成
+                testGame = new Game();
+                testGame.setupCanvas();
+                
+                // 自動でゲーム開始
+                setTimeout(() => {
+                    testGame.startGame();
+                    updateStatus('ゲーム開始！スペースキーでジャンプテストしてください。');
+                }, 100);
+            }
+        }
+        
+        function resetTest() {
+            if (testGame) {
+                testGame.restartGame();
+                updateStatus('ゲームをリセットしました。');
+            }
+        }
+        
+        function updateStatus(message) {
+            const statusDiv = document.getElementById('statusDisplay');
+            if (statusDiv) {
+                statusDiv.innerHTML = `
+                    <strong>ステータス:</strong> ${message}<br>
+                    <small>時刻: ${new Date().toLocaleTimeString()}</small>
+                `;
+            }
+        }
+        
+        // ページ読み込み完了時の処理
+        document.addEventListener('DOMContentLoaded', () => {
+            updateStatus('準備完了。ゲーム開始ボタンを押してください。');
+            
+            // キーボードイベントの監視
+            let jumpStartTime = 0;
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.code === 'Space' && jumpStartTime === 0) {
+                    jumpStartTime = performance.now();
+                    updateStatus('ジャンプ開始！ボタンを離すタイミングでジャンプの高さが決まります。');
+                }
+            });
+            
+            document.addEventListener('keyup', (e) => {
+                if (e.code === 'Space' && jumpStartTime > 0) {
+                    const holdTime = performance.now() - jumpStartTime;
+                    const holdTimeMs = Math.round(holdTime);
+                    jumpStartTime = 0;
+                    
+                    let jumpType;
+                    if (holdTimeMs < 150) {
+                        jumpType = '短いタップ';
+                    } else if (holdTimeMs < 500) {
+                        jumpType = '中程度';
+                    } else {
+                        jumpType = '長押し';
+                    }
+                    
+                    updateStatus(`ジャンプ実行: ${jumpType} (${holdTimeMs}ms保持) - デバッグ表示で高さを確認してください。`);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
