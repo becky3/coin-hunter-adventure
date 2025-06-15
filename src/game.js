@@ -689,8 +689,8 @@ class Player {
         
         // 可変ジャンプロジック
         if (input.jump && this.onGround && !this.isJumping) {
-            // ジャンプ開始
-            this.velY = -this.jumpPower;
+            // ジャンプ開始 - 初速を少し抑えめにして、長押しで補正
+            this.velY = -PLAYER_CONFIG.minJumpPower * 1.5; // 最小ジャンプ力の1.5倍で開始
             this.onGround = false;
             this.isJumping = true;
             this.jumpButtonPressed = true;
@@ -713,8 +713,13 @@ class Player {
             // 最大ジャンプ時間内で、上昇中の場合のみ可変ジャンプ効果を適用
             if (this.jumpTime < PLAYER_CONFIG.maxJumpTime) {
                 const oldVelY = this.velY;
-                // 重力の一部を相殺して滞空時間を延長
-                this.velY -= GRAVITY * 0.3; // 重力の30%を相殺
+                // 重力を相殺しつつ、追加の上昇力を付与
+                this.velY -= GRAVITY * 0.8; // 重力の80%を相殺
+                
+                // ジャンプ初期に追加の上昇力を付与（最大jumpPowerまで）
+                if (this.jumpTime < 10 && Math.abs(this.velY) < PLAYER_CONFIG.jumpPower) {
+                    this.velY -= 0.5; // 追加の上昇力
+                }
                 console.log(`可変ジャンプ効果: velY ${oldVelY} -> ${this.velY}`);
             } else {
                 // 最大時間に達したら可変ジャンプ終了

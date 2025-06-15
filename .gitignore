@@ -17,3 +17,7 @@ debug-*.js
 debug-*.html
 server.log
 svg-debug.html
+
+# Node.js
+node_modules/
+package-lock.json

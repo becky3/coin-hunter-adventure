@@ -18,8 +18,8 @@ var PLAYER_CONFIG = {
     height: 60,
     speed: 3.5,      // 5 -> 3.5 に減速（30%減）
     jumpPower: 18,   // 15 -> 18 に増加（より高いジャンプ）
-    minJumpPower: 12, // 可変ジャンプの最小値
-    jumpDecayRate: 0.85, // ボタンを離した時の上昇速度減衰率
+    minJumpPower: 8,  // 可変ジャンプの最小値（12 -> 8 に減少）
+    jumpDecayRate: 0.65, // ボタンを離した時の上昇速度減衰率（0.85 -> 0.65 でより急激に減速）
     maxJumpTime: 20,  // 可変ジャンプの最大持続フレーム数
     maxHealth: 2,
     invulnerabilityTime: 120,
