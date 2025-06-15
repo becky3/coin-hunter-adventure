@@ -1,6 +1,7 @@
 /**
  * ゲームテストスイート
  * システムテストとレベルテストを分離して段階的に実行
+ * UPDATED: 2025-06-15 - ジャンプテスト修正版
  */
 
 // テストフレームワーク拡張版
@@ -268,7 +269,7 @@ systemTests.test('プレイヤーの移動処理', () => {
     player.onGround = true;
     player.isJumping = false;
     player.handleInput({ right: false, left: false, jump: true });
-    // ジャンプ値は調整可能なので、負の値であることのみ確認
+    // ジャンプ値は調整可能なので、負の値であることのみ確認 (2025-06-15 updated)
     assert(player.velY < 0, 'ジャンプ時の垂直速度が負でありません');
     assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
     assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
