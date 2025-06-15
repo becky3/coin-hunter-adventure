@@ -721,7 +721,7 @@ class Player {
                 
                 // ジャンプ中期まで追加の上昇力を付与（最大jumpPowerまで）
                 if (this.jumpTime < 15 && Math.abs(this.velY) < PLAYER_CONFIG.jumpPower) {
-                    this.velY -= 0.8; // 追加の上昇力
+                    this.velY -= 1.2; // 追加の上昇力（0.8 -> 1.2で強化）
                 }
                 console.log(`可変ジャンプ効果: velY ${oldVelY} -> ${this.velY}`);
             } else {
