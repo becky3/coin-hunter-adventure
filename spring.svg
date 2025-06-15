@@ -1,0 +1,60 @@
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <!-- スプリングアイテム -->
+  <defs>
+    <!-- グラデーション定義 -->
+    <linearGradient id="baseGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#AAAAAA;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#888888;stop-opacity:1" />
+    </linearGradient>
+    
+    <linearGradient id="topGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#FF6666;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FF4444;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- グロー効果 -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- スプリングベース -->
+  <rect x="8" y="36" width="24" height="4" fill="url(#baseGradient)" />
+  <rect x="8" y="36" width="24" height="1" fill="#CCCCCC" />
+  
+  <!-- スプリングコイル（5段） -->
+  <g stroke="#FFD700" stroke-width="3" stroke-linecap="round" fill="none" filter="url(#glow)">
+    <!-- コイル1段目 -->
+    <path d="M 12 32 Q 8 28 12 24 Q 16 20 12 16" />
+    <path d="M 28 32 Q 32 28 28 24 Q 24 20 28 16" />
+    
+    <!-- コイル2段目 -->
+    <path d="M 12 28 Q 8 24 12 20 Q 16 16 12 12" />
+    <path d="M 28 28 Q 32 24 28 20 Q 24 16 28 12" />
+    
+    <!-- コイル3段目 -->
+    <path d="M 12 24 Q 8 20 12 16 Q 16 12 12 8" />
+    <path d="M 28 24 Q 32 20 28 16 Q 24 12 28 8" />
+    
+    <!-- コイル4段目 -->
+    <path d="M 12 20 Q 8 16 12 12 Q 16 8 12 4" />
+    <path d="M 28 20 Q 32 16 28 12 Q 24 8 28 4" />
+    
+    <!-- 中央の垂直線 -->
+    <path d="M 20 32 L 20 4" stroke-width="2" />
+  </g>
+  
+  <!-- トッププレート -->
+  <rect x="6" y="2" width="28" height="2" fill="url(#topGradient)" filter="url(#glow)" />
+  <rect x="6" y="2" width="28" height="0.5" fill="#FF8888" />
+  
+  <!-- 圧縮時の効果線（圧縮状態では表示） -->
+  <g class="compression-effect" style="opacity: 0">
+    <path d="M 5 20 L 35 20" stroke="rgba(255,255,255,0.8)" stroke-width="2" stroke-dasharray="3,2" />
+    <path d="M 10 25 L 30 25" stroke="rgba(255,255,255,0.6)" stroke-width="1" stroke-dasharray="2,1" />
+  </g>
+</svg>

@@ -26,22 +26,50 @@
 
 ## 🚀 プレイ方法
 
-1. このリポジトリをクローンまたはダウンロード
+### 重要：HTTPサーバー経由でのアクセスが必要
+
+このゲームは外部SVGファイルを使用しているため、**file://プロトコルでは正常に動作しません**。
+CORS（Cross-Origin Resource Sharing）制限により、SVGグラフィックが読み込めないためです。
+
+### 推奨セットアップ手順
+
+1. **リポジトリを取得**
 ```bash
 git clone https://github.com/becky3/coin-hunter-adventure.git
 cd coin-hunter-adventure
 ```
 
-2. ブラウザで `index.html` を開く
-3. 「ゲーム開始」ボタンをクリック
-4. 冒険を楽しもう！
+2. **HTTPサーバーを起動**（以下のいずれかを実行）
+```bash
+# Python 3の場合
+python3 -m http.server 8080
+
+# Node.jsがある場合
+npx serve .
+
+# PHPがある場合
+php -S localhost:8080
+```
+
+3. **ブラウザでアクセス**
+```
+http://localhost:8080/index.html
+```
+
+4. 「ゲーム開始」ボタンをクリック
+5. 冒険を楽しもう！
+
+### ⚠️ 注意事項
+- `index.html`をダブルクリックで直接開くと、グラフィックが正常に表示されません
+- ブラウザに警告画面が表示された場合は、上記手順でHTTPサーバー経由でアクセスしてください
 
 ## 🛠️ 技術仕様
 
 - **言語**: HTML5, CSS3, JavaScript (ES6+)
 - **音響**: Web Audio API
-- **グラフィック**: HTML5 Canvas
+- **グラフィック**: HTML5 Canvas + 外部SVGファイル
 - **フレームワーク**: Vanilla JavaScript (ライブラリ不使用)
+- **アーキテクチャ**: SVGベースのグラフィックレンダリングシステム
 
 ## 📁 ファイル構成
 

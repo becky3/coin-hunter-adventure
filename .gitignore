@@ -11,3 +11,9 @@ HANDOVER.md
 
 # Local development rules (security sensitive)
 CLAUDE.md
+
+# Debug files
+debug-*.js
+debug-*.html
+server.log
+svg-debug.html

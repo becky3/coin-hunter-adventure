@@ -27,27 +27,55 @@ class SVGPlayerRenderer {
     // SVGファイルを非同期で読み込み
     async loadSVG(filename) {
         if (this.svgCache.has(filename)) {
+            console.log(`🎯 キャッシュからSVG取得: ${filename}`);
             return this.svgCache.get(filename);
         }
         
         if (this.loadPromises.has(filename)) {
+            console.log(`⏳ SVG読み込み中（待機）: ${filename}`);
             return this.loadPromises.get(filename);
         }
         
+        // Protocol check for better error messages
+        if (window.location.protocol === 'file:') {
+            console.error(`🚫 CORS ERROR: ゲームがfile://プロトコルで開かれています`);
+            console.error(`🚫 SVGファイルの読み込みができません: ${filename}`);
+            console.error(`✅ SOLUTION: HTTPサーバーを起動してください`);
+            console.error(`📝 例: python3 -m http.server 8080`);
+            console.error(`📝 その後: http://localhost:8080/ でアクセス`);
+            
+            // Return null to trigger fallback rendering
+            return null;
+        }
+        
+        console.log(`🌐 SVGファイル読み込み開始: ${filename}`);
+        console.log(`📍 現在のURL: ${window.location.href}`);
+        console.log(`🎯 読み込み先: ${window.location.origin}/${filename}`);
+        
         const loadPromise = fetch(filename)
             .then(response => {
+                console.log(`📡 fetch応答: ${filename}, status: ${response.status}, ok: ${response.ok}`);
+                console.log(`📡 response.url: ${response.url}`);
+                console.log(`📡 response.type: ${response.type}`);
                 if (!response.ok) {
-                    throw new Error(`SVGファイル読み込み失敗: ${filename}`);
+                    if (response.status === 0) {
+                        throw new Error(`CORS/ネットワークエラー: ${filename} - file://プロトコルまたはネットワーク問題 (Status: 0)`);
+                    } else {
+                        throw new Error(`SVGファイル読み込み失敗: ${filename} (Status: ${response.status})`);
+                    }
                 }
                 return response.text();
             })
             .then(svgText => {
+                console.log(`✅ SVGテキスト取得成功: ${filename}, 長さ: ${svgText.length}`);
                 this.svgCache.set(filename, svgText);
                 this.loadPromises.delete(filename);
                 return svgText;
             })
             .catch(error => {
-                console.error(error);
+                console.error(`❌ SVG読み込みエラー詳細: ${filename}`, error);
+                console.error(`❌ エラーメッセージ: ${error.message}`);
+                console.error(`❌ エラータイプ: ${error.constructor.name}`);
                 this.loadPromises.delete(filename);
                 return null;
             });
@@ -79,7 +107,9 @@ class SVGPlayerRenderer {
         let processedSvg = svgText;
         
         Object.entries(colorVars).forEach(([varName, color]) => {
-            const regex = new RegExp(`var\\(${varName}\\)`, 'g');
+            // より正確な正規表現でCSS変数を置換
+            const escapedVarName = varName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+            const regex = new RegExp(`var\\s*\\(\\s*${escapedVarName}\\s*(?:,\\s*[^)]*)?\\s*\\)`, 'g');
             processedSvg = processedSvg.replace(regex, color);
         });
         
@@ -107,20 +137,26 @@ class SVGPlayerRenderer {
         const filename = this.getSVGFilename(velX, velY, animFrame);
         const colorVars = this.getColorVariables(health);
         
-        // キャッシュされたSVGがあるかチェック
+        console.log(`SVGプレイヤー描画: ${filename}, キャッシュ状況: ${this.svgCache.has(filename)}`);
+        
+        // SVGが利用可能な場合は使用、そうでなければエラー
         if (this.svgCache.has(filename)) {
-            const svgText = this.svgCache.get(filename);
-            const processedSvg = this.applyColorVariables(svgText, colorVars);
-            this.renderSVGToCanvasSync(processedSvg, x, y, width, height, health, direction, invulnerable, animFrame);
+            console.log(`SVG描画を使用: ${filename}`);
+            this.drawFromSVGCache(x, y, width, height, health, direction, invulnerable, animFrame, filename);
         } else {
-            // SVGが読み込まれていない場合はフォールバック
-            this.drawFallback(x, y, width, height, health, direction, invulnerable);
-            
-            // 非同期で読み込み開始（次回フレーム用）
-            this.loadSVG(filename).catch(error => {
-                console.warn(`SVG読み込みエラー: ${filename}`, error);
-            });
+            throw new Error(`プレイヤーSVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);
         }
+    }
+    
+    // SVGキャッシュから描画
+    drawFromSVGCache(x, y, width, height, health, direction, invulnerable, animFrame, filename) {
+        const svgText = this.svgCache.get(filename);
+        if (!svgText) {
+            throw new Error(`SVGファイル（${filename}）がキャッシュに存在しません`);
+        }
+        
+        // SVGテキストを使って描画
+        this.renderSVGToCanvasSync(svgText, x, y, width, height, health, direction, invulnerable, animFrame);
     }
     
     // SVGをCanvasに同期描画（キャッシュされた画像使用）
@@ -137,10 +173,16 @@ class SVGPlayerRenderer {
             const img = this.imageCache.get(cacheKey);
             this.drawImageToCanvas(img, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
         } else {
-            // 画像キャッシュがない場合は非同期で作成
-            this.createAndCacheImage(svgText, cacheKey, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
-            // 今回はフォールバック描画
-            this.drawFallback(x, y, width, height, health, direction, invulnerable);
+            // SVGテキストがあるので直接同期描画
+            console.log('SVGテキストから直接描画を試行');
+            try {
+                this.drawSVGDirectly(svgText, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
+                // 成功したら画像もキャッシュ用に作成
+                this.createAndCacheImage(svgText, cacheKey, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
+            } catch (error) {
+                console.error('SVG直接描画エラー:', error);
+                this.drawFallback(x, y, width, height, health, direction, invulnerable);
+            }
         }
     }
     
@@ -172,21 +214,71 @@ class SVGPlayerRenderer {
             this.imageCache = new Map();
         }
         
-        const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
-        const url = URL.createObjectURL(svgBlob);
+        // Base64エンコード
+        const base64 = btoa(unescape(encodeURIComponent(svgText)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
         
         const img = new Image();
         img.onload = () => {
             this.imageCache.set(cacheKey, img);
-            URL.revokeObjectURL(url);
+            // 次のフレームで描画を試行
+            this.drawImageToCanvas(img, x, y, actualWidth, actualHeight, offsetY, direction, invulnerable, animFrame);
         };
         
-        img.onerror = () => {
-            URL.revokeObjectURL(url);
-            console.error('SVG画像の作成に失敗');
+        img.onerror = (error) => {
+            console.error('SVG画像の作成に失敗:', error);
         };
         
-        img.src = url;
+        img.src = dataUrl;
+    }
+    
+    // SVGを直接描画（同期）
+    drawSVGDirectly(svgText, x, y, width, height, offsetY, direction, invulnerable, animFrame) {
+        // Base64エンコード
+        const base64 = btoa(unescape(encodeURIComponent(svgText)));
+        const dataUrl = `data:image/svg+xml;base64,${base64}`;
+        
+        // 一時的な画像を作成して即座に描画
+        const img = new Image();
+        
+        // 同期的に描画するためのハック
+        img.onload = () => {
+            this.ctx.save();
+            
+            // 無敵時間中の点滅
+            if (invulnerable) {
+                this.ctx.globalAlpha = animFrame % 8 < 4 ? 0.6 : 1.0;
+            }
+            
+            // 向きの処理
+            if (direction === -1) {
+                this.ctx.scale(-1, 1);
+                this.ctx.translate(-x - width, 0);
+            }
+            
+            this.ctx.drawImage(img, x, y + offsetY, width, height);
+            this.ctx.restore();
+        };
+        
+        // 同期描画のため、src設定前にloadイベントを設定
+        img.src = dataUrl;
+        
+        // 画像が即座に利用可能な場合の処理
+        if (img.complete && img.naturalWidth > 0) {
+            this.ctx.save();
+            
+            if (invulnerable) {
+                this.ctx.globalAlpha = animFrame % 8 < 4 ? 0.6 : 1.0;
+            }
+            
+            if (direction === -1) {
+                this.ctx.scale(-1, 1);
+                this.ctx.translate(-x - width, 0);
+            }
+            
+            this.ctx.drawImage(img, x, y + offsetY, width, height);
+            this.ctx.restore();
+        }
     }
     
     // フォールバック描画（SVG読み込み失敗時）
@@ -252,14 +344,27 @@ class SVGPlayerRenderer {
         ];
         
         console.log('プレイヤーSVGファイルを事前読み込み中...');
+        console.log('読み込み対象ファイル:', svgFiles);
         
-        const loadPromises = svgFiles.map(filename => this.loadSVG(filename));
+        const loadPromises = svgFiles.map(async (filename) => {
+            try {
+                console.log(`${filename} 読み込み開始`);
+                const result = await this.loadSVG(filename);
+                console.log(`${filename} 読み込み結果:`, result ? '成功' : '失敗');
+                return result;
+            } catch (error) {
+                console.error(`${filename} 読み込みエラー:`, error);
+                throw error;
+            }
+        });
         
         try {
-            await Promise.all(loadPromises);
+            const results = await Promise.all(loadPromises);
             console.log('プレイヤーSVGファイルの事前読み込み完了');
+            console.log('キャッシュ状況:', Array.from(this.svgCache.keys()));
         } catch (error) {
             console.error('SVGファイルの事前読み込みでエラー:', error);
+            throw error;
         }
     }
 }

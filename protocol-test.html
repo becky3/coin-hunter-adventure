@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Protocol Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #1a1a2e;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background-color: #2d5a2d; }
+        .error { background-color: #5a2d2d; }
+        .warning { background-color: #5a5a2d; }
+        pre {
+            background-color: #0f0f0f;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Protocol and CORS Test</h1>
+    
+    <div id="results"></div>
+    
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+        
+        function addCode(code) {
+            const pre = document.createElement('pre');
+            pre.textContent = code;
+            results.appendChild(pre);
+        }
+        
+        // Environment info
+        addResult(`<strong>Current URL:</strong> ${window.location.href}`);
+        addResult(`<strong>Protocol:</strong> ${window.location.protocol}`);
+        addResult(`<strong>Origin:</strong> ${window.location.origin}`);
+        addResult(`<strong>Host:</strong> ${window.location.host}`);
+        
+        // Protocol detection
+        if (window.location.protocol === 'file:') {
+            addResult('⚠️ <strong>FILE PROTOCOL DETECTED!</strong> This will cause CORS issues with fetch()', 'warning');
+            addResult('✅ <strong>SOLUTION:</strong> Access via http://localhost:8080/protocol-test.html instead', 'success');
+        } else if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+            addResult('✅ <strong>HTTP PROTOCOL DETECTED!</strong> fetch() should work normally', 'success');
+        }
+        
+        // Test SVG loading
+        async function testSVGLoading() {
+            addResult('<strong>Testing SVG file loading...</strong>');
+            
+            const testFiles = ['player-idle.svg', 'slime.svg', 'coin.svg'];
+            
+            for (const filename of testFiles) {
+                try {
+                    const response = await fetch(filename);
+                    if (response.ok) {
+                        const text = await response.text();
+                        addResult(`✅ ${filename}: Success (${text.length} chars)`, 'success');
+                    } else {
+                        addResult(`❌ ${filename}: HTTP ${response.status}`, 'error');
+                    }
+                } catch (error) {
+                    addResult(`❌ ${filename}: ${error.constructor.name} - ${error.message}`, 'error');
+                    if (error.message.includes('Failed to fetch')) {
+                        addResult('🔍 This is likely a CORS issue due to file:// protocol', 'warning');
+                    }
+                }
+            }
+        }
+        
+        // Run tests
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(testSVGLoading, 1000);
+        });
+    </script>
+</body>
+</html>

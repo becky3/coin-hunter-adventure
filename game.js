@@ -17,17 +17,207 @@ class SVGGraphics {
         this.ctx = ctx;
         this.cache = new Map(); // パスキャッシュ
         
+        // クラス定義の確認
+        console.log('=== SVGレンダラークラス確認 ===');
+        console.log('SVGPlayerRenderer:', typeof SVGPlayerRenderer);
+        console.log('SVGEnemyRenderer:', typeof SVGEnemyRenderer);
+        console.log('SVGItemRenderer:', typeof SVGItemRenderer);
+        console.log('==========================');
+        
         // プレイヤーグラフィックレンダラーを初期化
-        // コードベースを優先して確実に動作させる
-        if (typeof PlayerGraphicsRenderer !== 'undefined') {
-            this.playerRenderer = new PlayerGraphicsRenderer(ctx);
-            console.log('コードベースのプレイヤーレンダラーを使用');
-        } else if (typeof SVGPlayerRenderer !== 'undefined') {
-            this.playerRenderer = new SVGPlayerRenderer(ctx);
-            console.log('SVGファイルベースのプレイヤーレンダラーを使用（フォールバック）');
+        if (typeof SVGPlayerRenderer !== 'undefined') {
+            try {
+                this.playerRenderer = new SVGPlayerRenderer(ctx);
+                console.log('✅ SVGPlayerRenderer初期化成功');
+            } catch (error) {
+                console.error('❌ SVGPlayerRenderer初期化エラー:', error);
+                this.playerRenderer = null;
+            }
         } else {
-            console.error('プレイヤーレンダラーが見つかりません');
+            console.error('❌ SVGPlayerRendererクラスが見つかりません');
+            this.playerRenderer = null;
         }
+        
+        // 敵キャラクターレンダラーを初期化
+        if (typeof SVGEnemyRenderer !== 'undefined') {
+            try {
+                this.enemyRenderer = new SVGEnemyRenderer(ctx);
+                console.log('✅ SVGEnemyRenderer初期化成功');
+            } catch (error) {
+                console.error('❌ SVGEnemyRenderer初期化エラー:', error);
+                this.enemyRenderer = null;
+            }
+        } else {
+            console.error('❌ SVGEnemyRendererクラスが見つかりません');
+            this.enemyRenderer = null;
+        }
+        
+        // アイテムレンダラーを初期化
+        if (typeof SVGItemRenderer !== 'undefined') {
+            try {
+                this.itemRenderer = new SVGItemRenderer(ctx);
+                console.log('✅ SVGItemRenderer初期化成功');
+            } catch (error) {
+                console.error('❌ SVGItemRenderer初期化エラー:', error);
+                this.itemRenderer = null;
+            }
+        } else {
+            console.error('❌ SVGItemRendererクラスが見つかりません');
+            this.itemRenderer = null;
+        }
+        
+        // 全SVGファイルを事前読み込み
+        this.preloadAllSVGs();
+        
+        // プロトコルチェックと警告システム
+        this.checkProtocolAndWarn();
+    }
+    
+    // プロトコルチェックと警告表示
+    checkProtocolAndWarn() {
+        if (window.location.protocol === 'file:') {
+            // test.html専用：CORS警告を無効化
+            if (window.DISABLE_CORS_WARNING) {
+                console.log('📝 テストモード: file://プロトコルですが、テスト実行のため警告を無効化します');
+                return;
+            }
+            
+            console.error('🚫 CRITICAL ERROR: ゲームがfile://プロトコルで開かれています');
+            console.error('🚫 SVGファイルはCORS制限により読み込めません');
+            console.error('✅ SOLUTION: HTTPサーバーでアクセスしてください');
+            console.error('📝 例: python3 -m http.server 8080 を実行後、http://localhost:8080/ でアクセス');
+            
+            // ビジュアル警告を表示（一度だけ）
+            if (!window._corsWarningShown) {
+                window._corsWarningShown = true;
+                this.showProtocolWarning();
+            }
+        } else {
+            console.log('✅ HTTPサーバー経由でアクセスされています:', window.location.href);
+        }
+    }
+    
+    // プロトコル警告の表示
+    showProtocolWarning() {
+        // 赤いオーバーレイを追加
+        const warningDiv = document.createElement('div');
+        warningDiv.style.position = 'fixed';
+        warningDiv.style.top = '0';
+        warningDiv.style.left = '0';
+        warningDiv.style.width = '100%';
+        warningDiv.style.height = '100%';
+        warningDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
+        warningDiv.style.color = 'white';
+        warningDiv.style.fontSize = '24px';
+        warningDiv.style.textAlign = 'center';
+        warningDiv.style.padding = '50px';
+        warningDiv.style.zIndex = '10000';
+        warningDiv.style.display = 'flex';
+        warningDiv.style.flexDirection = 'column';
+        warningDiv.style.justifyContent = 'center';
+        warningDiv.style.alignItems = 'center';
+        
+        warningDiv.innerHTML = `
+            <h1>⚠️ アクセス方法エラー ⚠️</h1>
+            <p>ゲームが file:// プロトコルで開かれています</p>
+            <p>SVGファイルが読み込めないため、グラフィックが表示されません</p>
+            <br>
+            <h2>✅ 解決方法:</h2>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <p><strong>1. HTTPサーバーを起動：</strong></p>
+                <p style="background: #333; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace;">
+                    python3 -m http.server 8080<br>
+                    # または<br>
+                    npx serve .<br>
+                    # または<br>
+                    php -S localhost:8080
+                </p>
+                <p><strong>2. ブラウザでHTTPアクセス：</strong></p>
+                <p style="background: #333; color: #ff0; padding: 10px; border-radius: 5px; font-family: monospace;">
+                    http://localhost:8080/index.html
+                </p>
+            </div>
+            <br>
+            <button onclick="this.parentElement.style.display='none'" 
+                    style="padding: 10px 20px; font-size: 16px; background: white; color: black; border: none; border-radius: 5px; cursor: pointer;">
+                警告を閉じる（フォールバック描画でプレイ）
+            </button>
+        `;
+        
+        document.body.appendChild(warningDiv);
+        
+        // ブラウザアラートも表示
+        setTimeout(() => {
+            alert('ゲームのグラフィックが正常に表示されません。\n\nHTTPサーバーを起動後、http://localhost:8080/ でアクセスしてください。\n\n例: python3 -m http.server 8080');
+        }, 1000);
+    }
+    
+    // 全SVGファイルの事前読み込み
+    async preloadAllSVGs() {
+        // Protocol check - skip SVG loading for file:// protocol
+        if (window.location.protocol === 'file:') {
+            console.log('🚫 file://プロトコルのためSVG読み込みをスキップします');
+            return; // Skip SVG loading
+        }
+        
+        console.log('🚀 全SVGファイルの事前読み込み開始...');
+        const promises = [];
+        
+        if (this.playerRenderer && this.playerRenderer.preloadSVGs) {
+            promises.push(this.playerRenderer.preloadSVGs());
+        }
+        
+        if (this.enemyRenderer && this.enemyRenderer.preloadSVGs) {
+            promises.push(this.enemyRenderer.preloadSVGs());
+        }
+        
+        if (this.itemRenderer && this.itemRenderer.preloadSVGs) {
+            promises.push(this.itemRenderer.preloadSVGs());
+        }
+        
+        try {
+            await Promise.all(promises);
+            console.log('✅ 全SVGファイルの事前読み込み完了！');
+        } catch (error) {
+            console.error('❌ SVGファイル事前読み込み中にエラー:', error);
+        }
+    }
+    
+    // Protocol warning display
+    showProtocolWarning() {
+        // Create a warning overlay on the game canvas
+        if (this.ctx && this.ctx.canvas) {
+            const canvas = this.ctx.canvas;
+            this.ctx.save();
+            
+            // Semi-transparent red overlay
+            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+            this.ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Warning text
+            this.ctx.fillStyle = 'white';
+            this.ctx.font = 'bold 24px Arial';
+            this.ctx.textAlign = 'center';
+            this.ctx.textBaseline = 'middle';
+            
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            
+            this.ctx.fillText('⚠️ CORS ERROR', centerX, centerY - 60);
+            this.ctx.font = '18px Arial';
+            this.ctx.fillText('Game is accessed via file:// protocol', centerX, centerY - 20);
+            this.ctx.fillText('SVG files cannot be loaded', centerX, centerY + 10);
+            this.ctx.font = 'bold 20px Arial';
+            this.ctx.fillStyle = '#FFD700';
+            this.ctx.fillText('Solution: Access via http://localhost:8080/', centerX, centerY + 50);
+            
+            this.ctx.restore();
+        }
+        
+        // Also show browser alert as backup
+        setTimeout(() => {
+            alert(`⚠️ CORS ERROR\n\nThe game is being accessed via file:// protocol.\nSVG graphics cannot be loaded due to CORS restrictions.\n\nSolution: Please access the game via:\nhttp://localhost:8080/index.html`);
+        }, 1000);
     }
     
     // SVGパスを描画する汎用メソッド
@@ -53,13 +243,10 @@ class SVGGraphics {
     
     // プレイヤーキャラクター（SVGファイルベース）
     drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX = 0, velY = 0) {
-        if (this.playerRenderer) {
-            // プレイヤーグラフィックレンダラーに委託
-            this.playerRenderer.drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX, velY);
-        } else {
-            // フォールバック描画
-            this.drawPlayerFallback(x, y, width, height, health, direction, invulnerable);
+        if (!this.playerRenderer) {
+            throw new Error('プレイヤーSVGレンダラーが初期化されていません');
         }
+        this.playerRenderer.drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX, velY);
     }
     
     // フォールバックプレイヤー描画
@@ -81,12 +268,67 @@ class SVGGraphics {
         }
         this.ctx.translate(-actualWidth / 2, 0);
         
-        // シンプルな矩形で代替
-        this.ctx.fillStyle = health === 2 ? '#6B8EC8' : '#E3A8C7';
-        this.ctx.fillRect(0, actualHeight * 0.4, actualWidth, actualHeight * 0.6);
+        // 体（シャツ）
+        const bodyGradient = this.ctx.createLinearGradient(0, actualHeight * 0.4, 0, actualHeight);
+        bodyGradient.addColorStop(0, health === 2 ? '#4A90E2' : '#E91E63');
+        bodyGradient.addColorStop(1, health === 2 ? '#2171B5' : '#AD1457');
         
-        this.ctx.fillStyle = '#F4C2A1';
-        this.ctx.fillRect(actualWidth * 0.2, 0, actualWidth * 0.6, actualHeight * 0.5);
+        this.ctx.fillStyle = bodyGradient;
+        this.ctx.fillRect(actualWidth * 0.15, actualHeight * 0.4, actualWidth * 0.7, actualHeight * 0.6);
+        
+        // 頭（肌色）
+        const headGradient = this.ctx.createRadialGradient(actualWidth * 0.5, actualHeight * 0.25, 0, actualWidth * 0.5, actualHeight * 0.25, actualWidth * 0.35);
+        headGradient.addColorStop(0, '#FFDBAC');
+        headGradient.addColorStop(1, '#F4C2A1');
+        
+        this.ctx.fillStyle = headGradient;
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.25, actualWidth * 0.3, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 髪
+        this.ctx.fillStyle = '#8B4513';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.2, actualWidth * 0.32, Math.PI, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 目
+        this.ctx.fillStyle = 'white';
+        this.ctx.beginPath();
+        this.ctx.ellipse(actualWidth * 0.4, actualHeight * 0.22, actualWidth * 0.05, actualWidth * 0.04, 0, 0, Math.PI * 2);
+        this.ctx.ellipse(actualWidth * 0.6, actualHeight * 0.22, actualWidth * 0.05, actualWidth * 0.04, 0, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 瞳
+        this.ctx.fillStyle = '#333';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.4, actualHeight * 0.22, actualWidth * 0.02, 0, Math.PI * 2);
+        this.ctx.arc(actualWidth * 0.6, actualHeight * 0.22, actualWidth * 0.02, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 鼻
+        this.ctx.fillStyle = '#E8B896';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.27, actualWidth * 0.015, 0, Math.PI * 2);
+        this.ctx.fill();
+        
+        // 口
+        this.ctx.strokeStyle = '#333';
+        this.ctx.lineWidth = 1.5;
+        this.ctx.lineCap = 'round';
+        this.ctx.beginPath();
+        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.31, actualWidth * 0.03, 0.2 * Math.PI, 0.8 * Math.PI);
+        this.ctx.stroke();
+        
+        // 腕
+        this.ctx.fillStyle = headGradient;
+        this.ctx.fillRect(actualWidth * 0.05, actualHeight * 0.45, actualWidth * 0.1, actualHeight * 0.35);
+        this.ctx.fillRect(actualWidth * 0.85, actualHeight * 0.45, actualWidth * 0.1, actualHeight * 0.35);
+        
+        // 足
+        this.ctx.fillStyle = '#654321';
+        this.ctx.fillRect(actualWidth * 0.25, actualHeight * 0.85, actualWidth * 0.15, actualHeight * 0.15);
+        this.ctx.fillRect(actualWidth * 0.6, actualHeight * 0.85, actualWidth * 0.15, actualHeight * 0.15);
         
         this.ctx.restore();
     }
@@ -115,47 +357,52 @@ class SVGGraphics {
             (B > 255 ? 255 : B < 0 ? 0 : B) * 0x100).toString(16).slice(1);
     }
     
-    // スライムの改良版描画
+    // スライムのSVG描画（外部ファイル使用）
     drawSlime(x, y, width, height, animTimer) {
-        const bounce = Math.sin(animTimer * 0.1) * 2;
-        const eyeBlink = animTimer % 180 > 170 ? 0.3 : 1.0;
+        if (!this.enemyRenderer) {
+            throw new Error('敵SVGレンダラーが初期化されていません');
+        }
+        this.enemyRenderer.drawEnemy('slime', x, y, width, height, animTimer);
+    }
+    
+    // スライム本体のSVGパス作成
+    createSlimeBodyPath(width, height) {
+        const path = new Path2D();
+        // 柔らかい楕円形の本体
+        path.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
+        return path;
+    }
+    
+    // スライム頭部のSVGパス作成
+    createSlimeHeadPath(width, height) {
+        const path = new Path2D();
+        // より有機的な頭部の形状
+        const centerX = width / 2;
+        const centerY = height * 0.4;
+        const radiusX = width * 0.3;
+        const radiusY = height * 0.25;
         
-        this.ctx.save();
-        this.ctx.translate(x, y + bounce);
+        // ベジェ曲線で自然な形状を作成
+        path.moveTo(centerX - radiusX, centerY);
+        path.quadraticCurveTo(centerX - radiusX, centerY - radiusY * 1.2, centerX, centerY - radiusY * 1.1);
+        path.quadraticCurveTo(centerX + radiusX, centerY - radiusY * 1.2, centerX + radiusX, centerY);
+        path.quadraticCurveTo(centerX + radiusX * 0.8, centerY + radiusY * 0.8, centerX, centerY + radiusY);
+        path.quadraticCurveTo(centerX - radiusX * 0.8, centerY + radiusY * 0.8, centerX - radiusX, centerY);
+        path.closePath();
         
-        // スライム本体（グラデーション）
-        const bodyGradient = this.ctx.createRadialGradient(width / 2, height * 0.7, 0, width / 2, height * 0.7, width * 0.5);
-        bodyGradient.addColorStop(0, '#7FFF7F'); // 明るいグリーン
-        bodyGradient.addColorStop(0.6, '#4CAF50'); // 中間グリーン
-        bodyGradient.addColorStop(1, '#2E7D32'); // 濃いグリーン
-        
-        this.ctx.fillStyle = bodyGradient;
-        this.ctx.shadowColor = '#4CAF50';
-        this.ctx.shadowBlur = 8;
-        this.ctx.beginPath();
-        this.ctx.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // スライムの頭部（グラデーション）
-        const headGradient = this.ctx.createRadialGradient(width / 2, height * 0.4, 0, width / 2, height * 0.4, width * 0.4);
-        headGradient.addColorStop(0, '#A5FF7F');
-        headGradient.addColorStop(0.7, '#4CAF50');
-        headGradient.addColorStop(1, '#2E7D32');
-        
-        this.ctx.fillStyle = headGradient;
-        this.ctx.beginPath();
-        this.ctx.ellipse(width / 2, height * 0.4, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        this.ctx.shadowBlur = 0;
-        
-        // ハイライト効果
-        this.ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.4, height * 0.35, width * 0.15, height * 0.12, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 目（改良版）
+        return path;
+    }
+    
+    // スライムハイライトのSVGパス作成
+    createSlimeHighlightPath(width, height) {
+        const path = new Path2D();
+        path.ellipse(width * 0.4, height * 0.35, width * 0.15, height * 0.12, 0, 0, Math.PI * 2);
+        return path;
+    }
+    
+    // スライムの目を描画
+    drawSlimeEyes(width, height, eyeBlink) {
+        // 目の白い部分
         this.ctx.fillStyle = 'white';
         this.ctx.beginPath();
         this.ctx.ellipse(width * 0.38, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
@@ -164,7 +411,7 @@ class SVGGraphics {
         this.ctx.ellipse(width * 0.62, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
         this.ctx.fill();
         
-        // 瞳（より可愛らしく）
+        // 瞳
         if (eyeBlink > 0.5) {
             this.ctx.fillStyle = '#1A1A1A';
             this.ctx.beginPath();
@@ -179,221 +426,48 @@ class SVGGraphics {
             this.ctx.arc(width * 0.62 - width * 0.015, height * 0.35, width * 0.015, 0, Math.PI * 2);
             this.ctx.fill();
         }
-        
-        // 口（可愛い笑顔）
+    }
+    
+    // スライムの口を描画
+    drawSlimeMouth(width, height) {
         this.ctx.strokeStyle = '#2E7D32';
         this.ctx.lineWidth = 1.5;
         this.ctx.lineCap = 'round';
         this.ctx.beginPath();
         this.ctx.arc(width * 0.5, height * 0.45, width * 0.06, 0.1 * Math.PI, 0.9 * Math.PI);
         this.ctx.stroke();
-        
-        this.ctx.restore();
     }
     
-    // 鳥の改良版描画
+    // 鳥のSVG描画（外部ファイル使用）
     drawBird(x, y, width, height, animTimer) {
-        const wingFlap = Math.sin(animTimer * 0.3) * 0.3;
-        const bobbing = Math.sin(animTimer * 0.1) * 1;
-        const eyeBlink = animTimer % 200 > 190 ? 0.2 : 1.0;
-        
-        this.ctx.save();
-        this.ctx.translate(x, y + bobbing);
-        
-        // 鳥のボディ（グラデーション）
-        const bodyGradient = this.ctx.createRadialGradient(width * 0.5, height * 0.6, 0, width * 0.5, height * 0.6, width * 0.4);
-        bodyGradient.addColorStop(0, '#E1BEE7'); // 明るいパープル
-        bodyGradient.addColorStop(0.6, '#9C27B0'); // 中間パープル
-        bodyGradient.addColorStop(1, '#6A1B9A'); // 濃いパープル
-        
-        this.ctx.fillStyle = bodyGradient;
-        this.ctx.shadowColor = '#9C27B0';
-        this.ctx.shadowBlur = 6;
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.5, height * 0.6, width * 0.3, height * 0.25, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 頭（グラデーション）
-        const headGradient = this.ctx.createRadialGradient(width * 0.3, height * 0.4, 0, width * 0.3, height * 0.4, width * 0.25);
-        headGradient.addColorStop(0, '#F3E5F5');
-        headGradient.addColorStop(0.7, '#BA68C8');
-        headGradient.addColorStop(1, '#8E24AA');
-        
-        this.ctx.fillStyle = headGradient;
-        this.ctx.beginPath();
-        this.ctx.arc(width * 0.3, height * 0.4, width * 0.2, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        this.ctx.shadowBlur = 0;
-        
-        // 翼（アニメーション改良版）
-        this.ctx.save();
-        this.ctx.translate(width * 0.5, height * 0.5);
-        this.ctx.rotate(wingFlap);
-        
-        // 翼のグラデーション
-        const wingGradient = this.ctx.createLinearGradient(-width * 0.25, -height * 0.15, width * 0.25, height * 0.15);
-        wingGradient.addColorStop(0, '#7B1FA2');
-        wingGradient.addColorStop(0.5, '#9C27B0');
-        wingGradient.addColorStop(1, '#6A1B9A');
-        
-        this.ctx.fillStyle = wingGradient;
-        this.ctx.beginPath();
-        this.ctx.ellipse(0, 0, width * 0.25, height * 0.15, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 翼の羽根模様
-        this.ctx.strokeStyle = '#4A148C';
-        this.ctx.lineWidth = 1;
-        this.ctx.beginPath();
-        this.ctx.moveTo(-width * 0.15, -height * 0.05);
-        this.ctx.lineTo(width * 0.15, height * 0.05);
-        this.ctx.moveTo(-width * 0.1, 0);
-        this.ctx.lineTo(width * 0.2, 0);
-        this.ctx.stroke();
-        
-        this.ctx.restore();
-        
-        // くちばし（改良版）
-        const beakGradient = this.ctx.createLinearGradient(width * 0.1, height * 0.35, width * 0.25, height * 0.45);
-        beakGradient.addColorStop(0, '#FFB74D');
-        beakGradient.addColorStop(1, '#FF8F00');
-        
-        this.ctx.fillStyle = beakGradient;
-        this.ctx.beginPath();
-        this.ctx.moveTo(width * 0.1, height * 0.4);
-        this.ctx.lineTo(width * 0.25, height * 0.35);
-        this.ctx.lineTo(width * 0.25, height * 0.45);
-        this.ctx.closePath();
-        this.ctx.fill();
-        
-        // 目（改良版）
-        this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.28, height * 0.35, width * 0.05, width * 0.05 * eyeBlink, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 瞳（より表情豊かに）
-        if (eyeBlink > 0.5) {
-            this.ctx.fillStyle = '#1A1A1A';
-            this.ctx.beginPath();
-            this.ctx.arc(width * 0.29, height * 0.35, width * 0.025, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // 瞳のハイライト
-            this.ctx.fillStyle = 'white';
-            this.ctx.beginPath();
-            this.ctx.arc(width * 0.285, height * 0.34, width * 0.01, 0, Math.PI * 2);
-            this.ctx.fill();
+        if (!this.enemyRenderer) {
+            throw new Error('敵SVGレンダラーが初期化されていません');
         }
-        
-        // 頬の模様
-        this.ctx.fillStyle = 'rgba(255, 193, 7, 0.4)';
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.35, height * 0.45, width * 0.04, width * 0.03, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        this.ctx.restore();
+        this.enemyRenderer.drawEnemy('bird', x, y, width, height, animTimer);
     }
     
-    // コインのSVG
+    // コインのSVG描画（外部ファイル使用）
     drawCoin(x, y, width, height, rotation) {
-        this.ctx.save();
-        this.ctx.translate(x + width / 2, y + height / 2);
-        this.ctx.scale(Math.cos(rotation), 1); // 回転効果
-        
-        // コインベース（ネオンゴールド）
-        this.ctx.fillStyle = '#FFFF00';
-        this.ctx.shadowColor = '#FFFF00';
-        this.ctx.shadowBlur = 12;
-        this.ctx.beginPath();
-        this.ctx.arc(0, 0, width * 0.4, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // コインの縁
-        this.ctx.strokeStyle = '#FFD700';
-        this.ctx.lineWidth = 2;
-        this.ctx.shadowBlur = 8;
-        this.ctx.stroke();
-        
-        // 中央の記号
-        this.ctx.fillStyle = '#FF8800';
-        this.ctx.shadowColor = '#FF8800';
-        this.ctx.shadowBlur = 6;
-        this.ctx.font = `bold ${Math.max(12, width * 0.6)}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        this.ctx.fillText('¥', 0, 0);
-        
-        this.ctx.restore();
-    }
-    
-    // フラグのSVG
-    drawFlag(x, y, width, height) {
-        // ポール
-        this.ctx.fillStyle = '#8B4513';
-        this.ctx.fillRect(x + width * 0.47, y, width * 0.06, height);
-        
-        // 旗
-        this.ctx.fillStyle = '#FF0000';
-        this.ctx.beginPath();
-        this.ctx.moveTo(x + width * 0.5, y);
-        this.ctx.lineTo(x + width * 0.9, y + height * 0.1);
-        this.ctx.lineTo(x + width * 0.85, y + height * 0.25);
-        this.ctx.lineTo(x + width * 0.9, y + height * 0.4);
-        this.ctx.lineTo(x + width * 0.5, y + height * 0.5);
-        this.ctx.closePath();
-        this.ctx.fill();
-        
-        // 旗の縁
-        this.ctx.strokeStyle = '#CC0000';
-        this.ctx.lineWidth = 2;
-        this.ctx.stroke();
-    }
-    
-    // スプリングのSVG
-    drawSpring(x, y, width, height, compression = 0) {
-        this.ctx.save();
-        this.ctx.translate(x, y);
-        
-        // スプリングベース
-        this.ctx.fillStyle = '#888888';
-        this.ctx.fillRect(width * 0.2, height * 0.9, width * 0.6, height * 0.1);
-        
-        // スプリングコイル（圧縮アニメーション付き）
-        const coilHeight = height * 0.8 * (1 - compression * 0.5);
-        const coilY = height * 0.1 + compression * height * 0.4;
-        const coils = 5;
-        
-        this.ctx.strokeStyle = '#FFD700';
-        this.ctx.lineWidth = 3;
-        this.ctx.shadowColor = '#FFD700';
-        this.ctx.shadowBlur = 10;
-        
-        for (let i = 0; i < coils; i++) {
-            const segmentHeight = coilHeight / coils;
-            const y1 = coilY + i * segmentHeight;
-            const y2 = coilY + (i + 0.5) * segmentHeight;
-            const y3 = coilY + (i + 1) * segmentHeight;
-            
-            this.ctx.beginPath();
-            this.ctx.moveTo(width * 0.3, y1);
-            this.ctx.quadraticCurveTo(width * 0.1, y2, width * 0.3, y3);
-            this.ctx.stroke();
-            
-            this.ctx.beginPath();
-            this.ctx.moveTo(width * 0.7, y1);
-            this.ctx.quadraticCurveTo(width * 0.9, y2, width * 0.7, y3);
-            this.ctx.stroke();
+        if (!this.itemRenderer) {
+            throw new Error('アイテムSVGレンダラーが初期化されていません');
         }
-        
-        // トッププレート
-        this.ctx.fillStyle = '#FF4444';
-        this.ctx.shadowColor = '#FF4444';
-        this.ctx.shadowBlur = 8;
-        this.ctx.fillRect(width * 0.15, coilY - height * 0.05, width * 0.7, height * 0.05);
-        
-        this.ctx.restore();
+        this.itemRenderer.drawItem('coin', x, y, width, height, { rotation });
+    }
+    
+    // フラグのSVG描画（外部ファイル使用）
+    drawFlag(x, y, width, height) {
+        if (!this.itemRenderer) {
+            throw new Error('アイテムSVGレンダラーが初期化されていません');
+        }
+        this.itemRenderer.drawItem('flag', x, y, width, height);
+    }
+    
+    // スプリングのSVG描画（外部ファイル使用）
+    drawSpring(x, y, width, height, compression = 0) {
+        if (!this.itemRenderer) {
+            throw new Error('アイテムSVGレンダラーが初期化されていません');
+        }
+        this.itemRenderer.drawItem('spring', x, y, width, height, { compression });
     }
 }
 

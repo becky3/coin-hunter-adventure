@@ -123,12 +123,100 @@
         </div>
     </div>
 
+    <!-- file://プロトコル警告システム -->
+    <script>
+        // ページ読み込み時にプロトコルをチェック
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.location.protocol === 'file:') {
+                showProtocolWarning();
+            }
+        });
+
+        function showProtocolWarning() {
+            // 警告オーバーレイを作成
+            const warningOverlay = document.createElement('div');
+            warningOverlay.id = 'protocolWarning';
+            warningOverlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.9);
+                color: white;
+                font-family: Arial, sans-serif;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                z-index: 10000;
+                text-align: center;
+                padding: 20px;
+                box-sizing: border-box;
+            `;
+
+            warningOverlay.innerHTML = `
+                <div style="max-width: 600px; background: linear-gradient(135deg, #FF4444, #CC0000); padding: 30px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    <h1 style="margin: 0 0 20px 0; font-size: 2.2em; color: #FFE4E1;">⚠️ アクセス方法エラー</h1>
+                    <p style="font-size: 1.1em; margin: 15px 0; line-height: 1.5;">
+                        ゲームがfile://プロトコルで開かれています。<br>
+                        SVGグラフィックが読み込めないため、ゲームが正常に動作しません。
+                    </p>
+                    
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 10px; margin: 20px 0;">
+                        <h2 style="margin: 0 0 15px 0; color: #90EE90;">✅ 解決方法</h2>
+                        <div style="text-align: left; font-size: 0.95em;">
+                            <p><strong>1. ターミナル/コマンドプロンプトでHTTPサーバーを起動：</strong></p>
+                            <div style="background: #1a1a1a; color: #00ff00; padding: 10px; border-radius: 5px; font-family: monospace; margin: 8px 0;">
+                                python3 -m http.server 8080<br>
+                                # または<br>
+                                npx serve .<br>
+                                # または<br>
+                                php -S localhost:8080
+                            </div>
+                            <p><strong>2. ブラウザでHTTPアクセス：</strong></p>
+                            <div style="background: #1a1a1a; color: #ffff00; padding: 10px; border-radius: 5px; font-family: monospace; margin: 8px 0;">
+                                http://localhost:8080/index.html
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="closeWarning()" style="
+                        background: linear-gradient(135deg, #4CAF50, #45a049);
+                        color: white;
+                        border: none;
+                        padding: 12px 25px;
+                        font-size: 1em;
+                        border-radius: 8px;
+                        cursor: pointer;
+                        margin-top: 10px;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+                        transition: transform 0.2s;
+                    " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        警告を閉じる（制限付きでプレイ）
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(warningOverlay);
+        }
+
+        function closeWarning() {
+            const warning = document.getElementById('protocolWarning');
+            if (warning) {
+                warning.remove();
+            }
+        }
+    </script>
+
     <!-- ゲームスクリプト -->
     <script src="config.js"></script>
     <script src="levels.js"></script>
     <script src="music.js"></script>
     <script src="player-graphics.js"></script>
     <script src="svg-player-renderer.js"></script>
+    <script src="svg-enemy-renderer.js"></script>
+    <script src="svg-item-renderer.js"></script>
     <script src="game.js"></script>
 </body>
 </html>
