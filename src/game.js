@@ -732,9 +732,9 @@ class Player {
                 
                 // 最大保持時間内なら継続的な上昇力を付与
                 if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
-                    // 重力を強力に相殺して上昇を維持
-                    this.velY -= GRAVITY * 2.0; // 重力の2倍を相殺
-                    console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}`);
+                    // 重力を強力に相殺して上昇を維持（倍率を3.5倍に増加）
+                    this.velY -= GRAVITY * 3.5; // 重力の3.5倍を相殺で高いジャンプ実現
+                    console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}, gravity=${GRAVITY}`);
                 } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 最大時間に達したら上昇を停止
                     this.velY = 0;
@@ -1931,47 +1931,117 @@ class Game {
     
     // ジャンプ統計をリアルタイムで表示
     renderJumpStats() {
-        const ctx = this.ctx;
-        ctx.save();
-        
-        // 背景
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        ctx.fillRect(10, 10, 320, 160);
-        
-        // テキスト設定
-        ctx.fillStyle = 'white';
-        ctx.font = '14px monospace';
-        
-        let y = 30;
-        ctx.fillText('=== ジャンプ統計デバッグ ===', 20, y);
-        y += 20;
-        
-        // 現在のジャンプ状態
-        if (this.player.isJumping) {
+        try {
+            // 確実にコンテキストを取得
+            const ctx = this.ctx;
+            if (!ctx) {
+                console.error('❌ renderJumpStats: ctxが未定義');
+                return;
+            }
+            
+            // ゲーム状態が'playing'の時のみ表示
+            if (this.gameState.state !== 'playing') {
+                return;
+            }
+            
+            ctx.save();
+            
+            // 強制的に見えるデバッグ表示（赤い背景で目立たせる）
+            ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
+            ctx.fillRect(5, 5, 400, 250);
+            
+            // 白い枠線
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(5, 5, 400, 250);
+            
+            // テキスト設定
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 18px Arial';
+            
+            let y = 28;
+            ctx.fillText('🚨 ジャンプデバッグ表示 🚨', 15, y);
+            y += 22;
+            
+            // 設定値の表示
+            ctx.font = '13px monospace';
             ctx.fillStyle = 'yellow';
-            ctx.fillText(`ジャンプ中...`, 20, y);
+            ctx.fillText('⚙️ 設定値:', 15, y);
             y += 16;
-            ctx.fillText(`ボタン保持: ${this.player.jumpButtonHoldTime}f (${(this.player.jumpButtonHoldTime * 16.67).toFixed(0)}ms)`, 20, y);
+            ctx.fillStyle = 'white';
+            ctx.fillText(`jumpPower: ${PLAYER_CONFIG.jumpPower}`, 15, y);
+            y += 14;
+            ctx.fillText(`minJumpTime: ${PLAYER_CONFIG.minJumpTime}f`, 15, y);
+            y += 14;
+            ctx.fillText(`maxJumpTime: ${PLAYER_CONFIG.maxJumpTime}f`, 15, y);
+            y += 14;
+            ctx.fillText(`gravity: ${GRAVITY}`, 15, y);
+            y += 18;
+            
+            // プレイヤー状態の詳細表示
+            ctx.fillStyle = 'lightblue';
+            ctx.fillText('🎮 プレイヤー状態:', 15, y);
             y += 16;
-            ctx.fillText(`ジャンプ時間: ${this.player.jumpTime}f`, 20, y);
-            y += 16;
-            ctx.fillText(`現在の高さ: ${(this.player.jumpStartY - this.player.y).toFixed(1)}px`, 20, y);
-            y += 16;
+            
+            if (this.player) {
+                ctx.fillStyle = 'white';
+                ctx.fillText(`Player位置: (${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)})`, 15, y);
+                y += 14;
+                ctx.fillText(`isJumping: ${this.player.isJumping}`, 15, y);
+                y += 14;
+                ctx.fillText(`onGround: ${this.player.onGround}`, 15, y);
+                y += 14;
+                ctx.fillText(`velY: ${this.player.velY.toFixed(2)}`, 15, y);
+                y += 14;
+                ctx.fillText(`jumpButtonPressed: ${this.player.jumpButtonPressed}`, 15, y);
+                y += 14;
+                
+                // 現在のジャンプ状態
+                if (this.player.isJumping) {
+                    ctx.fillStyle = 'yellow';
+                    ctx.fillText(`🦘 ジャンプ中!`, 15, y);
+                    y += 14;
+                    ctx.fillText(`ボタン保持: ${this.player.jumpButtonHoldTime}f`, 15, y);
+                    y += 14;
+                    ctx.fillText(`ジャンプ時間: ${this.player.jumpTime}f`, 15, y);
+                    y += 14;
+                    if (this.player.jumpStartY !== undefined) {
+                        const currentHeight = this.player.jumpStartY - this.player.y;
+                        ctx.fillText(`現在高さ: ${currentHeight.toFixed(1)}px`, 15, y);
+                        y += 14;
+                        const heightInUnits = (currentHeight / PLAYER_CONFIG.height).toFixed(1);
+                        ctx.fillText(`身長比: ${heightInUnits}人分`, 15, y);
+                        y += 14;
+                    }
+                }
+                
+                // 最後のジャンプ統計
+                if (this.player.lastJumpStats) {
+                    ctx.fillStyle = 'lightgreen';
+                    ctx.fillText('📊 前回のジャンプ:', 15, y);
+                    y += 14;
+                    ctx.fillText(`保持: ${this.player.lastJumpStats.buttonHoldTime}f`, 15, y);
+                    y += 14;
+                    ctx.fillText(`高さ: ${this.player.lastJumpStats.maxHeight.toFixed(1)}px`, 15, y);
+                    y += 14;
+                    ctx.fillText(`身長比: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 15, y);
+                    y += 14;
+                }
+            } else {
+                ctx.fillStyle = 'red';
+                ctx.fillText('❌ Player未定義', 15, y);
+            }
+            
+            ctx.restore();
+            // 1回だけコンソールログを出力
+            if (!this._debugLogShown) {
+                console.log('✅ renderJumpStats正常実行開始');
+                this._debugLogShown = true;
+            }
+        } catch (error) {
+            console.error('❌ renderJumpStats エラー:', error);
+            console.error('Stack:', error.stack);
         }
-        
-        // 最後のジャンプ統計
-        if (this.player.lastJumpStats) {
-            ctx.fillStyle = 'lightgreen';
-            ctx.fillText('前回のジャンプ:', 20, y);
-            y += 16;
-            ctx.fillText(`ボタン保持: ${this.player.lastJumpStats.buttonHoldTime}f (${(this.player.lastJumpStats.buttonHoldTime * 16.67).toFixed(0)}ms)`, 20, y);
-            y += 16;
-            ctx.fillText(`最高高さ: ${this.player.lastJumpStats.maxHeight.toFixed(1)}px`, 20, y);
-            y += 16;
-            ctx.fillText(`身長比: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 20, y);
-        }
-        
-        ctx.restore();
     }
 }
 

@@ -17,8 +17,8 @@ var PLAYER_CONFIG = {
     width: 40,
     height: 60,
     speed: 3.5,      // 5 -> 3.5 に減速（30%減）
-    jumpPower: 25,   // ジャンプ初速（15 -> 25 に増加で約2倍の高さ）
-    minJumpTime: 4,  // 最小ジャンプ保持時間（フレーム）
+    jumpPower: 18,   // ジャンプ初速（25 -> 18 に減少でタップジャンプを低く）
+    minJumpTime: 8,  // 最小ジャンプ保持時間（4 -> 8 に増加で短いタップでも制御しやすく）
     maxJumpTime: 30,  // 最大ジャンプ保持時間（20 -> 30 に延長）
     maxHealth: 2,
     invulnerabilityTime: 120,
