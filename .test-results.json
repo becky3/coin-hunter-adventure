@@ -1,13 +1,21 @@
 {
-  "timestamp": "2025-06-15T11:33:09.627Z",
-  "total": 20,
-  "passed": 20,
-  "failed": 0,
-  "successRate": 100,
-  "source": "browser_manual_verification",
-  "details": [
-    "システムテスト: 9件成功",
-    "SVGレンダリングテスト: 5件成功",
-    "レベルテスト: 6件成功"
-  ]
+  "timestamp": "2025-06-16T23:11:38.667Z",
+  "method": "curl_validation",
+  "status": "structure_valid",
+  "validation_results": {
+    "pageLoaded": true,
+    "scriptsIncluded": {
+      "level-loader.js": true,
+      "config.js": true,
+      "game.js": true,
+      "test.js": true
+    },
+    "elementsPresent": {
+      "gameCanvas": true,
+      "testResults": true,
+      "corsWarning": true
+    },
+    "issues": []
+  },
+  "manual_test_required": true
 }
