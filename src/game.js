@@ -1082,7 +1082,7 @@ class Game {
                         console.error('音楽システム初期化失敗:', e);
                     }
                 }
-                this.startGame();
+                await this.startGame();
             });
         }
         
@@ -2128,6 +2128,22 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // グローバルにアクセス可能にする（デバッグ用）
         window.game = game;
+        
+        // テスト環境では自動的に最初のステージを読み込む
+        if (window.DISABLE_CORS_WARNING) {
+            // テスト環境でのステージ読み込み
+            game.levelLoader.loadStageList()
+                .then(stageList => {
+                    game.levelLoader.loadProgress();
+                    return game.levelLoader.loadStage(stageList.currentStage || 'stage1');
+                })
+                .then(() => {
+                    console.log('✅ テスト環境でステージデータ読み込み完了');
+                })
+                .catch(error => {
+                    console.error('❌ テスト環境でのステージ読み込みエラー:', error);
+                });
+        }
         
         // テスト用関数
         window.testStart = function() {

@@ -183,28 +183,6 @@ class LevelLoader {
         }
     }
     
-    /**
-     * 従来のlevelDataをJSON形式に変換
-     * @param {Object} legacyData 従来のレベルデータ
-     */
-    convertLegacyLevelData(legacyData) {
-        return {
-            id: 'stage1',
-            name: 'レガシーステージ',
-            description: 'levels.jsから変換されたステージ',
-            worldWidth: 3000,
-            worldHeight: CANVAS_HEIGHT,
-            playerSpawn: {
-                x: PLAYER_CONFIG.spawnX,
-                y: PLAYER_CONFIG.spawnY
-            },
-            goal: legacyData.flag || { x: 2900, y: 396 },
-            platforms: legacyData.platforms || [],
-            enemies: legacyData.enemies || [],
-            coins: legacyData.coins || [],
-            springs: legacyData.springs || []
-        };
-    }
 }
 
 // グローバルに公開
