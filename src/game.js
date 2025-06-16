@@ -2138,6 +2138,17 @@ document.addEventListener('DOMContentLoaded', () => {
         
     } catch (error) {
         console.error('ゲーム初期化エラー:', error);
+        console.error('エラースタック:', error.stack);
+        
+        // テスト用にエラー情報を保存
+        window.gameInitError = error;
+        
+        // テスト実行のため、空のwindow.gameオブジェクトを作成
+        window.game = {
+            svg: null,
+            isRunning: false,
+            initializationError: error
+        };
     }
 });
 

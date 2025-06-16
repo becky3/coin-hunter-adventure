@@ -417,7 +417,18 @@ svgRenderingTests.test('個別SVGレンダラーの初期化', () => {
 // SVG描画メソッドのテスト
 svgRenderingTests.test('SVG描画メソッドの動作確認', () => {
     // Gameインスタンスが存在することを確認
-    assert(window.game, 'window.gameが存在しません');
+    if (!window.game) {
+        if (window.gameInitError) {
+            throw new Error(`ゲーム初期化に失敗: ${window.gameInitError.message}`);
+        } else {
+            throw new Error('window.gameが存在しません（初期化されていない可能性があります）');
+        }
+    }
+    
+    if (window.game.initializationError) {
+        throw new Error(`ゲーム初期化エラー: ${window.game.initializationError.message}`);
+    }
+    
     assert(window.game.svg, 'game.svgが存在しません');
     
     const svgGraphics = window.game.svg;
