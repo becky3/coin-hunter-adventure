@@ -974,7 +974,13 @@ class Game {
             console.log('ゲームの初期化完了');
             
             this.isInitialized = true;
-            this.start();
+            
+            // Node.js環境ではゲームを自動開始しない
+            if (typeof window !== 'undefined' && typeof requestAnimationFrame !== 'undefined') {
+                this.start();
+            } else {
+                console.log('📝 非ブラウザ環境のためゲーム自動開始をスキップ');
+            }
             
         } catch (error) {
             console.error('ゲーム初期化エラー:', error);
