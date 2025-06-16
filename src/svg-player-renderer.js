@@ -137,11 +137,11 @@ class SVGPlayerRenderer {
         const filename = this.getSVGFilename(velX, velY, animFrame);
         const colorVars = this.getColorVariables(health);
         
-        console.log(`SVGプレイヤー描画: ${filename}, キャッシュ状況: ${this.svgCache.has(filename)}`);
+        // console.log(`SVGプレイヤー描画: ${filename}, キャッシュ状況: ${this.svgCache.has(filename)}`);
         
         // SVGが利用可能な場合は使用、そうでなければエラー
         if (this.svgCache.has(filename)) {
-            console.log(`SVG描画を使用: ${filename}`);
+            // console.log(`SVG描画を使用: ${filename}`);
             this.drawFromSVGCache(x, y, width, height, health, direction, invulnerable, animFrame, filename);
         } else {
             throw new Error(`プレイヤーSVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);
