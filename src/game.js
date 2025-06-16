@@ -923,7 +923,14 @@ class Game {
         this.gameState = new GameState();
         this.inputManager = new InputManager();
         this.player = new Player();
-        this.levelLoader = new LevelLoader(); // レベルローダーを追加
+        
+        // LevelLoaderの初期化（必須）
+        if (typeof LevelLoader === 'undefined') {
+            throw new Error('LevelLoaderクラスが読み込まれていません。level-loader.jsが正しく読み込まれているか確認してください。');
+        }
+        
+        this.levelLoader = new LevelLoader();
+        console.log('✅ LevelLoader初期化成功');
         
         // モダンデザイン用の時間とエフェクト
         this.gameTime = 0;
@@ -1007,13 +1014,11 @@ class Game {
         // 現在のステージデータを使用（LevelLoaderが読み込み済みの場合）
         const stageData = this.levelLoader.getCurrentStageData();
         
-        if (stageData) {
-            // JSONデータから読み込み
-            this.loadLevelFromJSON(stageData);
-        } else {
-            // フォールバック: 従来のlevelDataを使用
-            this.loadLevelFromLegacy(levelData);
+        if (!stageData) {
+            throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
         }
+        
+        this.loadLevelFromJSON(stageData);
     }
     
     loadLevelFromJSON(stageData) {
@@ -1056,36 +1061,6 @@ class Game {
         }
     }
     
-    loadLevelFromLegacy(levelData) {
-        this.platforms = levelData.platforms;
-        this.enemies = levelData.enemies.map(e => ({
-            ...e,
-            ...ENEMY_CONFIG[e.type],
-            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
-            direction: e.type === 'bird' ? -1 : 1,
-            animTimer: 0,
-            originalX: e.x,
-            originalY: e.y
-        }));
-        this.coins = levelData.coins.map(c => ({
-            ...c,
-            ...COIN_CONFIG,
-            collected: false,
-            rotation: 0,
-            floatOffset: 0,
-            baseY: c.y
-        }));
-        this.flag = levelData.flag;
-        
-        // スプリングの初期化
-        this.springs = (levelData.springs || []).map(s => ({
-            ...s,
-            ...SPRING_CONFIG,
-            compression: 0,
-            triggered: false,
-            cooldown: 0
-        }));
-    }
     
     setupUI() {
         const startBtn = document.getElementById('startBtn');
@@ -1172,20 +1147,15 @@ class Game {
             this.musicSystem.playGameStartSound();
         }
         
-        try {
-            // ステージデータを読み込む（初回のみ）
-            if (!this.levelLoader.getCurrentStageData()) {
-                // ステージリストを読み込む
-                const stageList = await this.levelLoader.loadStageList();
-                this.levelLoader.loadProgress(); // 保存された進行状況を読み込む
-                
-                // 最初のステージを読み込む
-                const firstStageId = stageList.currentStage || 'stage1';
-                await this.levelLoader.loadStage(firstStageId);
-            }
-        } catch (error) {
-            console.error('ステージ読み込みエラー:', error);
-            // エラー時は従来のlevelDataを使用
+        // ステージデータを読み込む（初回のみ）
+        if (!this.levelLoader.getCurrentStageData()) {
+            // ステージリストを読み込む
+            const stageList = await this.levelLoader.loadStageList();
+            this.levelLoader.loadProgress(); // 保存された進行状況を読み込む
+            
+            // 最初のステージを読み込む
+            const firstStageId = stageList.currentStage || 'stage1';
+            await this.levelLoader.loadStage(firstStageId);
         }
         
         // ゲームデータをリセット（状態は変更しない）
@@ -1222,13 +1192,11 @@ class Game {
         // 現在のステージデータを確認
         const stageData = this.levelLoader.getCurrentStageData();
         
-        if (stageData) {
-            // JSONデータからリセット
-            this.resetLevelFromJSON(stageData);
-        } else {
-            // フォールバック: 従来のlevelDataを使用
-            this.resetLevelFromLegacy();
+        if (!stageData) {
+            throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
         }
+        
+        this.resetLevelFromJSON(stageData);
     }
     
     resetLevelFromJSON(stageData) {
@@ -1260,34 +1228,6 @@ class Game {
         }));
     }
     
-    resetLevelFromLegacy() {
-        // コインをリセット
-        this.coins.forEach(coin => {
-            coin.collected = false;
-            coin.rotation = 0;
-            coin.floatOffset = 0;
-        });
-        
-        // 敵をリセット（初期状態に復元）
-        this.enemies = levelData.enemies.map(e => ({
-            ...e,
-            ...ENEMY_CONFIG[e.type],
-            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
-            direction: e.type === 'bird' ? -1 : 1,
-            animTimer: 0,
-            originalX: e.x,
-            originalY: e.y
-        }));
-        
-        // スプリングをリセット
-        this.springs = (levelData.springs || []).map(s => ({
-            ...s,
-            ...SPRING_CONFIG,
-            compression: 0,
-            triggered: false,
-            cooldown: 0
-        }));
-    }
     
     start() {
         if (this.isRunning) return;
