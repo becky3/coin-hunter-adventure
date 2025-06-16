@@ -15,7 +15,9 @@ class LevelLoader {
      */
     async loadStageList() {
         try {
-            const response = await fetch('levels/stages.json');
+            // 現在のページ位置に関係なく正しいパスを構築
+            const basePath = window.location.pathname.includes('/tests/') ? '../levels/' : 'levels/';
+            const response = await fetch(basePath + 'stages.json');
             if (!response.ok) {
                 throw new Error(`ステージリスト読み込みエラー: ${response.status}`);
             }
@@ -57,7 +59,8 @@ class LevelLoader {
             }
             
             // ステージデータを読み込む
-            const response = await fetch(`levels/${stageInfo.filename}`);
+            const basePath = window.location.pathname.includes('/tests/') ? '../levels/' : 'levels/';
+            const response = await fetch(basePath + stageInfo.filename);
             if (!response.ok) {
                 throw new Error(`ステージデータ読み込みエラー: ${response.status}`);
             }
