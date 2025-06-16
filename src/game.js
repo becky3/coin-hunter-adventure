@@ -963,7 +963,7 @@ class Game {
             // ステージデータの初期化
             await this.initializeStageData();
             
-            // ゲーム初期化
+            // ステージデータ読み込み後にレベル初期化
             this.initLevel();
             this.setupUI();
             this.setupCanvas();
@@ -990,15 +990,23 @@ class Game {
     
     async initializeStageData() {
         try {
+            console.log('🔍 ステージデータ初期化開始...');
+            
             // ステージリストを読み込み
             await this.levelLoader.loadStageList();
+            console.log('✅ ステージリスト読み込み完了');
             
             // 進行状況を読み込み
             this.levelLoader.loadProgress();
+            console.log('✅ 進行状況読み込み完了');
             
             // 現在のステージまたはstage1を読み込み
             const currentStage = this.levelLoader.stageList?.currentStage || 'stage1';
+            console.log(`🎯 読み込み対象ステージ: ${currentStage}`);
+            
             this.currentStageData = await this.levelLoader.loadStage(currentStage);
+            console.log('✅ ステージデータ読み込み成功');
+            console.log('📊 currentStageData:', this.currentStageData ? 'データ存在' : 'データなし');
             
             console.log(`✅ ステージデータ読み込み完了: ${currentStage}`);
         } catch (error) {
@@ -1057,12 +1065,18 @@ class Game {
     }
     
     initLevel() {
+        console.log('🎮 レベル初期化開始...');
+        console.log('📊 currentStageData確認:', this.currentStageData ? '存在' : '未設定');
+        
         // 現在のステージデータを使用
         if (!this.currentStageData) {
+            console.error('❌ currentStageDataが未設定です');
             throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
         }
         
+        console.log('✅ ステージデータ確認完了、レベル読み込み開始');
         this.loadLevelFromJSON(this.currentStageData);
+        console.log('✅ レベル初期化完了');
     }
     
     loadLevelFromJSON(stageData) {
