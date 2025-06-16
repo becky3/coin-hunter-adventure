@@ -733,19 +733,19 @@ class Player {
                 if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 重力を相殺して上昇を維持（倍率を1.8倍に調整）
                     this.velY -= GRAVITY * 1.8; // 重力の1.8倍を相殺で適度な高さに調整
-                    console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}, gravity=${GRAVITY}`);
+                    // console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}, gravity=${GRAVITY}`);
                 } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 最大時間に達したら上昇を停止
                     this.velY = 0;
                     this.canVariableJump = false;
-                    console.log(`ジャンプ最大時間到達: velY -> 0`);
+                    // console.log(`ジャンプ最大時間到達: velY -> 0`);
                 }
             } else {
                 // ボタンが離された時
                 if (this.jumpTime >= PLAYER_CONFIG.minJumpTime && this.velY < 0) {
                     // 最小時間経過後なら上昇を即座に停止
                     this.velY = 0;
-                    console.log(`ジャンプボタン離し: time=${this.jumpTime}, velY -> 0`);
+                    // console.log(`ジャンプボタン離し: time=${this.jumpTime}, velY -> 0`);
                 }
                 // 最小時間前に離した場合は、最小時間まで上昇を継続
                 this.jumpButtonPressed = false;
