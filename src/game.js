@@ -954,20 +954,60 @@ class Game {
         // 音楽システム
         this.musicSystem = new MusicSystem();
         
-        this.initLevel();
-        this.setupUI();
-        this.setupCanvas();
-        this.setupResizeHandler();
-        
-        // SVGファイルの事前読み込み
-        this.preloadSVGs().then(() => {
+        // 初期化フラグ
+        this.isInitialized = false;
+    }
+    
+    async initialize() {
+        try {
+            // ステージデータの初期化
+            await this.initializeStageData();
+            
+            // ゲーム初期化
+            this.initLevel();
+            this.setupUI();
+            this.setupCanvas();
+            this.setupResizeHandler();
+            
+            // SVGファイルの事前読み込み
+            await this.preloadSVGs();
             console.log('ゲームの初期化完了');
-        });
-        
-        this.start();
+            
+            this.isInitialized = true;
+            this.start();
+            
+        } catch (error) {
+            console.error('ゲーム初期化エラー:', error);
+            throw error;
+        }
+    }
+    
+    async initializeStageData() {
+        try {
+            // ステージリストを読み込み
+            await this.levelLoader.loadStageList();
+            
+            // 進行状況を読み込み
+            this.levelLoader.loadProgress();
+            
+            // 現在のステージまたはstage1を読み込み
+            const currentStage = this.levelLoader.stageList?.currentStage || 'stage1';
+            this.currentStageData = await this.levelLoader.loadStage(currentStage);
+            
+            console.log(`✅ ステージデータ読み込み完了: ${currentStage}`);
+        } catch (error) {
+            console.error('❌ ステージデータ読み込み失敗:', error);
+            throw new Error(`ステージデータの初期化に失敗しました: ${error.message}`);
+        }
     }
     
     setupCanvas() {
+        // Node.js環境ではキャンバスセットアップをスキップ
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            console.log('📝 Node.js環境のためキャンバスセットアップをスキップ');
+            return;
+        }
+        
         // ビューポートサイズに基づいてキャンバスサイズを調整
         const gameArea = document.querySelector('.game-area');
         if (!gameArea) return;
@@ -1011,14 +1051,12 @@ class Game {
     }
     
     initLevel() {
-        // 現在のステージデータを使用（LevelLoaderが読み込み済みの場合）
-        const stageData = this.levelLoader.getCurrentStageData();
-        
-        if (!stageData) {
+        // 現在のステージデータを使用
+        if (!this.currentStageData) {
             throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
         }
         
-        this.loadLevelFromJSON(stageData);
+        this.loadLevelFromJSON(this.currentStageData);
     }
     
     loadLevelFromJSON(stageData) {
@@ -1063,8 +1101,14 @@ class Game {
     
     
     setupUI() {
+        // Node.js環境ではUIセットアップをスキップ
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            console.log('📝 Node.js環境のためUIセットアップをスキップ');
+            return;
+        }
+        
         const startBtn = document.getElementById('startBtn');
-        if (startBtn) {
+        if (startBtn && typeof startBtn.addEventListener === 'function') {
             startBtn.addEventListener('click', async () => {
                 console.log('スタートボタンがクリックされました');
                 
@@ -1949,6 +1993,11 @@ class Game {
     }
     
     updateUIVisibility() {
+        // Node.js環境ではUIアップデートをスキップ
+        if (typeof window === 'undefined' || typeof document === 'undefined') {
+            return;
+        }
+        
         const startScreen = document.getElementById('startScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
         const gameClearScreen = document.getElementById('gameClearScreen');
@@ -2122,51 +2171,51 @@ class Game {
 }
 
 // ===== ゲーム開始 =====
-document.addEventListener('DOMContentLoaded', () => {
-    try {
-        const game = new Game();
-        
-        // グローバルにアクセス可能にする（デバッグ用）
-        window.game = game;
-        
-        // テスト環境では自動的に最初のステージを読み込む
-        if (window.DISABLE_CORS_WARNING) {
-            // テスト環境でのステージ読み込み
-            game.levelLoader.loadStageList()
-                .then(stageList => {
-                    game.levelLoader.loadProgress();
-                    return game.levelLoader.loadStage(stageList.currentStage || 'stage1');
-                })
-                .then(() => {
-                    console.log('✅ テスト環境でステージデータ読み込み完了');
-                })
-                .catch(error => {
-                    console.error('❌ テスト環境でのステージ読み込みエラー:', error);
-                });
-        }
-        
-        // テスト用関数
-        window.testStart = function() {
-            if (window.game) {
-                window.game.startGame();
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            console.log('DOM読み込み完了、ゲーム初期化開始');
+            
+            // ゲームインスタンスを作成（コンストラクタは同期）
+            const game = new Game();
+            
+            // グローバルにアクセス可能にする（デバッグ用）
+            if (typeof window !== 'undefined') {
+                window.game = game;
             }
-        };
-        
-    } catch (error) {
-        console.error('ゲーム初期化エラー:', error);
-        console.error('エラースタック:', error.stack);
-        
-        // テスト用にエラー情報を保存
-        window.gameInitError = error;
-        
-        // テスト実行のため、空のwindow.gameオブジェクトを作成
-        window.game = {
-            svg: null,
-            isRunning: false,
-            initializationError: error
-        };
-    }
-});
+            
+            // 非同期初期化を待機
+            await game.initialize();
+            
+            console.log('✅ ゲーム初期化完了');
+            
+            // テスト用関数
+            if (typeof window !== 'undefined') {
+                window.testStart = function() {
+                    if (window.game && window.game.isInitialized) {
+                        window.game.startGame();
+                    }
+                };
+            }
+            
+        } catch (error) {
+            console.error('ゲーム初期化エラー:', error);
+            console.error('エラースタック:', error.stack);
+            
+            // テスト用にエラー情報を保存
+            if (typeof window !== 'undefined') {
+                window.gameInitError = error;
+                
+                // テスト実行のため、空のwindow.gameオブジェクトを作成
+                window.game = {
+                    svg: null,
+                    isRunning: false,
+                    initializationError: error
+                };
+            }
+        }
+    });
+}
 
 // Node.js環境用にクラスをグローバルに設定
 if (typeof global !== 'undefined') {

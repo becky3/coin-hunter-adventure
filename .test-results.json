@@ -1,21 +1,21 @@
 {
-  "timestamp": "2025-06-15T08:54:12.000Z",
-  "total": 20,
-  "passed": 20,
-  "failed": 0,
-  "successRate": 100,
-  "source": "logical_analysis_after_json_stage_update",
-  "verificationMethod": "implementation_analysis",
-  "details": [
-    "システムテスト: 9件成功",
-    "SVGレンダリングテスト: 5件成功",
-    "レベルテスト: 6件成功"
-  ],
-  "notes": "レガシーコード削除とJSONステージシステム対応後の分析結果。stage1.jsonには完全なレベルデータが含まれており、更新されたテストコードはJSONデータを正しく読み込むため全テスト成功と予想される。",
-  "implementation_status": {
-    "json_stage_system": "完了",
-    "legacy_code_cleanup": "完了", 
-    "test_updates": "完了",
-    "level_loader_integration": "完了"
-  }
+  "timestamp": "2025-06-16T23:11:38.667Z",
+  "method": "curl_validation",
+  "status": "structure_valid",
+  "validation_results": {
+    "pageLoaded": true,
+    "scriptsIncluded": {
+      "level-loader.js": true,
+      "config.js": true,
+      "game.js": true,
+      "test.js": true
+    },
+    "elementsPresent": {
+      "gameCanvas": true,
+      "testResults": true,
+      "corsWarning": true
+    },
+    "issues": []
+  },
+  "manual_test_required": true
 }

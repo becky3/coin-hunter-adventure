@@ -21,11 +21,12 @@ class LevelLoader {
             }
             const data = await response.json();
             this.stages = data.stages;
+            this.stageList = data;
             return data;
         } catch (error) {
             console.error('ステージリスト読み込みエラー:', error);
             // フォールバック: ハードコードされたステージリスト
-            return {
+            const fallbackData = {
                 stages: [
                     {
                         id: 'stage1',
@@ -37,6 +38,9 @@ class LevelLoader {
                 ],
                 currentStage: 'stage1'
             };
+            this.stages = fallbackData.stages;
+            this.stageList = fallbackData;
+            return fallbackData;
         }
     }
     
@@ -66,13 +70,6 @@ class LevelLoader {
             
         } catch (error) {
             console.error('ステージデータ読み込みエラー:', error);
-            
-            // フォールバック: 従来のlevels.jsからデータを返す
-            if (typeof levelData !== 'undefined') {
-                console.warn('フォールバック: levels.jsのデータを使用します');
-                return this.convertLegacyLevelData(levelData);
-            }
-            
             throw error;
         }
     }
