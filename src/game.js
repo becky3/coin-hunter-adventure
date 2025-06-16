@@ -662,15 +662,15 @@ class Player {
         }
         
         // 大幅な座標変更または異常な座標を検出
-        if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
-            this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50) {
-            console.error(`🚨 異常な座標変更/位置を検出:`, {
-                before: {x: oldX, y: oldY},
-                after: {x: this.x, y: this.y},
-                vel: {x: this.velX, y: this.velY},
-                jump: {isJumping: this.isJumping, onGround: this.onGround, canVariable: this.canVariableJump}
-            });
-        }
+        // if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
+        //     this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50) {
+        //     console.error(`🚨 異常な座標変更/位置を検出:`, {
+        //         before: {x: oldX, y: oldY},
+        //         after: {x: this.x, y: this.y},
+        //         vel: {x: this.velX, y: this.velY},
+        //         jump: {isJumping: this.isJumping, onGround: this.onGround, canVariable: this.canVariableJump}
+        //     });
+        // }
         
         if (this.invulnerable) {
             this.invulnerabilityTime--;
