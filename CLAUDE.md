@@ -63,6 +63,8 @@ python3 -m http.server 8080
    - ブランチをpushしてPRを作成
    - PR本文に "Closes #<issue-number>" を含める
    - 詳細な実装内容や問題解決の報告はPRで行う
+   - **重要**: PR作成はClaudeが`gh pr create`コマンドで実行すること
+   - ghコマンドが使えない場合は、適切なツールをインストールまたは代替手段を使用
 
 ### 作業終了時
 5. **HTTPサーバーを停止**
