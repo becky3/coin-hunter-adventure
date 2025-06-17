@@ -107,7 +107,7 @@ class SVGEnemyRenderer {
         
         // SVGが利用可能な場合は使用、そうでなければエラー
         if (this.svgCache.has(filename)) {
-            console.log(`SVG描画を使用: ${filename}`);
+            // console.log(`SVG描画を使用: ${filename}`);
             this.drawCachedImage(filename, x, y, width, height, type, animTimer);
         } else {
             throw new Error(`敵SVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);

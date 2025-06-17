@@ -1,0 +1,14 @@
+{
+  "stages": [
+    {
+      "id": "stage1",
+      "name": "チュートリアルステージ",
+      "description": "基本的な操作を学ぶステージ",
+      "filename": "stage1.json",
+      "unlocked": true,
+      "bestScore": 0,
+      "bestTime": 0
+    }
+  ],
+  "currentStage": "stage1"
+}
