@@ -2093,6 +2093,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         };
         
+        // 自動テストシステムの統合
+        if (typeof GameStateManager !== 'undefined') {
+            window.gameStateManager = new GameStateManager();
+            
+            // ゲーム更新時に状態をキャプチャ
+            const originalUpdate = game.update.bind(game);
+            game.update = function() {
+                originalUpdate();
+                if (window.gameStateManager && window.gameStateManager.recording) {
+                    window.gameStateManager.captureState(game);
+                }
+            };
+        }
+        
     } catch (error) {
         console.error('ゲーム初期化エラー:', error);
     }
