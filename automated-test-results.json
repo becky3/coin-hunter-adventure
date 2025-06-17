@@ -1,0 +1,268 @@
+{
+  "summary": {
+    "total": 12,
+    "passed": 10,
+    "failed": 2,
+    "successRate": "83.3%",
+    "duration": "4646ms"
+  },
+  "details": [
+    {
+      "name": "状態キャプチャの正確性",
+      "passed": true,
+      "error": null,
+      "duration": 102,
+      "details": {
+        "captured": true,
+        "stateSize": 288
+      }
+    },
+    {
+      "name": "状態履歴の記録",
+      "passed": true,
+      "error": null,
+      "duration": 163,
+      "details": {
+        "historyLength": 10
+      }
+    },
+    {
+      "name": "状態検証機能",
+      "passed": true,
+      "error": null,
+      "duration": 1,
+      "details": {
+        "validationCount": 0
+      }
+    },
+    {
+      "name": "右移動の検証",
+      "passed": false,
+      "error": "右移動が機能していない",
+      "duration": 18137,
+      "details": {}
+    },
+    {
+      "name": "ジャンプ動作の検証",
+      "passed": false,
+      "error": "ジャンプが機能していない",
+      "duration": -17139,
+      "details": {}
+    },
+    {
+      "name": "複合動作の検証",
+      "passed": true,
+      "error": null,
+      "duration": 1210,
+      "details": {
+        "totalActions": 3,
+        "successful": 3,
+        "failed": 0,
+        "playerPath": [
+          {
+            "x": 50,
+            "y": 350
+          },
+          {
+            "x": 50,
+            "y": 350
+          },
+          {
+            "x": 50,
+            "y": 350
+          }
+        ],
+        "finalState": {
+          "timestamp": 1750202625911,
+          "frame": 0,
+          "player": {
+            "x": 50,
+            "y": 350,
+            "vx": 0,
+            "vy": 0,
+            "grounded": true,
+            "lives": 3,
+            "coins": 0,
+            "animation": "idle",
+            "facingRight": true
+          },
+          "enemies": [],
+          "items": {
+            "coins": [
+              {
+                "x": 200,
+                "y": 300
+              },
+              {
+                "x": 400,
+                "y": 250
+              }
+            ],
+            "springs": []
+          },
+          "camera": {
+            "x": 0,
+            "y": 0
+          },
+          "gameState": "playing",
+          "level": 1
+        }
+      }
+    },
+    {
+      "name": "コイン収集メカニクス",
+      "passed": true,
+      "error": null,
+      "duration": 2005,
+      "details": {
+        "coinsCollected": 0,
+        "success": false
+      }
+    },
+    {
+      "name": "ライフシステム",
+      "passed": true,
+      "error": null,
+      "duration": 1,
+      "details": {
+        "initialLives": 3,
+        "currentLives": 2
+      }
+    },
+    {
+      "name": "重力の適用",
+      "passed": true,
+      "error": null,
+      "duration": 165,
+      "details": {
+        "fallDistance": 27.5,
+        "velocity": 5
+      }
+    },
+    {
+      "name": "速度制限の確認",
+      "passed": true,
+      "error": null,
+      "duration": 0,
+      "details": {
+        "limitedVelocity": 5,
+        "maxSpeed": 5
+      }
+    },
+    {
+      "name": "プラットフォーム衝突",
+      "passed": true,
+      "error": null,
+      "duration": 1,
+      "details": {
+        "collision": false,
+        "playerPos": {
+          "x": 50,
+          "y": 227.5
+        }
+      }
+    },
+    {
+      "name": "境界チェック",
+      "passed": true,
+      "error": null,
+      "duration": 0,
+      "details": {
+        "violations": [],
+        "inBounds": true
+      }
+    }
+  ],
+  "timestamp": "2025-06-17T23:23:48.084Z",
+  "statistics": {
+    "byCategory": {
+      "状態キャプチャの正確性": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 102
+      },
+      "状態履歴の記録": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 163
+      },
+      "状態検証機能": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 1
+      },
+      "右移動の検証": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "totalDuration": 18137
+      },
+      "ジャンプ動作の検証": {
+        "total": 1,
+        "passed": 0,
+        "failed": 1,
+        "totalDuration": -17139
+      },
+      "複合動作の検証": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 1210
+      },
+      "コイン収集メカニクス": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 2005
+      },
+      "ライフシステム": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 1
+      },
+      "重力の適用": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 165
+      },
+      "速度制限の確認": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 0
+      },
+      "プラットフォーム衝突": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 1
+      },
+      "境界チェック": {
+        "total": 1,
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 0
+      }
+    },
+    "averageDuration": 387.1666666666667,
+    "slowestTest": {
+      "name": "右移動の検証",
+      "passed": false,
+      "error": "右移動が機能していない",
+      "duration": 18137,
+      "details": {}
+    },
+    "fastestTest": {
+      "name": "ジャンプ動作の検証",
+      "passed": false,
+      "error": "ジャンプが機能していない",
+      "duration": -17139,
+      "details": {}
+    }
+  }
+}

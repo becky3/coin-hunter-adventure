@@ -425,18 +425,73 @@ class AutomatedGameTests {
                 duration: `${totalDuration}ms`
             },
             details: this.testResults,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            statistics: this.generateStatistics()
         };
 
-        console.log('\n📊 テスト結果サマリー');
-        console.log('─'.repeat(40));
-        console.log(`総テスト数: ${totalTests}`);
-        console.log(`成功: ${passedTests}`);
-        console.log(`失敗: ${failedTests}`);
-        console.log(`成功率: ${report.summary.successRate}`);
-        console.log(`実行時間: ${report.summary.duration}`);
+        // TestReporterを使用してレポート生成
+        if (typeof TestReporter !== 'undefined') {
+            const reporter = new TestReporter();
+            const consoleOutput = reporter.generateReport(report, 'console');
+            console.log('\n' + consoleOutput);
+        } else {
+            // フォールバック
+            console.log('\n📊 テスト結果サマリー');
+            console.log('─'.repeat(40));
+            console.log(`総テスト数: ${totalTests}`);
+            console.log(`成功: ${passedTests}`);
+            console.log(`失敗: ${failedTests}`);
+            console.log(`成功率: ${report.summary.successRate}`);
+            console.log(`実行時間: ${report.summary.duration}`);
+        }
 
         return report;
+    }
+
+    // 統計情報の生成
+    generateStatistics() {
+        const stats = {
+            byCategory: {},
+            averageDuration: 0,
+            slowestTest: null,
+            fastestTest: null
+        };
+
+        // カテゴリ別集計
+        this.testResults.forEach(result => {
+            const category = result.name.split(':')[0] || 'その他';
+            if (!stats.byCategory[category]) {
+                stats.byCategory[category] = {
+                    total: 0,
+                    passed: 0,
+                    failed: 0,
+                    totalDuration: 0
+                };
+            }
+            
+            stats.byCategory[category].total++;
+            if (result.passed) {
+                stats.byCategory[category].passed++;
+            } else {
+                stats.byCategory[category].failed++;
+            }
+            stats.byCategory[category].totalDuration += result.duration;
+        });
+
+        // 平均実行時間
+        if (this.testResults.length > 0) {
+            stats.averageDuration = this.testResults.reduce((sum, r) => sum + r.duration, 0) / this.testResults.length;
+            
+            // 最速・最遅テスト
+            stats.slowestTest = this.testResults.reduce((slow, r) => 
+                r.duration > slow.duration ? r : slow
+            );
+            stats.fastestTest = this.testResults.reduce((fast, r) => 
+                r.duration < fast.duration ? r : fast
+            );
+        }
+
+        return stats;
     }
 }
 

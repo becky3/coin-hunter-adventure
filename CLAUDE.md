@@ -112,7 +112,19 @@ python3 -m http.server 8080
    - http://localhost:8080/tests/test.html で全テスト成功
    - 20件中20件成功を確認済み
 
-2. **JSOMテスト（参考）**:
+2. **自動ゲームテスト（新機能）**:
+   ```bash
+   # Node.js環境での実行
+   node scripts/run-automated-tests.js
+   
+   # ブラウザでの実行
+   open http://localhost:8080/tests/automated-test.html
+   ```
+   - ゲーム状態の自動検証（12項目）
+   - Claudeが自律的に実行・検証可能
+   - 詳細なレポート生成機能付き
+
+3. **JSOMテスト（参考）**:
    ```bash
    node scripts/jsdom-test.js
    ```
