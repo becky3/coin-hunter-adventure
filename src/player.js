@@ -89,8 +89,17 @@ class Player {
         // 位置更新
         const oldX = this.x;
         const oldY = this.y;
-        this.x += this.velX;
-        this.y += this.velY;
+        const newX = this.x + this.velX;
+        const newY = this.y + this.velY;
+        
+        if (isFinite(newX) && isFinite(newY)) {
+            this.x = newX;
+            this.y = newY;
+        } else {
+            console.error('無効な位置計算:', newX, newY);
+            this.velX = 0;
+            this.velY = 0;
+        }
         
         // ジャンプ中の最高到達点を記録
         if (this.isJumping && !this.onGround) {

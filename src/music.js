@@ -27,13 +27,26 @@ class MusicSystem {
         if (this.isInitialized) return;
         
         try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+                throw new Error('Web Audio API is not supported in this browser');
+            }
+            
+            this.audioContext = new AudioContextClass();
+            
+            // suspended状態の場合はresume
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
             this.masterGain = this.audioContext.createGain();
             this.masterGain.connect(this.audioContext.destination);
             this.masterGain.gain.value = this.bgmVolume;
             
             this.isInitialized = true;
         } catch (error) {
+            console.warn('音楽システムの初期化に失敗しました:', error);
+            this.isInitialized = false;
         }
     }
     
@@ -681,6 +694,21 @@ class MusicSystem {
     // 効果音の音量を取得
     getSfxVolume() {
         return this.sfxVolume;
+    }
+    
+    // クリーンアップ
+    destroy() {
+        try {
+            this.stopAllActiveNodes();
+            if (this.audioContext && this.audioContext.state !== 'closed') {
+                this.audioContext.close().catch(error => {
+                    console.error('AudioContext closing error:', error);
+                });
+            }
+            this.isInitialized = false;
+        } catch (error) {
+            console.error('音楽システムのクリーンアップエラー:', error);
+        }
     }
 }
 

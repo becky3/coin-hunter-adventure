@@ -334,19 +334,29 @@ class Game {
     
     stop() {
         this.isRunning = false;
+        if (this.animationFrameId) {
+            cancelAnimationFrame(this.animationFrameId);
+            this.animationFrameId = null;
+        }
     }
     
     gameLoop() {
         if (!this.isRunning) return;
         
-        const currentTime = performance.now();
-        const deltaTime = (currentTime - this.lastTime) / 1000; // 秒に変換
-        this.lastTime = currentTime;
+        try {
+            const currentTime = performance.now();
+            const deltaTime = (currentTime - this.lastTime) / 1000; // 秒に変換
+            this.lastTime = currentTime;
+            
+            this.update(deltaTime);
+            this.render();
+        } catch (error) {
+            console.error('ゲームループエラー:', error);
+            this.stop();
+            return;
+        }
         
-        this.update(deltaTime);
-        this.render();
-        
-        requestAnimationFrame(() => this.gameLoop());
+        this.animationFrameId = requestAnimationFrame(() => this.gameLoop());
     }
     
     update(deltaTime) {
@@ -584,6 +594,14 @@ class Game {
         const worldWidth = 3000;
         const worldHeight = CANVAS_HEIGHT;
         
+        // プレイヤー座標の妥当性チェック
+        if (!isFinite(this.player.x) || !isFinite(this.player.y)) {
+            console.error('プレイヤー座標が無効です:', this.player.x, this.player.y);
+            this.player.x = this.player.width;
+            this.player.y = this.player.height;
+            return;
+        }
+        
         // プレイヤーの境界チェック
         if (this.player.x < 0) {
             this.player.x = 0;
@@ -634,9 +652,19 @@ class Game {
     }
     
     updateEnemies() {
+        if (!Array.isArray(this.enemies)) {
+            console.error('enemies配列が無効です');
+            return;
+        }
+        
         this.enemies.forEach(enemy => {
-            enemy.animTimer++;
-            enemy.x += enemy.velX;
+            if (!enemy || typeof enemy !== 'object') {
+                console.warn('無効な敵オブジェクト:', enemy);
+                return;
+            }
+            
+            enemy.animTimer = (enemy.animTimer || 0) + 1;
+            enemy.x = (enemy.x || 0) + (enemy.velX || 0);
             
             if (enemy.type === 'slime') {
                 // スライムの移動パターン
@@ -888,9 +916,13 @@ class Game {
         }
         
         // 最終スコアを表示
-        const finalScoreEl = document.getElementById('finalScore');
-        if (finalScoreEl) {
-            finalScoreEl.textContent = this.gameState.score;
+        try {
+            const finalScoreEl = document.getElementById('finalScore');
+            if (finalScoreEl) {
+                finalScoreEl.textContent = this.gameState.score;
+            }
+        } catch (error) {
+            console.error('最終スコア表示エラー:', error);
         }
     }
     
@@ -904,9 +936,13 @@ class Game {
         }
         
         // レベルクリアスコアを表示
-        const levelScoreEl = document.getElementById('levelScore');
-        if (levelScoreEl) {
-            levelScoreEl.textContent = this.gameState.score;
+        try {
+            const levelScoreEl = document.getElementById('levelScore');
+            if (levelScoreEl) {
+                levelScoreEl.textContent = this.gameState.score;
+            }
+        } catch (error) {
+            console.error('レベルスコア表示エラー:', error);
         }
         
         // 花火エフェクト
@@ -1057,6 +1093,34 @@ class Game {
             ctx.restore();
         } catch (error) {
             // エラーは無視
+        }
+    }
+    
+    // クリーンアップ
+    destroy() {
+        try {
+            // ゲームループの停止
+            this.stop();
+            
+            // 各システムのクリーンアップ
+            if (this.musicSystem && typeof this.musicSystem.destroy === 'function') {
+                this.musicSystem.destroy();
+            }
+            
+            if (this.inputManager && typeof this.inputManager.destroy === 'function') {
+                this.inputManager.destroy();
+            }
+            
+            // リソースのクリア
+            this.platforms = [];
+            this.enemies = [];
+            this.coins = [];
+            this.particles = [];
+            this.scoreAnimations = [];
+            
+            this.isInitialized = false;
+        } catch (error) {
+            console.error('ゲームのクリーンアップエラー:', error);
         }
     }
 }
