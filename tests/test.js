@@ -216,18 +216,23 @@ systemTests.test('ジャンプ機能の動作確認', () => {
     player.velY = 0;
     const initialY = player.y;
     
-    // ジャンプ入力を実行
+    // ジャンプ入力を実行（実際のゲームループと同じ順序でupdateを呼ぶ）
     const jumpInput = { jump: true, left: false, right: false };
-    player.handleJump(jumpInput);
+    const beforeUpdateVelY = player.velY;
+    player.update(jumpInput);
     
     // ジャンプ後の状態を確認
-    assert(player.velY === -PLAYER_CONFIG.jumpPower, 
-        `ジャンプ時の初期速度が正しくありません。期待値: ${-PLAYER_CONFIG.jumpPower}, 実際: ${player.velY}`);
+    // updateメソッドでは、handleJump後に重力が適用され、さらに可変ジャンプ処理が行われる
+    // 期待値: -jumpPower + GRAVITY - (GRAVITY * 1.8) = -12 + 0.65 - 1.17 = -12.52
+    const expectedVelY = -PLAYER_CONFIG.jumpPower + GRAVITY - (GRAVITY * 1.8);
+    const tolerance = 0.01; // 浮動小数点の誤差許容範囲
+    assert(Math.abs(player.velY - expectedVelY) < tolerance, 
+        `ジャンプ時の速度が正しくありません。期待値: ${expectedVelY.toFixed(2)}, 実際: ${player.velY.toFixed(2)}`);
     assert(!player.onGround, 'ジャンプ後もonGroundがtrueのままです');
     assert(player.isJumping, 'ジャンプ後にisJumpingがtrueになっていません');
     assert(player.jumpButtonPressed, 'ジャンプ後にjumpButtonPressedがtrueになっていません');
     assert(player.canVariableJump, 'ジャンプ後にcanVariableJumpがtrueになっていません');
-    assertEquals(player.jumpTime, 0, 'ジャンプ時間の初期値が0ではありません');
+    assertEquals(player.jumpTime, 1, 'ジャンプ時間が正しくカウントされていません');
     assertEquals(player.jumpStartY, initialY, 'ジャンプ開始Y座標が記録されていません');
 });
 
@@ -299,7 +304,11 @@ systemTests.test('プレイヤーの移動処理', () => {
     player.jumpButtonHoldTime = 0;
     player.velY = 0;  // 初期速度を0に設定
     player.update({ right: false, left: false, jump: true });
-    assert(player.velY === -PLAYER_CONFIG.jumpPower, 'ジャンプ時の垂直速度が正しくありません');
+    // updateメソッドでは、handleJump後に重力が適用され、さらに可変ジャンプ処理が行われる
+    const expectedVelY = -PLAYER_CONFIG.jumpPower + GRAVITY - (GRAVITY * 1.8);
+    const tolerance = 0.01;
+    assert(Math.abs(player.velY - expectedVelY) < tolerance, 
+        `ジャンプ時の垂直速度が正しくありません。期待値: ${expectedVelY.toFixed(2)}, 実際: ${player.velY.toFixed(2)}`);
     assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
     assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
 });
@@ -482,11 +491,11 @@ svgRenderingTests.test('SVG描画メソッドの動作確認', () => {
     if (window.location.protocol !== 'file:') {
         try {
             // SVGファイルが読み込まれている場合のみテスト
-            svgGraphics.drawSlime(0, 0, 40, 40, 0);
-            svgGraphics.drawBird(0, 0, 40, 40, 0);
-            svgGraphics.drawCoin(0, 0, 30, 30, 0);
-            svgGraphics.drawFlag(0, 0, 60, 80);
-            svgGraphics.drawSpring(0, 0, 40, 40, 0);
+            svgGraphics.drawEnemy('slime', 0, 0, 40, 40, 0);
+            svgGraphics.drawEnemy('bird', 0, 0, 40, 40, 0);
+            svgGraphics.drawItem('coin', 0, 0, 30, 30, { rotation: 0 });
+            svgGraphics.drawItem('flag', 0, 0, 60, 80);
+            svgGraphics.drawItem('spring', 0, 0, 40, 40, { animTimer: 0 });
             svgGraphics.drawPlayer(0, 0, 32, 48, 2, 1, false, 0, 0, 0);
         } catch (error) {
             // SVGファイル未読み込みの場合は期待されるエラー
