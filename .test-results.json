@@ -1,9 +1,21 @@
 {
-  "timestamp": "2025-06-18T00:13:46.352Z",
+  "timestamp": "2025-06-18T23:26:11.555Z",
   "method": "curl_validation",
-  "status": "error",
+  "status": "structure_valid",
   "validation_results": {
-    "error": "HTTP 404"
+    "pageLoaded": true,
+    "scriptsIncluded": {
+      "level-loader.js": true,
+      "config.js": true,
+      "game.js": true,
+      "test.js": true
+    },
+    "elementsPresent": {
+      "gameCanvas": true,
+      "testResults": true,
+      "corsWarning": true
+    },
+    "issues": []
   },
   "manual_test_required": true
 }

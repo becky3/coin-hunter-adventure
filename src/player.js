@@ -102,7 +102,7 @@ class Player {
     handleJump(input) {
         // ジャンプボタンが押された瞬間
         if (input.jump && !this.jumpButtonPressed && this.onGround) {
-            this.velY = this.jumpPower;
+            this.velY = -this.jumpPower;
             this.onGround = false;
             this.isJumping = true;
             this.jumpButtonPressed = true;

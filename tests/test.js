@@ -212,6 +212,7 @@ systemTests.test('ジャンプ機能の動作確認', () => {
     player.onGround = true;
     player.isJumping = false;
     player.jumpButtonPressed = false;
+    player.jumpTime = 0;
     player.velY = 0;
     const initialY = player.y;
     
@@ -220,8 +221,8 @@ systemTests.test('ジャンプ機能の動作確認', () => {
     player.handleJump(jumpInput);
     
     // ジャンプ後の状態を確認
-    assert(player.velY === PLAYER_CONFIG.jumpPower, 
-        `ジャンプ時の初期速度が正しくありません。期待値: ${PLAYER_CONFIG.jumpPower}, 実際: ${player.velY}`);
+    assert(player.velY === -PLAYER_CONFIG.jumpPower, 
+        `ジャンプ時の初期速度が正しくありません。期待値: ${-PLAYER_CONFIG.jumpPower}, 実際: ${player.velY}`);
     assert(!player.onGround, 'ジャンプ後もonGroundがtrueのままです');
     assert(player.isJumping, 'ジャンプ後にisJumpingがtrueになっていません');
     assert(player.jumpButtonPressed, 'ジャンプ後にjumpButtonPressedがtrueになっていません');
@@ -240,7 +241,7 @@ systemTests.test('入力マネージャーの動作', () => {
     // getInputメソッドのテスト（直接keysを設定）
     inputManager.keys.ArrowLeft = true;
     inputManager.keys.ArrowRight = false;
-    inputManager.keys[' '] = true;
+    inputManager.keys.Space = true;  // 'Space'キーコードに修正
     
     const state = inputManager.getInput();
     assert(state.left === true, 'getInputでleftが検出されません');
@@ -294,9 +295,11 @@ systemTests.test('プレイヤーの移動処理', () => {
     player.onGround = true;
     player.isJumping = false;
     player.jumpButtonPressed = false;
+    player.jumpTime = 0;
     player.jumpButtonHoldTime = 0;
+    player.velY = 0;  // 初期速度を0に設定
     player.update({ right: false, left: false, jump: true });
-    assert(player.velY === PLAYER_CONFIG.jumpPower, 'ジャンプ時の垂直速度が正しくありません');
+    assert(player.velY === -PLAYER_CONFIG.jumpPower, 'ジャンプ時の垂直速度が正しくありません');
     assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
     assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
 });

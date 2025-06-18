@@ -4,7 +4,7 @@
     "passed": 10,
     "failed": 2,
     "successRate": "83.3%",
-    "duration": "4646ms"
+    "duration": "5357ms"
   },
   "details": [
     {
@@ -21,7 +21,7 @@
       "name": "状態履歴の記録",
       "passed": true,
       "error": null,
-      "duration": 163,
+      "duration": 164,
       "details": {
         "historyLength": 10
       }
@@ -39,21 +39,21 @@
       "name": "右移動の検証",
       "passed": false,
       "error": "右移動が機能していない",
-      "duration": 18137,
+      "duration": 1007,
       "details": {}
     },
     {
       "name": "ジャンプ動作の検証",
       "passed": false,
       "error": "ジャンプが機能していない",
-      "duration": -17139,
+      "duration": 702,
       "details": {}
     },
     {
       "name": "複合動作の検証",
       "passed": true,
       "error": null,
-      "duration": 1210,
+      "duration": 1207,
       "details": {
         "totalActions": 3,
         "successful": 3,
@@ -73,7 +73,7 @@
           }
         ],
         "finalState": {
-          "timestamp": 1750202625911,
+          "timestamp": 1750289202805,
           "frame": 0,
           "player": {
             "x": 50,
@@ -113,7 +113,7 @@
       "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 2005,
+      "duration": 2011,
       "details": {
         "coinsCollected": 0,
         "success": false
@@ -123,7 +123,7 @@
       "name": "ライフシステム",
       "passed": true,
       "error": null,
-      "duration": 1,
+      "duration": 0,
       "details": {
         "initialLives": 3,
         "currentLives": 2
@@ -133,7 +133,7 @@
       "name": "重力の適用",
       "passed": true,
       "error": null,
-      "duration": 165,
+      "duration": 163,
       "details": {
         "fallDistance": 27.5,
         "velocity": 5
@@ -153,7 +153,7 @@
       "name": "プラットフォーム衝突",
       "passed": true,
       "error": null,
-      "duration": 1,
+      "duration": 0,
       "details": {
         "collision": false,
         "playerPos": {
@@ -173,7 +173,7 @@
       }
     }
   ],
-  "timestamp": "2025-06-17T23:23:48.084Z",
+  "timestamp": "2025-06-18T23:26:44.982Z",
   "statistics": {
     "byCategory": {
       "状態キャプチャの正確性": {
@@ -186,7 +186,7 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 163
+        "totalDuration": 164
       },
       "状態検証機能": {
         "total": 1,
@@ -198,37 +198,37 @@
         "total": 1,
         "passed": 0,
         "failed": 1,
-        "totalDuration": 18137
+        "totalDuration": 1007
       },
       "ジャンプ動作の検証": {
         "total": 1,
         "passed": 0,
         "failed": 1,
-        "totalDuration": -17139
+        "totalDuration": 702
       },
       "複合動作の検証": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 1210
+        "totalDuration": 1207
       },
       "コイン収集メカニクス": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 2005
+        "totalDuration": 2011
       },
       "ライフシステム": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 1
+        "totalDuration": 0
       },
       "重力の適用": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 165
+        "totalDuration": 163
       },
       "速度制限の確認": {
         "total": 1,
@@ -240,7 +240,7 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 1
+        "totalDuration": 0
       },
       "境界チェック": {
         "total": 1,
@@ -249,20 +249,26 @@
         "totalDuration": 0
       }
     },
-    "averageDuration": 387.1666666666667,
+    "averageDuration": 446.4166666666667,
     "slowestTest": {
-      "name": "右移動の検証",
-      "passed": false,
-      "error": "右移動が機能していない",
-      "duration": 18137,
-      "details": {}
+      "name": "コイン収集メカニクス",
+      "passed": true,
+      "error": null,
+      "duration": 2011,
+      "details": {
+        "coinsCollected": 0,
+        "success": false
+      }
     },
     "fastestTest": {
-      "name": "ジャンプ動作の検証",
-      "passed": false,
-      "error": "ジャンプが機能していない",
-      "duration": -17139,
-      "details": {}
+      "name": "ライフシステム",
+      "passed": true,
+      "error": null,
+      "duration": 0,
+      "details": {
+        "initialLives": 3,
+        "currentLives": 2
+      }
     }
   }
 }
