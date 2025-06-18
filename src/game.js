@@ -199,7 +199,8 @@ class Game {
         }
         
         const startBtn = document.getElementById('startBtn');
-        if (startBtn && typeof startBtn.addEventListener === 'function') {
+        if (startBtn && typeof startBtn.addEventListener === 'function' && !startBtn.hasListener) {
+            startBtn.hasListener = true;
             startBtn.addEventListener('click', async () => {
                 // ボタンクリック効果音を再生
                 if (this.musicSystem.isInitialized) {
@@ -220,7 +221,8 @@ class Game {
         
         const restartBtns = document.querySelectorAll('#restartBtn1, #restartBtn2');
         restartBtns.forEach(btn => {
-            if (btn && typeof btn.addEventListener === 'function') {
+            if (btn && typeof btn.addEventListener === 'function' && !btn.hasListener) {
+                btn.hasListener = true;
                 btn.addEventListener('click', () => {
                     // リスタート効果音を再生
                     if (this.musicSystem.isInitialized) {
@@ -233,7 +235,8 @@ class Game {
         
         const titleBtns = document.querySelectorAll('#backToTitleBtn1, #backToTitleBtn2');
         titleBtns.forEach(btn => {
-            if (btn && typeof btn.addEventListener === 'function') {
+            if (btn && typeof btn.addEventListener === 'function' && !btn.hasListener) {
+                btn.hasListener = true;
                 btn.addEventListener('click', () => {
                     // ボタンクリック効果音を再生
                     if (this.musicSystem.isInitialized) {
@@ -246,7 +249,8 @@ class Game {
         
         // 音楽ミュートボタン
         const muteBtn = document.getElementById('muteBtn');
-        if (muteBtn && typeof muteBtn.addEventListener === 'function') {
+        if (muteBtn && typeof muteBtn.addEventListener === 'function' && !muteBtn.hasListener) {
+            muteBtn.hasListener = true;
             muteBtn.addEventListener('click', () => {
                 const isMuted = this.musicSystem.toggleMute();
                 muteBtn.classList.toggle('muted', isMuted);
@@ -263,13 +267,22 @@ class Game {
         // ステージデータを読み込む（初回のみ）
         if (!this.levelLoader.getCurrentStageData()) {
             await this.initializeStageData();
-            this.initLevel();
         }
         
+        // レベルを初期化（敵、コイン、スプリングを初期状態に戻す）
+        this.initLevel();
+        
+        // ゲーム状態とプレイヤーをリセット
         this.gameState.reset();
         this.player.reset();
+        
+        // カメラ位置をリセット
+        this.camera = { x: 0, y: 0 };
+        
+        // エフェクトとアニメーションをクリア
         this.damageEffect = 0;
         this.scoreAnimations = [];
+        this.particles = [];
         
         // BGMを開始
         if (this.musicSystem.isInitialized) {
@@ -493,12 +506,15 @@ class Game {
                     } else {
                         // 通常の衝突（横から当たった場合）
                         
-                        // ダメージ効果音を再生
-                        if (this.musicSystem.isInitialized) {
-                            this.musicSystem.playDamageSound();
+                        // 無敵状態でない場合のみダメージを受ける
+                        if (!this.player.invulnerable) {
+                            // ダメージ効果音を再生
+                            if (this.musicSystem.isInitialized) {
+                                this.musicSystem.playDamageSound();
+                            }
+                            
+                            this.loseLife();
                         }
-                        
-                        this.loseLife();
                         return; // 一度の衝突で複数回呼ばれるのを防ぐ
                     }
                 }
