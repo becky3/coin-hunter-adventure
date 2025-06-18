@@ -158,11 +158,12 @@ class Game {
         this.enemies = (stageData.enemies || []).map(e => ({
             ...e,
             ...ENEMY_CONFIG[e.type],
-            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
-            direction: e.type === 'bird' ? -1 : 1,
+            velX: -ENEMY_CONFIG[e.type].speed, // 全ての敵が左に移動開始
+            direction: -1, // 左向き
             animTimer: 0,
             originalX: e.x,
-            originalY: e.y
+            originalY: e.y,
+            isDead: false
         }));
         
         this.coins = (stageData.coins || []).map(c => ({
@@ -645,10 +646,9 @@ class Game {
             
             // 敵の落下判定
             if (enemy.y > worldHeight) {
-                // 敵を初期位置にリセット
-                enemy.x = enemy.originalX;
-                enemy.y = enemy.originalY;
-                enemy.velY = 0;
+                // 敵を無効化（非表示にする）
+                enemy.isDead = true;
+                enemy.y = worldHeight + 100; // 画面外に配置
             }
         });
     }
@@ -662,6 +662,11 @@ class Game {
         this.enemies.forEach(enemy => {
             if (!enemy || typeof enemy !== 'object') {
                 console.warn('無効な敵オブジェクト:', enemy);
+                return;
+            }
+            
+            // 死んでいる敵はスキップ
+            if (enemy.isDead) {
                 return;
             }
             
@@ -790,7 +795,7 @@ class Game {
         
         // 敵描画
         this.enemies.forEach(enemy => {
-            if (this.isInView(enemy)) {
+            if (!enemy.isDead && this.isInView(enemy)) {
                 this.svg.drawEnemy(enemy.type, enemy.x, enemy.y, enemy.width, enemy.height, 
                                  enemy.animTimer, enemy.direction);
             }
@@ -866,8 +871,11 @@ class Game {
     loseLife() {
         const isDead = this.player.takeDamage();
         
-        // ダメージエフェクト：画面を少し赤くする
-        this.damageEffect = 30; // 30フレーム間エフェクト表示
+        // takeDamageがtrueを返した場合のみ（実際にダメージを受けた場合のみ）エフェクトを表示
+        if (this.player.invulnerable) {
+            // ダメージエフェクト：画面を少し赤くする
+            this.damageEffect = 30; // 30フレーム間エフェクト表示
+        }
         
         if (isDead) {
             const gameOver = this.gameState.loseLife();
