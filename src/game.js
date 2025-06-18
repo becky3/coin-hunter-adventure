@@ -413,16 +413,20 @@ class Game {
             if (this.checkCollision(playerBounds, platform)) {
                 // 上から乗る
                 if (this.player.velY >= 0 && 
-                    playerBounds.y + playerBounds.height > platform.y &&
-                    playerBounds.y + playerBounds.height <= platform.y + platform.height &&
-                    playerBounds.y < platform.y) {
+                    playerBounds.y < platform.y + platform.height &&
+                    playerBounds.y + playerBounds.height > platform.y) {
                     
-                    const newY = platform.y - playerBounds.height;
-                    // 座標範囲チェック
-                    if (newY >= 0 && newY <= CANVAS_HEIGHT - playerBounds.height) {
-                        this.player.y = newY;
-                        this.player.velY = 0;
-                        onPlatform = true;
+                    // プレイヤーの中心が
+                    const playerCenterY = playerBounds.y + playerBounds.height / 2;
+                    const platformCenterY = platform.y + platform.height / 2;
+                    
+                    if (playerCenterY < platformCenterY) {
+                        const newY = platform.y - playerBounds.height;
+                        if (newY >= 0 && newY <= CANVAS_HEIGHT - playerBounds.height) {
+                            this.player.y = newY;
+                            this.player.velY = 0;
+                            onPlatform = true;
+                        }
                     }
                 }
                 // 下から衝突
