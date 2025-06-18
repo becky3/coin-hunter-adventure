@@ -231,7 +231,7 @@ class Game {
             }
         });
         
-        const titleBtns = document.querySelectorAll('#titleBtn1, #titleBtn2');
+        const titleBtns = document.querySelectorAll('#backToTitleBtn1, #backToTitleBtn2');
         titleBtns.forEach(btn => {
             if (btn && typeof btn.addEventListener === 'function') {
                 btn.addEventListener('click', () => {
@@ -412,18 +412,18 @@ class Game {
             const playerBounds = this.player.getBounds();
             if (this.checkCollision(playerBounds, platform)) {
                 // 上から乗る
-                if (this.player.velY > 0 && 
-                    playerBounds.y < platform.y && 
-                    playerBounds.y + playerBounds.height < platform.y + platform.height / 2) {
+                if (this.player.velY >= 0 && 
+                    playerBounds.y + playerBounds.height > platform.y &&
+                    playerBounds.y + playerBounds.height <= platform.y + platform.height &&
+                    playerBounds.y < platform.y) {
                     
                     const newY = platform.y - playerBounds.height;
                     // 座標範囲チェック
                     if (newY >= 0 && newY <= CANVAS_HEIGHT - playerBounds.height) {
                         this.player.y = newY;
                         this.player.velY = 0;
+                        onPlatform = true;
                     }
-                    
-                    onPlatform = true;
                 }
                 // 下から衝突
                 else if (this.player.velY < 0 && 
@@ -648,11 +648,31 @@ class Game {
             enemy.animTimer = (enemy.animTimer || 0) + 1;
             enemy.x = (enemy.x || 0) + (enemy.velX || 0);
             
+            // スライムには重力を適用
             if (enemy.type === 'slime') {
-                // スライムの移動パターン
-                if (Math.abs(enemy.x - enemy.originalX) > 100) {
-                    enemy.velX *= -1;
-                    enemy.direction *= -1;
+                // 重力
+                if (!enemy.velY) enemy.velY = 0;
+                enemy.velY += GRAVITY;
+                enemy.y += enemy.velY;
+                
+                // プラットフォームとの衝突判定
+                let onPlatform = false;
+                this.platforms.forEach(platform => {
+                    if (this.checkCollision(enemy, platform)) {
+                        if (enemy.velY > 0 && enemy.y < platform.y) {
+                            enemy.y = platform.y - enemy.height;
+                            enemy.velY = 0;
+                            onPlatform = true;
+                        }
+                    }
+                });
+                
+                // 移動パターン（プラットフォーム上にいる時のみ）
+                if (onPlatform) {
+                    if (Math.abs(enemy.x - enemy.originalX) > 100) {
+                        enemy.velX *= -1;
+                        enemy.direction *= -1;
+                    }
                 }
             } else if (enemy.type === 'bird') {
                 // 鳥の飛行パターン
