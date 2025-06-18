@@ -14,5 +14,4 @@ var levelData = {
 };
 
 if (typeof console !== 'undefined') {
-    console.log('levels.js loaded - 改善版レベルデザイン');
 }

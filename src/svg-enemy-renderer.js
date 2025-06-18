@@ -29,16 +29,12 @@ class SVGEnemyRenderer {
         
         // Protocol check
         if (window.location.protocol === 'file:') {
-            console.error(`🚫 CORS ERROR: 敵SVGファイルの読み込みができません: ${filename}`);
-            console.error(`📝 HTTPサーバーを起動してください (例: python3 -m http.server 8080)`);
             return null;
         }
         
-        console.log(`🐾 敵SVGファイル読み込み開始: ${filename}`);
         
         const loadPromise = fetch(filename)
             .then(response => {
-                console.log(`📡 敵SVG fetch応答: ${filename}, status: ${response.status}`);
                 if (!response.ok) {
                     if (response.status === 0) {
                         throw new Error(`CORS/ネットワークエラー: ${filename} - file://プロトコルまたはネットワーク問題 (Status: 0)`);
@@ -49,7 +45,6 @@ class SVGEnemyRenderer {
                 return response.text();
             })
             .then(svgText => {
-                console.log(`✅ 敵SVGテキスト取得成功: ${filename}, 長さ: ${svgText.length}`);
                 this.svgCache.set(filename, svgText);
                 this.loadPromises.delete(filename);
                 // 画像もプリロード
@@ -57,7 +52,6 @@ class SVGEnemyRenderer {
                 return svgText;
             })
             .catch(error => {
-                console.error(`❌ 敵SVGファイル読み込みエラー: ${filename}`, error);
                 this.loadPromises.delete(filename);
                 throw error;
             });
@@ -74,11 +68,9 @@ class SVGEnemyRenderer {
         
         img.onload = () => {
             this.imageCache.set(filename, img);
-            console.log(`✅ 敵画像キャッシュ完了: ${filename}`);
         };
         
         img.onerror = (error) => {
-            console.error(`❌ 敵画像キャッシュエラー: ${filename}`, error);
         };
         
         img.src = dataUrl;
@@ -86,14 +78,11 @@ class SVGEnemyRenderer {
     
     // SVGファイルの事前読み込み
     async preloadSVGs() {
-        console.log('🎮 敵SVGファイル事前読み込み開始...');
         const promises = Object.values(this.svgFiles).map(filename => this.loadSVG(filename));
         
         try {
             await Promise.all(promises);
-            console.log('✅ 全敵SVGファイル事前読み込み完了');
         } catch (error) {
-            console.error('❌ 敵SVGファイル事前読み込み中にエラー:', error);
         }
     }
     
@@ -101,13 +90,11 @@ class SVGEnemyRenderer {
     drawEnemy(type, x, y, width, height, animTimer = 0) {
         const filename = this.svgFiles[type];
         if (!filename) {
-            console.warn(`未知の敵タイプ: ${type}`);
             return;
         }
         
         // SVGが利用可能な場合は使用、そうでなければエラー
         if (this.svgCache.has(filename)) {
-            // console.log(`SVG描画を使用: ${filename}`);
             this.drawCachedImage(filename, x, y, width, height, type, animTimer);
         } else {
             throw new Error(`敵SVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);
@@ -153,7 +140,6 @@ class SVGEnemyRenderer {
         };
         
         img.onerror = (error) => {
-            console.error(`❌ 敵画像作成エラー (${type}):`, error);
         };
         
         img.src = dataUrl;

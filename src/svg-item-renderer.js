@@ -30,24 +30,17 @@ class SVGItemRenderer {
         
         // Protocol check for better error messages
         if (window.location.protocol === 'file:') {
-            console.error(`🚫 CORS ERROR: ゲームがfile://プロトコルで開かれています`);
-            console.error(`🚫 アイテムSVGファイルの読み込みができません: ${filename}`);
-            console.error(`✅ SOLUTION: HTTPサーバーでアクセスしてください: http://localhost:8080/`);
             return null;
         }
         
         // Protocol check
         if (window.location.protocol === 'file:') {
-            console.error(`🚫 CORS ERROR: アイテムSVGファイルの読み込みができません: ${filename}`);
-            console.error(`📝 HTTPサーバーを起動してください (例: python3 -m http.server 8080)`);
             return null;
         }
         
-        console.log(`💎 アイテムSVGファイル読み込み開始: ${filename}`);
         
         const loadPromise = fetch(filename)
             .then(response => {
-                console.log(`📡 アイテムSVG fetch応答: ${filename}, status: ${response.status}`);
                 if (!response.ok) {
                     if (response.status === 0) {
                         throw new Error(`CORS/ネットワークエラー: ${filename} - file://プロトコルまたはネットワーク問題 (Status: 0)`);
@@ -58,7 +51,6 @@ class SVGItemRenderer {
                 return response.text();
             })
             .then(svgText => {
-                console.log(`✅ アイテムSVGテキスト取得成功: ${filename}, 長さ: ${svgText.length}`);
                 this.svgCache.set(filename, svgText);
                 this.loadPromises.delete(filename);
                 // 画像もプリロード
@@ -66,7 +58,6 @@ class SVGItemRenderer {
                 return svgText;
             })
             .catch(error => {
-                console.error(`❌ アイテムSVGファイル読み込みエラー: ${filename}`, error);
                 this.loadPromises.delete(filename);
                 throw error;
             });
@@ -83,11 +74,9 @@ class SVGItemRenderer {
         
         img.onload = () => {
             this.imageCache.set(filename, img);
-            console.log(`✅ アイテム画像キャッシュ完了: ${filename}`);
         };
         
         img.onerror = (error) => {
-            console.error(`❌ アイテム画像キャッシュエラー: ${filename}`, error);
         };
         
         img.src = dataUrl;
@@ -95,14 +84,11 @@ class SVGItemRenderer {
     
     // SVGファイルの事前読み込み
     async preloadSVGs() {
-        console.log('🎮 アイテムSVGファイル事前読み込み開始...');
         const promises = Object.values(this.svgFiles).map(filename => this.loadSVG(filename));
         
         try {
             await Promise.all(promises);
-            console.log('✅ 全アイテムSVGファイル事前読み込み完了');
         } catch (error) {
-            console.error('❌ アイテムSVGファイル事前読み込み中にエラー:', error);
         }
     }
     
@@ -111,13 +97,11 @@ class SVGItemRenderer {
         const animTimer = animData.rotation || animData.compression || 0;
         const filename = this.svgFiles[type];
         if (!filename) {
-            console.warn(`未知のアイテムタイプ: ${type}`);
             return;
         }
         
         // SVGが利用可能な場合は使用、そうでなければエラー
         if (this.svgCache.has(filename)) {
-            // console.log(`SVG描画を使用: ${filename}`);
             this.drawCachedImage(filename, x, y, width, height, type, animTimer);
         } else {
             throw new Error(`アイテムSVGファイル（${filename}）が読み込まれていません。HTTPサーバー経由でアクセスしてください。`);
@@ -170,7 +154,6 @@ class SVGItemRenderer {
         };
         
         img.onerror = (error) => {
-            console.error(`❌ アイテム画像作成エラー (${type}):`, error);
         };
         
         img.src = dataUrl;

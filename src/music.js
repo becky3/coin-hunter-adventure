@@ -33,9 +33,7 @@ class MusicSystem {
             this.masterGain.gain.value = this.bgmVolume;
             
             this.isInitialized = true;
-            console.log('音楽システムを初期化しました');
         } catch (error) {
-            console.error('音楽システムの初期化に失敗しました:', error);
         }
     }
     
@@ -152,15 +150,12 @@ class MusicSystem {
     // タイトル画面のBGM
     playTitleBGM() {
         if (this.currentBGM === 'title') {
-            console.log('タイトルBGMは既に再生中です');
             return;
         }
         
-        console.log('タイトルBGMを開始します（現在のBGM:', this.currentBGM, '）');
         this.stopBGM();
         
         if (!this.isInitialized) {
-            console.log('音楽システムが初期化されていません');
             return;
         }
         
@@ -241,15 +236,12 @@ class MusicSystem {
     // ゲームプレイ中のBGM
     playGameBGM() {
         if (this.currentBGM === 'game') {
-            console.log('ゲームBGMは既に再生中です');
             return;
         }
         
-        console.log('ゲームBGMを開始します（現在のBGM:', this.currentBGM, '）');
         this.stopBGM();
         
         if (!this.isInitialized) {
-            console.log('音楽システムが初期化されていません');
             return;
         }
         
@@ -384,7 +376,6 @@ class MusicSystem {
     
     // 全てのアクティブノードを強制停止
     stopAllActiveNodes() {
-        console.log('アクティブノードを停止します。ノード数:', this.activeNodes.length);
         
         this.activeNodes.forEach(({ oscillator, gainNode }) => {
             try {
@@ -398,7 +389,6 @@ class MusicSystem {
                     oscillator.stop(this.audioContext.currentTime);
                 }
             } catch (e) {
-                console.log('ノード停止エラー:', e);
             }
         });
         
@@ -408,11 +398,9 @@ class MusicSystem {
     
     // BGMを停止
     stopBGM() {
-        console.log('BGMを停止します。現在のBGM:', this.currentBGM);
         
         // 既に停止済みの場合はスキップ
         if (!this.currentBGM && !this.bgmLoopInterval) {
-            console.log('BGMは既に停止済みです');
             return;
         }
         
@@ -428,7 +416,6 @@ class MusicSystem {
         // 現在のBGMを無効化
         this.currentBGM = null;
         
-        console.log('BGM停止完了');
     }
     
     // 音量を設定

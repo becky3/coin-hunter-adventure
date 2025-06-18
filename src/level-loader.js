@@ -26,7 +26,6 @@ class LevelLoader {
             this.stageList = data;
             return data;
         } catch (error) {
-            console.error('ステージリスト読み込みエラー:', error);
             // フォールバック: ハードコードされたステージリスト
             const fallbackData = {
                 stages: [
@@ -68,11 +67,9 @@ class LevelLoader {
             this.currentStageData = await response.json();
             this.currentStageId = stageId;
             
-            console.log(`ステージ「${this.currentStageData.name}」を読み込みました`);
             return this.currentStageData;
             
         } catch (error) {
-            console.error('ステージデータ読み込みエラー:', error);
             throw error;
         }
     }
@@ -179,7 +176,6 @@ class LevelLoader {
             });
             
         } catch (error) {
-            console.error('進行状況の読み込みエラー:', error);
         }
     }
     

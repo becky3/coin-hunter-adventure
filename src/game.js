@@ -5,10 +5,8 @@
 
 // 設定は config.js から読み込み、レベルデータは levels.js から読み込み
 if (typeof CANVAS_WIDTH !== 'undefined') {
-    console.log('game.js loaded, CANVAS_WIDTH:', CANVAS_WIDTH);
 }
 // ステージシステム初期化ログ
-console.log('game.js loaded - JSONベースステージシステム対応');
 
 // ===== SVGグラフィックシステム =====
 class SVGGraphics {
@@ -17,23 +15,15 @@ class SVGGraphics {
         this.cache = new Map(); // パスキャッシュ
         
         // クラス定義の確認
-        console.log('=== SVGレンダラークラス確認 ===');
-        console.log('SVGPlayerRenderer:', typeof SVGPlayerRenderer);
-        console.log('SVGEnemyRenderer:', typeof SVGEnemyRenderer);
-        console.log('SVGItemRenderer:', typeof SVGItemRenderer);
-        console.log('==========================');
         
         // プレイヤーグラフィックレンダラーを初期化
         if (typeof SVGPlayerRenderer !== 'undefined') {
             try {
                 this.playerRenderer = new SVGPlayerRenderer(ctx);
-                console.log('✅ SVGPlayerRenderer初期化成功');
             } catch (error) {
-                console.error('❌ SVGPlayerRenderer初期化エラー:', error);
                 this.playerRenderer = null;
             }
         } else {
-            console.error('❌ SVGPlayerRendererクラスが見つかりません');
             this.playerRenderer = null;
         }
         
@@ -41,13 +31,10 @@ class SVGGraphics {
         if (typeof SVGEnemyRenderer !== 'undefined') {
             try {
                 this.enemyRenderer = new SVGEnemyRenderer(ctx);
-                console.log('✅ SVGEnemyRenderer初期化成功');
             } catch (error) {
-                console.error('❌ SVGEnemyRenderer初期化エラー:', error);
                 this.enemyRenderer = null;
             }
         } else {
-            console.error('❌ SVGEnemyRendererクラスが見つかりません');
             this.enemyRenderer = null;
         }
         
@@ -55,13 +42,10 @@ class SVGGraphics {
         if (typeof SVGItemRenderer !== 'undefined') {
             try {
                 this.itemRenderer = new SVGItemRenderer(ctx);
-                console.log('✅ SVGItemRenderer初期化成功');
             } catch (error) {
-                console.error('❌ SVGItemRenderer初期化エラー:', error);
                 this.itemRenderer = null;
             }
         } else {
-            console.error('❌ SVGItemRendererクラスが見つかりません');
             this.itemRenderer = null;
         }
         
@@ -77,14 +61,9 @@ class SVGGraphics {
         if (window.location.protocol === 'file:') {
             // test.html専用：CORS警告を無効化
             if (window.DISABLE_CORS_WARNING) {
-                console.log('📝 テストモード: file://プロトコルですが、テスト実行のため警告を無効化します');
                 return;
             }
             
-            console.error('🚫 CRITICAL ERROR: ゲームがfile://プロトコルで開かれています');
-            console.error('🚫 SVGファイルはCORS制限により読み込めません');
-            console.error('✅ SOLUTION: HTTPサーバーでアクセスしてください');
-            console.error('📝 例: python3 -m http.server 8080 を実行後、http://localhost:8080/ でアクセス');
             
             // ビジュアル警告を表示（一度だけ）
             if (!window._corsWarningShown) {
@@ -92,7 +71,6 @@ class SVGGraphics {
                 this.showProtocolWarning();
             }
         } else {
-            console.log('✅ HTTPサーバー経由でアクセスされています:', window.location.href);
         }
     }
     
@@ -155,11 +133,9 @@ class SVGGraphics {
     async preloadAllSVGs() {
         // Protocol check - skip SVG loading for file:// protocol
         if (window.location.protocol === 'file:') {
-            console.log('🚫 file://プロトコルのためSVG読み込みをスキップします');
             return; // Skip SVG loading
         }
         
-        console.log('🚀 全SVGファイルの事前読み込み開始...');
         const promises = [];
         
         if (this.playerRenderer && this.playerRenderer.preloadSVGs) {
@@ -176,9 +152,7 @@ class SVGGraphics {
         
         try {
             await Promise.all(promises);
-            console.log('✅ 全SVGファイルの事前読み込み完了！');
         } catch (error) {
-            console.error('❌ SVGファイル事前読み込み中にエラー:', error);
         }
     }
     
@@ -664,7 +638,6 @@ class Player {
         // 大幅な座標変更または異常な座標を検出
         // if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
         //     this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50) {
-        //     console.error(`🚨 異常な座標変更/位置を検出:`, {
         //         before: {x: oldX, y: oldY},
         //         after: {x: this.x, y: this.y},
         //         vel: {x: this.velX, y: this.velY},
@@ -733,19 +706,16 @@ class Player {
                 if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 重力を相殺して上昇を維持（倍率を1.8倍に調整）
                     this.velY -= GRAVITY * 1.8; // 重力の1.8倍を相殺で適度な高さに調整
-                    // console.log(`継続ジャンプ: time=${this.jumpTime}, velY=${this.velY}, gravity=${GRAVITY}`);
                 } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
                     // 最大時間に達したら上昇を停止
                     this.velY = 0;
                     this.canVariableJump = false;
-                    // console.log(`ジャンプ最大時間到達: velY -> 0`);
                 }
             } else {
                 // ボタンが離された時
                 if (this.jumpTime >= PLAYER_CONFIG.minJumpTime && this.velY < 0) {
                     // 最小時間経過後なら上昇を即座に停止
                     this.velY = 0;
-                    // console.log(`ジャンプボタン離し: time=${this.jumpTime}, velY -> 0`);
                 }
                 // 最小時間前に離した場合は、最小時間まで上昇を継続
                 this.jumpButtonPressed = false;
@@ -778,7 +748,6 @@ class Player {
     
     takeDamage() {
         if (this.invulnerable) {
-            console.log('無敵時間中のため、ダメージ無効');
             return false;
         }
         
@@ -786,11 +755,9 @@ class Player {
         this.invulnerable = true;
         this.invulnerabilityTime = PLAYER_CONFIG.invulnerabilityTime;
         
-        console.log('ダメージを受けました。残りヘルス:', this.health);
         
         if (this.health <= 0) {
             this.isDead = true;
-            console.log('プレイヤー死亡');
             return true;
         }
         
@@ -798,7 +765,6 @@ class Player {
     }
     
     reset() {
-        console.log(`プレイヤーリセット: (${this.x}, ${this.y}) -> (${PLAYER_CONFIG.spawnX}, ${PLAYER_CONFIG.spawnY})`);
         this.x = PLAYER_CONFIG.spawnX;
         this.y = PLAYER_CONFIG.spawnY;
         this.velX = 0;
@@ -835,7 +801,6 @@ class Player {
             heightInPlayerUnits: (this.jumpMaxHeight / this.height).toFixed(1)
         };
         
-        console.log(`🦘 ジャンプ統計:`, {
             'ボタン保持時間': `${this.jumpButtonHoldTime}フレーム (${(this.jumpButtonHoldTime * 16.67).toFixed(0)}ms)`,
             '実際のジャンプ時間': `${this.jumpTime}フレーム`,
             '最高到達高さ': `${this.jumpMaxHeight.toFixed(1)}px`,
@@ -861,16 +826,13 @@ class InputManager {
             
             // @キーの直接検出とデバッグ切り替え
             if (e.key === '@') {
-                console.log('@キーが押されました！');
                 if (window.game) {
                     window.game.showJumpDebug = !window.game.showJumpDebug;
-                    console.log(`🛠️ ジャンプデバッグ表示: ${window.game.showJumpDebug ? 'ON' : 'OFF'} (@キーで切り替え)`);
                 }
             }
             
             // デバッグ用: キーコードをログ出力
             if (e.key === '@' || e.code === 'Digit2' || e.shiftKey) {
-                console.log(`キー検出: key="${e.key}", code="${e.code}", shift=${e.shiftKey}`);
             }
         });
 
@@ -930,7 +892,6 @@ class Game {
         }
         
         this.levelLoader = new LevelLoader();
-        console.log('✅ LevelLoader初期化成功');
         
         // モダンデザイン用の時間とエフェクト
         this.gameTime = 0;
@@ -971,7 +932,6 @@ class Game {
             
             // SVGファイルの事前読み込み
             await this.preloadSVGs();
-            console.log('ゲームの初期化完了');
             
             this.isInitialized = true;
             
@@ -979,38 +939,28 @@ class Game {
             if (typeof window !== 'undefined' && typeof requestAnimationFrame !== 'undefined') {
                 this.start();
             } else {
-                console.log('📝 非ブラウザ環境のためゲーム自動開始をスキップ');
             }
             
         } catch (error) {
-            console.error('ゲーム初期化エラー:', error);
             throw error;
         }
     }
     
     async initializeStageData() {
         try {
-            console.log('🔍 ステージデータ初期化開始...');
             
             // ステージリストを読み込み
             await this.levelLoader.loadStageList();
-            console.log('✅ ステージリスト読み込み完了');
             
             // 進行状況を読み込み
             this.levelLoader.loadProgress();
-            console.log('✅ 進行状況読み込み完了');
             
             // 現在のステージまたはstage1を読み込み
             const currentStage = this.levelLoader.stageList?.currentStage || 'stage1';
-            console.log(`🎯 読み込み対象ステージ: ${currentStage}`);
             
             this.currentStageData = await this.levelLoader.loadStage(currentStage);
-            console.log('✅ ステージデータ読み込み成功');
-            console.log('📊 currentStageData:', this.currentStageData ? 'データ存在' : 'データなし');
             
-            console.log(`✅ ステージデータ読み込み完了: ${currentStage}`);
         } catch (error) {
-            console.error('❌ ステージデータ読み込み失敗:', error);
             throw new Error(`ステージデータの初期化に失敗しました: ${error.message}`);
         }
     }
@@ -1018,7 +968,6 @@ class Game {
     setupCanvas() {
         // Node.js環境ではキャンバスセットアップをスキップ
         if (typeof window === 'undefined' || typeof document === 'undefined') {
-            console.log('📝 Node.js環境のためキャンバスセットアップをスキップ');
             return;
         }
         
@@ -1065,18 +1014,13 @@ class Game {
     }
     
     initLevel() {
-        console.log('🎮 レベル初期化開始...');
-        console.log('📊 currentStageData確認:', this.currentStageData ? '存在' : '未設定');
         
         // 現在のステージデータを使用
         if (!this.currentStageData) {
-            console.error('❌ currentStageDataが未設定です');
             throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
         }
         
-        console.log('✅ ステージデータ確認完了、レベル読み込み開始');
         this.loadLevelFromJSON(this.currentStageData);
-        console.log('✅ レベル初期化完了');
     }
     
     loadLevelFromJSON(stageData) {
@@ -1123,14 +1067,12 @@ class Game {
     setupUI() {
         // Node.js環境ではUIセットアップをスキップ
         if (typeof window === 'undefined' || typeof document === 'undefined') {
-            console.log('📝 Node.js環境のためUIセットアップをスキップ');
             return;
         }
         
         const startBtn = document.getElementById('startBtn');
         if (startBtn && typeof startBtn.addEventListener === 'function') {
             startBtn.addEventListener('click', async () => {
-                console.log('スタートボタンがクリックされました');
                 
                 // ボタンクリック効果音を再生
                 if (this.musicSystem.isInitialized) {
@@ -1141,9 +1083,7 @@ class Game {
                 if (!this.musicSystem.isInitialized) {
                     try {
                         await this.musicSystem.init();
-                        console.log('ゲーム開始時に音楽システムを初期化しました');
                     } catch (e) {
-                        console.error('音楽システム初期化失敗:', e);
                     }
                 }
                 await this.startGame();
@@ -1204,7 +1144,6 @@ class Game {
     
     
     async startGame() {
-        console.log('ゲームを開始します');
         
         // ゲームスタート効果音を再生
         if (this.musicSystem.isInitialized) {
@@ -1242,7 +1181,6 @@ class Game {
     }
     
     backToTitle() {
-        console.log('タイトルに戻ります');
         this.gameState.setState('start');
         this.updateUIVisibility();
         
@@ -1328,7 +1266,6 @@ class Game {
         // デバッグ表示切り替え（2キーまたは@キー）
         if (this.inputManager.isKeyJustPressed('Digit2') || this.inputManager.isKeyJustPressed('KeyD')) {
             this.showJumpDebug = !this.showJumpDebug;
-            console.log(`🛠️ ジャンプデバッグ表示: ${this.showJumpDebug ? 'ON' : 'OFF'} (2キーまたはDキーで切り替え)`);
         }
         
         if (!this.gameState.isPlaying()) return;
@@ -1398,35 +1335,29 @@ class Game {
                 else if (this.player.velY < 0 && 
                          playerBounds.y > platform.y) {
                     const newY = platform.y + platform.height;
-                    console.log(`プレイヤーY座標変更: ${this.player.y} -> ${newY} (プラットフォーム下側衝突)`);
                     // 座標範囲チェック
                     if (newY >= 0 && newY <= CANVAS_HEIGHT - this.player.height) {
                         this.player.y = newY;
                     } else {
-                        console.warn(`異常なY座標を検出、変更をスキップ: ${newY}`);
                     }
                     this.player.velY = 0;
                 }
                 // 横から衝突
                 else if (playerBounds.x < platform.x && this.player.velX > 0) {
                     const newX = platform.x - playerBounds.width;
-                    console.log(`プレイヤーX座標変更: ${this.player.x} -> ${newX} (プラットフォーム左側衝突)`);
                     // 座標範囲チェック
                     if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
                         this.player.x = newX;
                     } else {
-                        console.warn(`異常なX座標を検出、変更をスキップ: ${newX}`);
                     }
                     this.player.velX = 0;
                 }
                 else if (playerBounds.x > platform.x && this.player.velX < 0) {
                     const newX = platform.x + platform.width;
-                    console.log(`プレイヤーX座標変更: ${this.player.x} -> ${newX} (プラットフォーム右側衝突)`);
                     // 座標範囲チェック
                     if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
                         this.player.x = newX;
                     } else {
-                        console.warn(`異常なX座標を検出、変更をスキップ: ${newX}`);
                     }
                     this.player.velX = 0;
                 }
@@ -1447,7 +1378,6 @@ class Game {
                         playerBounds.y < enemy.y && // プレイヤーが敵より上にいる
                         playerBounds.y + playerBounds.height < enemy.y + enemy.height * 0.7) { // プレイヤーの足が敵の上部にある
                         
-                        console.log('敵を踏みつけました！');
                         
                         // 敵を撃破
                         this.enemies.splice(enemyIndex, 1);
@@ -1467,7 +1397,6 @@ class Game {
                         return; // 踏みつけ成功時はダメージを受けない
                     } else {
                         // 通常の衝突（横から当たった場合）
-                        console.log('敵との衝突を検出');
                         
                         // ダメージ効果音を再生
                         if (this.musicSystem.isInitialized) {
@@ -1512,7 +1441,6 @@ class Game {
             if (this.checkCollision(this.player.getBounds(), springBounds)) {
                 // プレイヤーが上から接触している場合のみ発動
                 if (this.player.velY > 0 && this.player.y < spring.y) {
-                    console.log('スプリングに乗りました！');
                     
                     // 大ジャンプ
                     this.player.velY = -spring.bouncePower;
@@ -1541,7 +1469,6 @@ class Game {
             };
             
             if (this.checkCollision(this.player.getBounds(), flagBounds)) {
-                console.log('ゴールに到達！');
                 
                 // ゴール効果音を再生
                 if (this.musicSystem.isInitialized) {
@@ -1571,20 +1498,17 @@ class Game {
         
         // プレイヤーの境界チェック
         if (this.player.x < 0) {
-            console.log(`プレイヤーX座標修正: ${this.player.x} -> 0 (左境界)`);
             this.player.x = 0;
             this.player.velX = 0;
         }
         if (this.player.x + this.player.width > worldWidth) {
             const newX = worldWidth - this.player.width;
-            console.log(`プレイヤーX座標修正: ${this.player.x} -> ${newX} (右境界)`);
             this.player.x = newX;
             this.player.velX = 0;
         }
         
         // 落下死判定
         if (this.player.y > worldHeight && !this.player.isDead) {
-            console.log(`プレイヤーが穴に落ちました！ 現在のライフ: ${this.gameState.lives}, HP: ${this.player.health}`);
             this.fallDeath();
         }
         
@@ -1613,7 +1537,6 @@ class Game {
             
             // 敵の落下判定
             if (enemy.y > worldHeight) {
-                console.log('敵が穴に落ちました');
                 // 敵を初期位置にリセット
                 enemy.x = enemy.originalX;
                 enemy.y = enemy.originalY;
@@ -1727,7 +1650,6 @@ class Game {
     }
     
     loseLife() {
-        console.log('ダメージを受けました！');
         const isDead = this.player.takeDamage();
         
         // ダメージエフェクト：画面を少し赤くする
@@ -1736,19 +1658,15 @@ class Game {
         if (isDead) {
             const gameOver = this.gameState.loseLife();
             if (gameOver) {
-                console.log('ゲームオーバー');
                 this.gameOver();
             } else {
-                console.log('ライフが残っています。プレイヤーをリセット');
                 this.player.reset();
             }
         } else {
-            console.log(`無敵時間開始 - 残りHP: ${this.player.health}`);
         }
     }
     
     fallDeath() {
-        console.log('プレイヤーが穴に落ちて死亡しました！');
         
         // 穴落ち効果音を再生
         if (this.musicSystem.isInitialized) {
@@ -1766,10 +1684,8 @@ class Game {
         // ライフを減らす
         const gameOver = this.gameState.loseLife();
         if (gameOver) {
-            console.log('ゲームオーバー');
             this.gameOver();
         } else {
-            console.log('ライフが残っています。少し待ってからプレイヤーをリセット');
             // 少し遅延を入れてリセット（死亡演出のため）
             setTimeout(() => {
                 if (this.gameState.lives > 0) {
@@ -2060,7 +1976,6 @@ class Game {
             try {
                 await this.svg.playerRenderer.preloadSVGs();
             } catch (error) {
-                console.warn('SVG事前読み込みエラー:', error);
             }
         }
     }
@@ -2076,7 +1991,6 @@ class Game {
             // 確実にコンテキストを取得
             const ctx = this.ctx;
             if (!ctx) {
-                console.error('❌ renderJumpStats: ctxが未定義');
                 return;
             }
             
@@ -2180,12 +2094,9 @@ class Game {
             ctx.restore();
             // 1回だけコンソールログを出力
             if (!this._debugLogShown) {
-                console.log('✅ renderJumpStats正常実行開始');
                 this._debugLogShown = true;
             }
         } catch (error) {
-            console.error('❌ renderJumpStats エラー:', error);
-            console.error('Stack:', error.stack);
         }
     }
 }
@@ -2194,7 +2105,6 @@ class Game {
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            console.log('DOM読み込み完了、ゲーム初期化開始');
             
             // ゲームインスタンスを作成（コンストラクタは同期）
             const game = new Game();
@@ -2207,7 +2117,6 @@ if (typeof document !== 'undefined') {
             // 非同期初期化を待機
             await game.initialize();
             
-            console.log('✅ ゲーム初期化完了');
             
             // テスト用関数
             if (typeof window !== 'undefined') {
@@ -2233,8 +2142,6 @@ if (typeof document !== 'undefined') {
             }
             
         } catch (error) {
-            console.error('ゲーム初期化エラー:', error);
-            console.error('エラースタック:', error.stack);
             
             // テスト用にエラー情報を保存
             if (typeof window !== 'undefined') {

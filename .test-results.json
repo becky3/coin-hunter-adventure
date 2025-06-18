@@ -1,21 +1,9 @@
 {
-  "timestamp": "2025-06-16T23:11:38.667Z",
+  "timestamp": "2025-06-18T00:03:55.258Z",
   "method": "curl_validation",
-  "status": "structure_valid",
+  "status": "error",
   "validation_results": {
-    "pageLoaded": true,
-    "scriptsIncluded": {
-      "level-loader.js": true,
-      "config.js": true,
-      "game.js": true,
-      "test.js": true
-    },
-    "elementsPresent": {
-      "gameCanvas": true,
-      "testResults": true,
-      "corsWarning": true
-    },
-    "issues": []
+    "error": "connect ECONNREFUSED 127.0.0.1:8080"
   },
   "manual_test_required": true
 }
