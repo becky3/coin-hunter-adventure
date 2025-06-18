@@ -1,876 +1,25 @@
 /**
- * コインハンターアドベンチャー - 統合版
- * モジュール化されたコードを単一ファイルに統合
+ * コインハンターアドベンチャー - リファクタリング版
+ * モジュール化されたコードを使用
  */
 
-// 設定は config.js から読み込み、レベルデータは levels.js から読み込み
-if (typeof CANVAS_WIDTH !== 'undefined') {
-}
-// ステージシステム初期化ログ
-
-// ===== SVGグラフィックシステム =====
-class SVGGraphics {
-    constructor(ctx) {
-        this.ctx = ctx;
-        this.cache = new Map(); // パスキャッシュ
-        
-        // クラス定義の確認
-        
-        // プレイヤーグラフィックレンダラーを初期化
-        if (typeof SVGPlayerRenderer !== 'undefined') {
-            try {
-                this.playerRenderer = new SVGPlayerRenderer(ctx);
-            } catch (error) {
-                this.playerRenderer = null;
-            }
-        } else {
-            this.playerRenderer = null;
-        }
-        
-        // 敵キャラクターレンダラーを初期化
-        if (typeof SVGEnemyRenderer !== 'undefined') {
-            try {
-                this.enemyRenderer = new SVGEnemyRenderer(ctx);
-            } catch (error) {
-                this.enemyRenderer = null;
-            }
-        } else {
-            this.enemyRenderer = null;
-        }
-        
-        // アイテムレンダラーを初期化
-        if (typeof SVGItemRenderer !== 'undefined') {
-            try {
-                this.itemRenderer = new SVGItemRenderer(ctx);
-            } catch (error) {
-                this.itemRenderer = null;
-            }
-        } else {
-            this.itemRenderer = null;
-        }
-        
-        // 全SVGファイルを事前読み込み
-        this.preloadAllSVGs();
-        
-        // プロトコルチェックと警告システム
-        this.checkProtocolAndWarn();
-    }
-    
-    // プロトコルチェックと警告表示
-    checkProtocolAndWarn() {
-        if (window.location.protocol === 'file:') {
-            // test.html専用：CORS警告を無効化
-            if (window.DISABLE_CORS_WARNING) {
-                return;
-            }
-            
-            
-            // ビジュアル警告を表示（一度だけ）
-            if (!window._corsWarningShown) {
-                window._corsWarningShown = true;
-                this.showProtocolWarning();
-            }
-        } else {
-        }
-    }
-    
-    // プロトコル警告の表示
-    showProtocolWarning() {
-        // 赤いオーバーレイを追加
-        const warningDiv = document.createElement('div');
-        warningDiv.style.position = 'fixed';
-        warningDiv.style.top = '0';
-        warningDiv.style.left = '0';
-        warningDiv.style.width = '100%';
-        warningDiv.style.height = '100%';
-        warningDiv.style.backgroundColor = 'rgba(255, 0, 0, 0.8)';
-        warningDiv.style.color = 'white';
-        warningDiv.style.fontSize = '24px';
-        warningDiv.style.textAlign = 'center';
-        warningDiv.style.padding = '50px';
-        warningDiv.style.zIndex = '10000';
-        warningDiv.style.display = 'flex';
-        warningDiv.style.flexDirection = 'column';
-        warningDiv.style.justifyContent = 'center';
-        warningDiv.style.alignItems = 'center';
-        
-        warningDiv.innerHTML = `
-            <h1>⚠️ アクセス方法エラー ⚠️</h1>
-            <p>ゲームが file:// プロトコルで開かれています</p>
-            <p>SVGファイルが読み込めないため、グラフィックが表示されません</p>
-            <br>
-            <h2>✅ 解決方法:</h2>
-            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
-                <p><strong>1. HTTPサーバーを起動：</strong></p>
-                <p style="background: #333; color: #0f0; padding: 10px; border-radius: 5px; font-family: monospace;">
-                    python3 -m http.server 8080<br>
-                    # または<br>
-                    npx serve .<br>
-                    # または<br>
-                    php -S localhost:8080
-                </p>
-                <p><strong>2. ブラウザでHTTPアクセス：</strong></p>
-                <p style="background: #333; color: #ff0; padding: 10px; border-radius: 5px; font-family: monospace;">
-                    http://localhost:8080/index.html
-                </p>
-            </div>
-            <br>
-            <button onclick="this.parentElement.style.display='none'" 
-                    style="padding: 10px 20px; font-size: 16px; background: white; color: black; border: none; border-radius: 5px; cursor: pointer;">
-                警告を閉じる（フォールバック描画でプレイ）
-            </button>
-        `;
-        
-        document.body.appendChild(warningDiv);
-        
-        // ブラウザアラートも表示
-        setTimeout(() => {
-            alert('ゲームのグラフィックが正常に表示されません。\n\nHTTPサーバーを起動後、http://localhost:8080/ でアクセスしてください。\n\n例: python3 -m http.server 8080');
-        }, 1000);
-    }
-    
-    // 全SVGファイルの事前読み込み
-    async preloadAllSVGs() {
-        // Protocol check - skip SVG loading for file:// protocol
-        if (window.location.protocol === 'file:') {
-            return; // Skip SVG loading
-        }
-        
-        const promises = [];
-        
-        if (this.playerRenderer && this.playerRenderer.preloadSVGs) {
-            promises.push(this.playerRenderer.preloadSVGs());
-        }
-        
-        if (this.enemyRenderer && this.enemyRenderer.preloadSVGs) {
-            promises.push(this.enemyRenderer.preloadSVGs());
-        }
-        
-        if (this.itemRenderer && this.itemRenderer.preloadSVGs) {
-            promises.push(this.itemRenderer.preloadSVGs());
-        }
-        
-        try {
-            await Promise.all(promises);
-        } catch (error) {
-        }
-    }
-    
-    // Protocol warning display
-    showProtocolWarning() {
-        // Create a warning overlay on the game canvas
-        if (this.ctx && this.ctx.canvas) {
-            const canvas = this.ctx.canvas;
-            this.ctx.save();
-            
-            // Semi-transparent red overlay
-            this.ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
-            this.ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            // Warning text
-            this.ctx.fillStyle = 'white';
-            this.ctx.font = 'bold 24px Arial';
-            this.ctx.textAlign = 'center';
-            this.ctx.textBaseline = 'middle';
-            
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            
-            this.ctx.fillText('⚠️ CORS ERROR', centerX, centerY - 60);
-            this.ctx.font = '18px Arial';
-            this.ctx.fillText('Game is accessed via file:// protocol', centerX, centerY - 20);
-            this.ctx.fillText('SVG files cannot be loaded', centerX, centerY + 10);
-            this.ctx.font = 'bold 20px Arial';
-            this.ctx.fillStyle = '#FFD700';
-            this.ctx.fillText('Solution: Access via http://localhost:8080/', centerX, centerY + 50);
-            
-            this.ctx.restore();
-        }
-        
-        // Also show browser alert as backup
-        setTimeout(() => {
-            alert(`⚠️ CORS ERROR\n\nThe game is being accessed via file:// protocol.\nSVG graphics cannot be loaded due to CORS restrictions.\n\nSolution: Please access the game via:\nhttp://localhost:8080/index.html`);
-        }, 1000);
-    }
-    
-    // SVGパスを描画する汎用メソッド
-    drawSVGPath(pathData, x, y, width, height, fillStyle = '#000', strokeStyle = null, strokeWidth = 1) {
-        this.ctx.save();
-        this.ctx.translate(x, y);
-        
-        const path = new Path2D(pathData);
-        
-        if (fillStyle) {
-            this.ctx.fillStyle = fillStyle;
-            this.ctx.fill(path);
-        }
-        
-        if (strokeStyle) {
-            this.ctx.strokeStyle = strokeStyle;
-            this.ctx.lineWidth = strokeWidth;
-            this.ctx.stroke(path);
-        }
-        
-        this.ctx.restore();
-    }
-    
-    // プレイヤーキャラクター（SVGファイルベース）
-    drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX = 0, velY = 0) {
-        if (!this.playerRenderer) {
-            throw new Error('プレイヤーSVGレンダラーが初期化されていません');
-        }
-        this.playerRenderer.drawPlayer(x, y, width, height, health, direction, invulnerable, animFrame, velX, velY);
-    }
-    
-    // フォールバックプレイヤー描画
-    drawPlayerFallback(x, y, width, height, health, direction, invulnerable) {
-        const scale = health === 2 ? 1.0 : 0.85;
-        const actualWidth = width * scale;
-        const actualHeight = height * scale;
-        const offsetY = health === 1 ? height * 0.15 : 0;
-        
-        this.ctx.save();
-        
-        if (invulnerable) {
-            this.ctx.globalAlpha = 0.7;
-        }
-        
-        this.ctx.translate(x + width / 2, y + offsetY);
-        if (direction < 0) {
-            this.ctx.scale(-1, 1);
-        }
-        this.ctx.translate(-actualWidth / 2, 0);
-        
-        // 体（シャツ）
-        const bodyGradient = this.ctx.createLinearGradient(0, actualHeight * 0.4, 0, actualHeight);
-        bodyGradient.addColorStop(0, health === 2 ? '#4A90E2' : '#E91E63');
-        bodyGradient.addColorStop(1, health === 2 ? '#2171B5' : '#AD1457');
-        
-        this.ctx.fillStyle = bodyGradient;
-        this.ctx.fillRect(actualWidth * 0.15, actualHeight * 0.4, actualWidth * 0.7, actualHeight * 0.6);
-        
-        // 頭（肌色）
-        const headGradient = this.ctx.createRadialGradient(actualWidth * 0.5, actualHeight * 0.25, 0, actualWidth * 0.5, actualHeight * 0.25, actualWidth * 0.35);
-        headGradient.addColorStop(0, '#FFDBAC');
-        headGradient.addColorStop(1, '#F4C2A1');
-        
-        this.ctx.fillStyle = headGradient;
-        this.ctx.beginPath();
-        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.25, actualWidth * 0.3, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 髪
-        this.ctx.fillStyle = '#8B4513';
-        this.ctx.beginPath();
-        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.2, actualWidth * 0.32, Math.PI, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 目
-        this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
-        this.ctx.ellipse(actualWidth * 0.4, actualHeight * 0.22, actualWidth * 0.05, actualWidth * 0.04, 0, 0, Math.PI * 2);
-        this.ctx.ellipse(actualWidth * 0.6, actualHeight * 0.22, actualWidth * 0.05, actualWidth * 0.04, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 瞳
-        this.ctx.fillStyle = '#333';
-        this.ctx.beginPath();
-        this.ctx.arc(actualWidth * 0.4, actualHeight * 0.22, actualWidth * 0.02, 0, Math.PI * 2);
-        this.ctx.arc(actualWidth * 0.6, actualHeight * 0.22, actualWidth * 0.02, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 鼻
-        this.ctx.fillStyle = '#E8B896';
-        this.ctx.beginPath();
-        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.27, actualWidth * 0.015, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 口
-        this.ctx.strokeStyle = '#333';
-        this.ctx.lineWidth = 1.5;
-        this.ctx.lineCap = 'round';
-        this.ctx.beginPath();
-        this.ctx.arc(actualWidth * 0.5, actualHeight * 0.31, actualWidth * 0.03, 0.2 * Math.PI, 0.8 * Math.PI);
-        this.ctx.stroke();
-        
-        // 腕
-        this.ctx.fillStyle = headGradient;
-        this.ctx.fillRect(actualWidth * 0.05, actualHeight * 0.45, actualWidth * 0.1, actualHeight * 0.35);
-        this.ctx.fillRect(actualWidth * 0.85, actualHeight * 0.45, actualWidth * 0.1, actualHeight * 0.35);
-        
-        // 足
-        this.ctx.fillStyle = '#654321';
-        this.ctx.fillRect(actualWidth * 0.25, actualHeight * 0.85, actualWidth * 0.15, actualHeight * 0.15);
-        this.ctx.fillRect(actualWidth * 0.6, actualHeight * 0.85, actualWidth * 0.15, actualHeight * 0.15);
-        
-        this.ctx.restore();
-    }
-    
-    // ヘルパーメソッド：色を明るくする
-    lightenColor(color, percent) {
-        const num = parseInt(color.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = (num >> 16) + amt;
-        const G = (num >> 8 & 0x00FF) + amt;
-        const B = (num & 0x0000FF) + amt;
-        return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
-            (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
-            (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
-    }
-    
-    // ヘルパーメソッド：色を暗くする
-    darkenColor(color, percent) {
-        const num = parseInt(color.replace('#', ''), 16);
-        const amt = Math.round(2.55 * percent);
-        const R = (num >> 16) - amt;
-        const G = (num >> 8 & 0x00FF) - amt;
-        const B = (num & 0x0000FF) - amt;
-        return '#' + (0x1000000 + (R > 255 ? 255 : R < 0 ? 0 : R) * 0x10000 +
-            (G > 255 ? 255 : G < 0 ? 0 : G) * 0x100 +
-            (B > 255 ? 255 : B < 0 ? 0 : B) * 0x100).toString(16).slice(1);
-    }
-    
-    // スライムのSVG描画（外部ファイル使用）
-    drawSlime(x, y, width, height, animTimer) {
-        if (!this.enemyRenderer) {
-            throw new Error('敵SVGレンダラーが初期化されていません');
-        }
-        this.enemyRenderer.drawEnemy('slime', x, y, width, height, animTimer);
-    }
-    
-    // スライム本体のSVGパス作成
-    createSlimeBodyPath(width, height) {
-        const path = new Path2D();
-        // 柔らかい楕円形の本体
-        path.ellipse(width / 2, height * 0.7, width * 0.4, height * 0.3, 0, 0, Math.PI * 2);
-        return path;
-    }
-    
-    // スライム頭部のSVGパス作成
-    createSlimeHeadPath(width, height) {
-        const path = new Path2D();
-        // より有機的な頭部の形状
-        const centerX = width / 2;
-        const centerY = height * 0.4;
-        const radiusX = width * 0.3;
-        const radiusY = height * 0.25;
-        
-        // ベジェ曲線で自然な形状を作成
-        path.moveTo(centerX - radiusX, centerY);
-        path.quadraticCurveTo(centerX - radiusX, centerY - radiusY * 1.2, centerX, centerY - radiusY * 1.1);
-        path.quadraticCurveTo(centerX + radiusX, centerY - radiusY * 1.2, centerX + radiusX, centerY);
-        path.quadraticCurveTo(centerX + radiusX * 0.8, centerY + radiusY * 0.8, centerX, centerY + radiusY);
-        path.quadraticCurveTo(centerX - radiusX * 0.8, centerY + radiusY * 0.8, centerX - radiusX, centerY);
-        path.closePath();
-        
-        return path;
-    }
-    
-    // スライムハイライトのSVGパス作成
-    createSlimeHighlightPath(width, height) {
-        const path = new Path2D();
-        path.ellipse(width * 0.4, height * 0.35, width * 0.15, height * 0.12, 0, 0, Math.PI * 2);
-        return path;
-    }
-    
-    // スライムの目を描画
-    drawSlimeEyes(width, height, eyeBlink) {
-        // 目の白い部分
-        this.ctx.fillStyle = 'white';
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.38, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        this.ctx.beginPath();
-        this.ctx.ellipse(width * 0.62, height * 0.35, width * 0.08, width * 0.08 * eyeBlink, 0, 0, Math.PI * 2);
-        this.ctx.fill();
-        
-        // 瞳
-        if (eyeBlink > 0.5) {
-            this.ctx.fillStyle = '#1A1A1A';
-            this.ctx.beginPath();
-            this.ctx.arc(width * 0.38, height * 0.37, width * 0.04, 0, Math.PI * 2);
-            this.ctx.arc(width * 0.62, height * 0.37, width * 0.04, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            // 瞳のハイライト
-            this.ctx.fillStyle = 'white';
-            this.ctx.beginPath();
-            this.ctx.arc(width * 0.38 - width * 0.015, height * 0.35, width * 0.015, 0, Math.PI * 2);
-            this.ctx.arc(width * 0.62 - width * 0.015, height * 0.35, width * 0.015, 0, Math.PI * 2);
-            this.ctx.fill();
-        }
-    }
-    
-    // スライムの口を描画
-    drawSlimeMouth(width, height) {
-        this.ctx.strokeStyle = '#2E7D32';
-        this.ctx.lineWidth = 1.5;
-        this.ctx.lineCap = 'round';
-        this.ctx.beginPath();
-        this.ctx.arc(width * 0.5, height * 0.45, width * 0.06, 0.1 * Math.PI, 0.9 * Math.PI);
-        this.ctx.stroke();
-    }
-    
-    // 鳥のSVG描画（外部ファイル使用）
-    drawBird(x, y, width, height, animTimer) {
-        if (!this.enemyRenderer) {
-            throw new Error('敵SVGレンダラーが初期化されていません');
-        }
-        this.enemyRenderer.drawEnemy('bird', x, y, width, height, animTimer);
-    }
-    
-    // コインのSVG描画（外部ファイル使用）
-    drawCoin(x, y, width, height, rotation) {
-        if (!this.itemRenderer) {
-            throw new Error('アイテムSVGレンダラーが初期化されていません');
-        }
-        this.itemRenderer.drawItem('coin', x, y, width, height, { rotation });
-    }
-    
-    // フラグのSVG描画（外部ファイル使用）
-    drawFlag(x, y, width, height) {
-        if (!this.itemRenderer) {
-            throw new Error('アイテムSVGレンダラーが初期化されていません');
-        }
-        this.itemRenderer.drawItem('flag', x, y, width, height);
-    }
-    
-    // スプリングのSVG描画（外部ファイル使用）
-    drawSpring(x, y, width, height, compression = 0) {
-        if (!this.itemRenderer) {
-            throw new Error('アイテムSVGレンダラーが初期化されていません');
-        }
-        this.itemRenderer.drawItem('spring', x, y, width, height, { compression });
-    }
+// 依存関係の確認とロード
+if (typeof SVGGraphics === 'undefined' && typeof require !== 'undefined') {
+    const SVGGraphics = require('./svg-graphics.js');
+    const GameState = require('./game-state.js');
+    const ScoreAnimation = require('./score-animation.js');
+    const Player = require('./player.js');
+    const InputManager = require('./input-manager.js');
 }
 
-// ===== ゲーム状態管理 =====
-class GameState {
-    constructor() {
-        this.reset();
-    }
+// グローバル設定値の確認
+const CANVAS_WIDTH = typeof window !== 'undefined' && window.CANVAS_WIDTH ? window.CANVAS_WIDTH : 1024;
+const CANVAS_HEIGHT = typeof window !== 'undefined' && window.CANVAS_HEIGHT ? window.CANVAS_HEIGHT : 576;
+const GRAVITY = typeof window !== 'undefined' && window.GRAVITY ? window.GRAVITY : 0.5;
+const ENEMY_CONFIG = typeof window !== 'undefined' && window.ENEMY_CONFIG ? window.ENEMY_CONFIG : {};
+const COIN_CONFIG = typeof window !== 'undefined' && window.COIN_CONFIG ? window.COIN_CONFIG : { width: 30, height: 30 };
+const SPRING_CONFIG = typeof window !== 'undefined' && window.SPRING_CONFIG ? window.SPRING_CONFIG : { width: 40, height: 20, bouncePower: -20 };
 
-    reset() {
-        this.state = 'start';
-        this.score = 0;
-        this.lives = 3;
-        this.coins = 0;
-        this.level = 1;
-        this.time = 300;
-        this.gameSpeed = 1;
-        this.isPaused = false;
-    }
-    
-    // ゲームプレイ用のリセット（状態は変更しない）
-    resetGameData() {
-        this.score = 0;
-        this.lives = 3;
-        this.coins = 0;
-        this.level = 1;
-        this.time = 300;
-        this.gameSpeed = 1;
-        this.isPaused = false;
-    }
-
-    setState(newState) {
-        this.state = newState;
-    }
-
-    addScore(points) {
-        this.score += points;
-    }
-
-    collectCoin() {
-        this.coins++;
-        this.addScore(10);
-    }
-
-    loseLife() {
-        this.lives--;
-        return this.lives <= 0;
-    }
-
-    updateTime(deltaTime) {
-        if (this.state === 'playing' && !this.isPaused) {
-            this.time -= deltaTime;
-            if (this.time <= 0) {
-                this.time = 0;
-                return true;
-            }
-        }
-        return false;
-    }
-
-    isPlaying() {
-        return this.state === 'playing' && !this.isPaused;
-    }
-}
-
-// ===== スコアアニメーションクラス =====
-class ScoreAnimation {
-    constructor(x, y, points) {
-        this.x = x;
-        this.y = y - 30; // オブジェクトより30px上に表示
-        this.originalY = this.y;
-        this.points = points;
-        this.text = `${points}`; // 「+」記号削除
-        
-        this.velY = -0.7; // より短い上向きの速度（1/3に短縮）
-        this.alpha = 1.0; // 透明度
-        this.isActive = true;
-        
-        this.lifetime = 0;
-        this.maxLifetime = 500; // 0.5秒間表示
-        this.moveTime = 150; // 0.15秒間移動
-        
-        // アニメーション段階
-        this.phase = 'move'; // 'move' -> 'fade' -> 'done'
-    }
-    
-    update(deltaTime) {
-        if (!this.isActive) return;
-        
-        this.lifetime += deltaTime * 1000; // ms に変換
-        
-        // シンプルなアニメーション: 短く上に移動してから止まってフェードアウト
-        if (this.lifetime < this.moveTime) {
-            // 移動段階: 短く上に移動
-            this.phase = 'move';
-            this.y += this.velY;
-            this.alpha = 1.0; // 完全に表示
-        } else if (this.lifetime < this.maxLifetime) {
-            // フェード段階: 移動停止してフェードアウト
-            this.phase = 'fade';
-            // 移動停止
-            const fadeProgress = (this.lifetime - this.moveTime) / (this.maxLifetime - this.moveTime);
-            this.alpha = Math.max(0, 1 - fadeProgress);
-        } else {
-            // 終了
-            this.phase = 'done';
-            this.isActive = false;
-        }
-    }
-    
-    render(ctx, camera) {
-        if (!this.isActive || this.alpha <= 0) return;
-        
-        ctx.save();
-        ctx.globalAlpha = this.alpha;
-        
-        // コミック風の太いフォント
-        ctx.font = 'bold 18px "Comic Sans MS", cursive, Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        
-        const screenX = this.x - camera.x;
-        const screenY = this.y - camera.y;
-        
-        // 太い黒縁取り（コミック風）
-        ctx.strokeStyle = 'rgba(0, 0, 0, 0.9)';
-        ctx.lineWidth = 3;
-        ctx.strokeText(this.text, screenX, screenY);
-        
-        // 白いテキスト
-        ctx.fillStyle = '#FFFFFF';
-        ctx.fillText(this.text, screenX, screenY);
-        
-        ctx.restore();
-    }
-}
-
-// ===== プレイヤークラス =====
-class Player {
-    constructor(x, y) {
-        this.x = x || PLAYER_CONFIG.spawnX;
-        this.y = y || PLAYER_CONFIG.spawnY;
-        this.width = PLAYER_CONFIG.width;
-        this.height = PLAYER_CONFIG.height;
-        
-        this.velX = 0;
-        this.velY = 0;
-        this.speed = PLAYER_CONFIG.speed;
-        this.jumpPower = PLAYER_CONFIG.jumpPower;
-        this.direction = 1;
-        
-        this.onGround = false;
-        this.isJumping = false;
-        this.isDead = false;
-        
-        // 可変ジャンプ用プロパティ
-        this.jumpButtonPressed = false;
-        this.jumpTime = 0;
-        this.canVariableJump = false;
-        
-        // ジャンプ計測用
-        this.jumpStartY = 0;
-        this.jumpMaxHeight = 0;
-        this.jumpButtonHoldTime = 0;
-        this.lastJumpStats = null;
-        
-        this.invulnerable = false;
-        this.invulnerabilityTime = 0;
-        
-        this.animTimer = 0;
-        this.animFrame = 0;
-        this.health = PLAYER_CONFIG.maxHealth;
-    }
-    
-    update(input, deltaTime) {
-        this.handleInput(input);
-        
-        this.velY += GRAVITY;
-        this.velY = Math.min(this.velY, 20);
-        
-        // 座標変更前のログ
-        const oldX = this.x, oldY = this.y;
-        
-        this.x += this.velX;
-        this.y += this.velY;
-        
-        // ジャンプ高さ計測
-        if (this.isJumping) {
-            const currentHeight = this.jumpStartY - this.y;
-            if (currentHeight > this.jumpMaxHeight) {
-                this.jumpMaxHeight = currentHeight;
-            }
-        }
-        
-        // 大幅な座標変更または異常な座標を検出
-        // if (Math.abs(this.x - oldX) > 100 || Math.abs(this.y - oldY) > 100 || 
-        //     this.x < -50 || this.x > CANVAS_WIDTH + 50 || this.y < -50 || this.y > CANVAS_HEIGHT + 50) {
-        //         before: {x: oldX, y: oldY},
-        //         after: {x: this.x, y: this.y},
-        //         vel: {x: this.velX, y: this.velY},
-        //         jump: {isJumping: this.isJumping, onGround: this.onGround, canVariable: this.canVariableJump}
-        //     });
-        // }
-        
-        if (this.invulnerable) {
-            this.invulnerabilityTime--;
-            if (this.invulnerabilityTime <= 0) {
-                this.invulnerable = false;
-            }
-        }
-        
-        this.updateAnimation();
-    }
-    
-    handleInput(input) {
-        // 死亡状態では入力を無効化
-        if (this.isDead) {
-            this.velX = 0;
-            return;
-        }
-        
-        // 左右移動のリセット
-        this.velX = 0;
-        
-        if (input.left) {
-            this.velX = -this.speed;
-            this.direction = -1;
-        } else if (input.right) {
-            this.velX = this.speed;
-            this.direction = 1;
-        }
-        
-        // マリオ式ジャンプロジック
-        if (input.jump && this.onGround && !this.isJumping) {
-            // ジャンプ開始 - 通常の初速で開始
-            this.velY = -PLAYER_CONFIG.jumpPower;
-            this.onGround = false;
-            this.isJumping = true;
-            this.jumpButtonPressed = true;
-            this.jumpTime = 0;
-            this.canVariableJump = true;
-            
-            // ジャンプ計測開始
-            this.jumpStartY = this.y;
-            this.jumpMaxHeight = 0;
-            this.jumpButtonHoldTime = 0;
-            
-            // ジャンプ効果音を再生（ゲームインスタンスを参照）
-            if (window.game && window.game.musicSystem && window.game.musicSystem.isInitialized) {
-                window.game.musicSystem.playJumpSound();
-            }
-        }
-        
-        // マリオ式ジャンプ継続処理
-        if (this.isJumping && this.jumpButtonPressed) {
-            this.jumpTime++;
-            
-            // ジャンプボタンが押されている間の処理
-            if (input.jump) {
-                this.jumpButtonHoldTime++;
-                
-                // 最大保持時間内なら継続的な上昇力を付与
-                if (this.jumpTime < PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
-                    // 重力を相殺して上昇を維持（倍率を1.8倍に調整）
-                    this.velY -= GRAVITY * 1.8; // 重力の1.8倍を相殺で適度な高さに調整
-                } else if (this.jumpTime >= PLAYER_CONFIG.maxJumpTime && this.velY < 0) {
-                    // 最大時間に達したら上昇を停止
-                    this.velY = 0;
-                    this.canVariableJump = false;
-                }
-            } else {
-                // ボタンが離された時
-                if (this.jumpTime >= PLAYER_CONFIG.minJumpTime && this.velY < 0) {
-                    // 最小時間経過後なら上昇を即座に停止
-                    this.velY = 0;
-                }
-                // 最小時間前に離した場合は、最小時間まで上昇を継続
-                this.jumpButtonPressed = false;
-                this.canVariableJump = false;
-            }
-        }
-        
-        // ジャンプ状態のリセット
-        if (!input.jump) {
-            this.jumpButtonPressed = false;
-        }
-    }
-    
-    updateAnimation() {
-        this.animTimer++;
-        if (this.animTimer > 8) { // アニメーション速度を遅く（5 -> 8）して見やすく
-            this.animFrame = (this.animFrame + 1) % 120; // より大きなフレーム範囲
-            this.animTimer = 0;
-        }
-    }
-    
-    handleGroundCollision(groundY) {
-        // 地面衝突判定を無効化 - プラットフォーム判定のみ使用
-        // if (this.y + this.height > groundY) {
-        //     this.y = groundY - this.height;
-        //     this.velY = 0;
-        //     this.onGround = true;
-        // }
-    }
-    
-    takeDamage() {
-        if (this.invulnerable) {
-            return false;
-        }
-        
-        this.health--;
-        this.invulnerable = true;
-        this.invulnerabilityTime = PLAYER_CONFIG.invulnerabilityTime;
-        
-        
-        if (this.health <= 0) {
-            this.isDead = true;
-            return true;
-        }
-        
-        return false;
-    }
-    
-    reset() {
-        this.x = PLAYER_CONFIG.spawnX;
-        this.y = PLAYER_CONFIG.spawnY;
-        this.velX = 0;
-        this.velY = 0;
-        this.health = PLAYER_CONFIG.maxHealth;
-        this.isDead = false;
-        this.invulnerable = false;
-        this.invulnerabilityTime = 0;
-        this.onGround = false;
-        this.isJumping = false;
-        this.direction = 1;
-        
-        // 可変ジャンプ用プロパティのリセット
-        this.jumpButtonPressed = false;
-        this.jumpTime = 0;
-        this.canVariableJump = false;
-    }
-    
-    getBounds() {
-        return {
-            x: this.x,
-            y: this.y,
-            width: this.width,
-            height: this.height
-        };
-    }
-    
-    // ジャンプ統計を記録する
-    recordJumpStats() {
-        this.lastJumpStats = {
-            buttonHoldTime: this.jumpButtonHoldTime,
-            actualJumpTime: this.jumpTime,
-            maxHeight: this.jumpMaxHeight,
-            heightInPlayerUnits: (this.jumpMaxHeight / this.height).toFixed(1)
-        };
-        
-            'ボタン保持時間': `${this.jumpButtonHoldTime}フレーム (${(this.jumpButtonHoldTime * 16.67).toFixed(0)}ms)`,
-            '実際のジャンプ時間': `${this.jumpTime}フレーム`,
-            '最高到達高さ': `${this.jumpMaxHeight.toFixed(1)}px`,
-            'プレイヤー単位': `${this.lastJumpStats.heightInPlayerUnits}人分`
-        });
-    }
-}
-
-// ===== 入力管理 =====
-class InputManager {
-    constructor() {
-        this.keys = {};
-        this.previousKeys = {};
-        this.setupEventListeners();
-    }
-
-    setupEventListeners() {
-        document.addEventListener('keydown', (e) => {
-            if (['Space', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) {
-                e.preventDefault();
-            }
-            this.keys[e.code] = true;
-            
-            // @キーの直接検出とデバッグ切り替え
-            if (e.key === '@') {
-                if (window.game) {
-                    window.game.showJumpDebug = !window.game.showJumpDebug;
-                }
-            }
-            
-            // デバッグ用: キーコードをログ出力
-            if (e.key === '@' || e.code === 'Digit2' || e.shiftKey) {
-            }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            this.keys[e.code] = false;
-        });
-
-        window.addEventListener('blur', () => {
-            this.keys = {};
-            this.previousKeys = {};
-        });
-    }
-
-    getInputState() {
-        return {
-            left: this.keys['ArrowLeft'] || this.keys['KeyA'],
-            right: this.keys['ArrowRight'] || this.keys['KeyD'],
-            jump: this.keys['Space'] || this.keys['KeyW'] || this.keys['ArrowUp'],
-            pause: this.keys['Escape'] || this.keys['KeyP'],
-            debug: this.keys['Digit2'] || this.keys['ShiftLeft'] // @キー（Shift+2）の検出
-        };
-    }
-
-    isKeyPressed(key) {
-        return this.keys[key];
-    }
-
-    isKeyJustPressed(key) {
-        return this.keys[key] && !this.previousKeys[key];
-    }
-
-    update() {
-        this.previousKeys = { ...this.keys };
-    }
-}
-
-
-// ===== ゲームメイン =====
 class Game {
     constructor() {
         this.canvas = document.getElementById('gameCanvas');
@@ -880,7 +29,7 @@ class Game {
         }
         
         this.ctx = this.canvas.getContext('2d');
-        this.svg = new SVGGraphics(this.ctx); // SVGグラフィックシステム追加
+        this.svg = new SVGGraphics(this.ctx);
         
         this.gameState = new GameState();
         this.inputManager = new InputManager();
@@ -907,10 +56,11 @@ class Game {
         this.enemies = [];
         this.coins = [];
         this.flag = null;
+        this.springs = [];
         
         this.lastTime = 0;
         this.isRunning = false;
-        this.damageEffect = 0; // ダメージエフェクト用
+        this.damageEffect = 0;
         
         // 音楽システム
         this.musicSystem = new MusicSystem();
@@ -938,7 +88,6 @@ class Game {
             // Node.js環境ではゲームを自動開始しない
             if (typeof window !== 'undefined' && typeof requestAnimationFrame !== 'undefined') {
                 this.start();
-            } else {
             }
             
         } catch (error) {
@@ -948,7 +97,6 @@ class Game {
     
     async initializeStageData() {
         try {
-            
             // ステージリストを読み込み
             await this.levelLoader.loadStageList();
             
@@ -1014,7 +162,6 @@ class Game {
     }
     
     initLevel() {
-        
         // 現在のステージデータを使用
         if (!this.currentStageData) {
             throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
@@ -1063,7 +210,6 @@ class Game {
         }
     }
     
-    
     setupUI() {
         // Node.js環境ではUIセットアップをスキップ
         if (typeof window === 'undefined' || typeof document === 'undefined') {
@@ -1073,7 +219,6 @@ class Game {
         const startBtn = document.getElementById('startBtn');
         if (startBtn && typeof startBtn.addEventListener === 'function') {
             startBtn.addEventListener('click', async () => {
-                
                 // ボタンクリック効果音を再生
                 if (this.musicSystem.isInitialized) {
                     this.musicSystem.playButtonClickSound();
@@ -1084,6 +229,7 @@ class Game {
                     try {
                         await this.musicSystem.init();
                     } catch (e) {
+                        // 音楽初期化エラーは無視
                     }
                 }
                 await this.startGame();
@@ -1092,59 +238,41 @@ class Game {
         
         const restartBtns = document.querySelectorAll('#restartBtn1, #restartBtn2');
         restartBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // ボタンクリック効果音を再生
-                if (this.musicSystem.isInitialized) {
-                    this.musicSystem.playButtonClickSound();
-                }
-                this.restartGame();
-            });
+            if (btn && typeof btn.addEventListener === 'function') {
+                btn.addEventListener('click', () => {
+                    // リスタート効果音を再生
+                    if (this.musicSystem.isInitialized) {
+                        this.musicSystem.playRestartSound();
+                    }
+                    this.restartGame();
+                });
+            }
         });
         
-        const backBtns = document.querySelectorAll('#backToTitleBtn1, #backToTitleBtn2');
-        backBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // ボタンクリック効果音を再生
-                if (this.musicSystem.isInitialized) {
-                    this.musicSystem.playButtonClickSound();
-                }
-                this.backToTitle();
-            });
+        const titleBtns = document.querySelectorAll('#titleBtn1, #titleBtn2');
+        titleBtns.forEach(btn => {
+            if (btn && typeof btn.addEventListener === 'function') {
+                btn.addEventListener('click', () => {
+                    // ボタンクリック効果音を再生
+                    if (this.musicSystem.isInitialized) {
+                        this.musicSystem.playButtonClickSound();
+                    }
+                    this.backToTitle();
+                });
+            }
         });
         
-        this.updateUIVisibility();
-        
-        // タイトル画面では音楽を再生しない
-        
-        // 音量スライダーの設定（ゲーム中）
-        const volumeSlider = document.getElementById('volumeSlider');
-        if (volumeSlider) {
-            volumeSlider.addEventListener('input', (e) => {
-                const volume = e.target.value / 100;
-                this.musicSystem.setVolume(volume);
-            });
-        }
-        
-        // ミュートボタンの設定（ゲーム中）
+        // 音楽ミュートボタン
         const muteBtn = document.getElementById('muteBtn');
-        if (muteBtn) {
+        if (muteBtn && typeof muteBtn.addEventListener === 'function') {
             muteBtn.addEventListener('click', () => {
-                // ボタンクリック効果音を再生（ミュート中でなければ）
-                if (this.musicSystem.isInitialized && !this.musicSystem.getMuteState()) {
-                    this.musicSystem.playButtonClickSound();
-                }
-                
                 const isMuted = this.musicSystem.toggleMute();
-                muteBtn.textContent = isMuted ? '🔇' : '🔊';
                 muteBtn.classList.toggle('muted', isMuted);
             });
         }
-        
     }
     
-    
     async startGame() {
-        
         // ゲームスタート効果音を再生
         if (this.musicSystem.isInitialized) {
             this.musicSystem.playGameStartSound();
@@ -1152,28 +280,36 @@ class Game {
         
         // ステージデータを読み込む（初回のみ）
         if (!this.levelLoader.getCurrentStageData()) {
-            // ステージリストを読み込む
-            const stageList = await this.levelLoader.loadStageList();
-            this.levelLoader.loadProgress(); // 保存された進行状況を読み込む
-            
-            // 最初のステージを読み込む
-            const firstStageId = stageList.currentStage || 'stage1';
-            await this.levelLoader.loadStage(firstStageId);
+            await this.initializeStageData();
+            this.initLevel();
         }
         
-        // ゲームデータをリセット（状態は変更しない）
-        this.gameState.resetGameData();
-        this.gameState.setState('playing');
+        this.gameState.reset();
         this.player.reset();
-        this.resetLevel();
-        this.updateUIVisibility();
+        this.damageEffect = 0;
+        this.scoreAnimations = [];
         
-        // ゲームBGMを再生（少し遅延を入れて確実に切り替え）
+        // BGMを開始
         if (this.musicSystem.isInitialized) {
-            setTimeout(() => {
-                this.musicSystem.playGameBGM();
-            }, 600); // ゲームスタート効果音の後に再生
+            this.musicSystem.playBGM();
         }
+        
+        this.updateUIVisibility();
+    }
+    
+    updateUIVisibility() {
+        const screens = {
+            'start': document.querySelector('.start-screen'),
+            'gameOver': document.querySelector('.game-over-screen'),
+            'levelComplete': document.querySelector('.level-complete-screen'),
+            'playing': document.querySelector('.game-area')
+        };
+        
+        Object.keys(screens).forEach(state => {
+            if (screens[state]) {
+                screens[state].style.display = state === this.gameState.state ? 'flex' : 'none';
+            }
+        });
     }
     
     restartGame() {
@@ -1190,74 +326,30 @@ class Game {
         }
     }
     
-    resetLevel() {
-        // 現在のステージデータを確認
-        const stageData = this.levelLoader.getCurrentStageData();
-        
-        if (!stageData) {
-            throw new Error('ステージデータが読み込まれていません。LevelLoaderでステージを読み込んでください。');
-        }
-        
-        this.resetLevelFromJSON(stageData);
-    }
-    
-    resetLevelFromJSON(stageData) {
-        // コインをリセット
-        this.coins.forEach(coin => {
-            coin.collected = false;
-            coin.rotation = 0;
-            coin.floatOffset = 0;
-        });
-        
-        // 敵をリセット（初期状態に復元）
-        this.enemies = (stageData.enemies || []).map(e => ({
-            ...e,
-            ...ENEMY_CONFIG[e.type],
-            velX: e.type === 'bird' ? -ENEMY_CONFIG[e.type].speed : ENEMY_CONFIG[e.type].speed,
-            direction: e.type === 'bird' ? -1 : 1,
-            animTimer: 0,
-            originalX: e.x,
-            originalY: e.y
-        }));
-        
-        // スプリングをリセット
-        this.springs = (stageData.springs || []).map(s => ({
-            ...s,
-            ...SPRING_CONFIG,
-            compression: 0,
-            triggered: false,
-            cooldown: 0
-        }));
-    }
-    
-    
     start() {
-        if (this.isRunning) return;
         this.isRunning = true;
         this.lastTime = performance.now();
         this.gameLoop();
     }
     
-    gameLoop(currentTime = performance.now()) {
+    stop() {
+        this.isRunning = false;
+    }
+    
+    gameLoop() {
         if (!this.isRunning) return;
         
-        const deltaTime = (currentTime - this.lastTime) / 1000;
+        const currentTime = performance.now();
+        const deltaTime = (currentTime - this.lastTime) / 1000; // 秒に変換
         this.lastTime = currentTime;
         
-        if (this.gameState.isPlaying()) {
-            this.update(deltaTime);
-        }
-        
+        this.update(deltaTime);
         this.render();
-        this.updateUI();
         
-        requestAnimationFrame((time) => this.gameLoop(time));
+        requestAnimationFrame(() => this.gameLoop());
     }
     
     update(deltaTime) {
-        const input = this.inputManager.getInputState();
-        
-        // モダンデザイン用の時間を更新
         this.gameTime += deltaTime;
         
         // 入力状態を更新
@@ -1278,55 +370,65 @@ class Game {
         }
         
         // プレイヤー更新
-        this.player.update(input, deltaTime);
-        
-        // 衝突判定
-        this.handleCollisions();
+        const input = this.inputManager.getInput();
+        this.player.update(input);
         
         // カメラ更新
         this.updateCamera();
         
+        // 敵の更新
+        this.updateEnemies();
+        
+        // コインの更新とアニメーション
+        this.updateCoins();
+        
+        // スプリングの更新
+        this.updateSprings();
+        
+        // 衝突判定
+        this.checkCollisions();
+        
         // 境界チェック
         this.checkBoundaries();
         
-        // コイン更新
-        this.updateCoins(deltaTime);
+        // パーティクル更新
+        this.updateParticles(deltaTime);
         
-        // 敵更新
-        this.updateEnemies(deltaTime);
+        // スコアアニメーション更新
+        this.updateScoreAnimations();
         
-        // スプリング更新
-        this.updateSprings(deltaTime);
+        // 背景アニメーション
+        this.backgroundAnimation += deltaTime * 50;
         
-        // ダメージエフェクトの更新
+        // ダメージエフェクト更新
         if (this.damageEffect > 0) {
             this.damageEffect--;
         }
-        
-        // スコアアニメーション更新
-        this.updateScoreAnimations(deltaTime);
     }
     
-    handleCollisions() {
-        // プラットフォーム衝突
+    updateCamera() {
+        // カメラはプレイヤーを追従
+        const targetX = this.player.x - CANVAS_WIDTH / 2;
+        this.camera.x = Math.max(0, Math.min(targetX, 3000 - CANVAS_WIDTH));
+    }
+    
+    checkCollisions() {
+        // プラットフォームとの衝突判定
         let onPlatform = false;
+        
         this.platforms.forEach(platform => {
             const playerBounds = this.player.getBounds();
-            
             if (this.checkCollision(playerBounds, platform)) {
-                // 上から衝突（着地）
+                // 上から乗る
                 if (this.player.velY > 0 && 
                     playerBounds.y < platform.y && 
-                    playerBounds.y + playerBounds.height > platform.y) {
-                    this.player.y = platform.y - playerBounds.height;
-                    this.player.velY = 0;
+                    playerBounds.y + playerBounds.height < platform.y + platform.height / 2) {
                     
-                    // ジャンプから着地した場合、統計を記録
-                    if (this.player.isJumping) {
-                        this.player.recordJumpStats();
-                        this.player.isJumping = false;
-                        this.player.jumpButtonPressed = false;
-                        this.player.canVariableJump = false;
+                    const newY = platform.y - playerBounds.height;
+                    // 座標範囲チェック
+                    if (newY >= 0 && newY <= CANVAS_HEIGHT - playerBounds.height) {
+                        this.player.y = newY;
+                        this.player.velY = 0;
                     }
                     
                     onPlatform = true;
@@ -1338,7 +440,6 @@ class Game {
                     // 座標範囲チェック
                     if (newY >= 0 && newY <= CANVAS_HEIGHT - this.player.height) {
                         this.player.y = newY;
-                    } else {
                     }
                     this.player.velY = 0;
                 }
@@ -1348,7 +449,6 @@ class Game {
                     // 座標範囲チェック
                     if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
                         this.player.x = newX;
-                    } else {
                     }
                     this.player.velX = 0;
                 }
@@ -1357,7 +457,6 @@ class Game {
                     // 座標範囲チェック
                     if (newX >= 0 && newX <= CANVAS_WIDTH - playerBounds.width) {
                         this.player.x = newX;
-                    } else {
                     }
                     this.player.velX = 0;
                 }
@@ -1367,9 +466,9 @@ class Game {
         // プラットフォームに立っているかチェック（地面判定は削除）
         this.player.onGround = onPlatform;
         
-        // 敵との衝突
-        if (!this.player.invulnerable) {
-            this.enemies.forEach((enemy, enemyIndex) => {
+        // 敵との衝突判定
+        this.enemies.forEach((enemy, enemyIndex) => {
+            if (!enemy.isDead) {
                 if (this.checkCollision(this.player.getBounds(), enemy)) {
                     const playerBounds = this.player.getBounds();
                     
@@ -1377,7 +476,6 @@ class Game {
                     if (this.player.velY > 0 && // 下向きに移動中
                         playerBounds.y < enemy.y && // プレイヤーが敵より上にいる
                         playerBounds.y + playerBounds.height < enemy.y + enemy.height * 0.7) { // プレイヤーの足が敵の上部にある
-                        
                         
                         // 敵を撃破
                         this.enemies.splice(enemyIndex, 1);
@@ -1387,8 +485,9 @@ class Game {
                             this.musicSystem.playEnemyStompSound();
                         }
                         
-                        // プレイヤーにバウンス効果
+                        // バウンド
                         this.player.velY = -10;
+                        this.gameState.defeatEnemy();
                         
                         // スコア加算
                         this.gameState.addScore(100);
@@ -1407,30 +506,27 @@ class Game {
                         return; // 一度の衝突で複数回呼ばれるのを防ぐ
                     }
                 }
-            });
-        }
+            }
+        });
         
-        // コイン収集
-        this.coins.forEach(coin => {
+        // コインとの衝突判定
+        this.coins.forEach((coin) => {
             if (!coin.collected && this.checkCollision(this.player.getBounds(), coin)) {
                 coin.collected = true;
+                this.gameState.collectCoin();
                 
-                // コイン収集効果音を再生
+                // コイン取得効果音を再生
                 if (this.musicSystem.isInitialized) {
                     this.musicSystem.playCoinSound();
                 }
                 
-                this.gameState.collectCoin();
-                
-                // スコアアニメーションを作成
+                // スコアアニメーション
                 this.createScoreAnimation(coin.x + coin.width / 2, coin.y, 10);
             }
         });
         
-        // スプリング判定
+        // スプリングとの衝突判定
         this.springs.forEach(spring => {
-            if (spring.cooldown > 0) return;
-            
             const springBounds = {
                 x: spring.x,
                 y: spring.y,
@@ -1441,7 +537,6 @@ class Game {
             if (this.checkCollision(this.player.getBounds(), springBounds)) {
                 // プレイヤーが上から接触している場合のみ発動
                 if (this.player.velY > 0 && this.player.y < spring.y) {
-                    
                     // 大ジャンプ
                     this.player.velY = -spring.bouncePower;
                     this.player.onGround = false;
@@ -1449,12 +544,11 @@ class Game {
                     // スプリング発動
                     spring.compression = 1;
                     spring.triggered = true;
-                    spring.cooldown = 30; // クールダウン設定
                     
-                    // スプリング効果音を再生（実装予定）
-                    // if (this.musicSystem.isInitialized) {
-                    //     this.musicSystem.playSpringSound();
-                    // }
+                    // スプリング効果音を再生
+                    if (this.musicSystem.isInitialized) {
+                        this.musicSystem.playSpringSound();
+                    }
                 }
             }
         });
@@ -1469,7 +563,6 @@ class Game {
             };
             
             if (this.checkCollision(this.player.getBounds(), flagBounds)) {
-                
                 // ゴール効果音を再生
                 if (this.musicSystem.isInitialized) {
                     this.musicSystem.playGoalSound();
@@ -1485,11 +578,6 @@ class Game {
                rect1.x + rect1.width > rect2.x &&
                rect1.y < rect2.y + rect2.height &&
                rect1.y + rect1.height > rect2.y;
-    }
-    
-    updateCamera() {
-        const targetX = this.player.x - CANVAS_WIDTH / 2;
-        this.camera.x = Math.max(0, Math.min(targetX, 3000 - CANVAS_WIDTH));
     }
     
     checkBoundaries() {
@@ -1522,7 +610,7 @@ class Game {
                     enemy.x = -enemy.width;
                 }
             } else {
-                // 地上敵の境界処理 - 画面端で反転
+                // 地上敵の境界処理
                 if (enemy.x < 0) {
                     enemy.x = 0;
                     enemy.velX *= -1;
@@ -1545,83 +633,43 @@ class Game {
         });
     }
     
-    updateCoins(deltaTime) {
-        this.coins.forEach(coin => {
-            if (!coin.collected) {
-                coin.rotation += coin.rotationSpeed;
-                coin.floatOffset += 0.05;
-                coin.y = coin.baseY + Math.sin(coin.floatOffset) * 5;
-            }
-        });
-    }
-    
-    updateEnemies(deltaTime) {
+    updateEnemies() {
         this.enemies.forEach(enemy => {
             enemy.animTimer++;
-            
-            // 重力を適用（鳥以外）
-            if (enemy.type !== 'bird') {
-                if (!enemy.velY) enemy.velY = 0;
-                enemy.velY += GRAVITY;
-                enemy.velY = Math.min(enemy.velY, 20);
-                enemy.y += enemy.velY;
-                
-                // プラットフォーム衝突のみ（地面衝突は削除）
-                this.platforms.forEach(platform => {
-                    if (this.checkCollision(enemy, platform)) {
-                        if (enemy.velY > 0 && enemy.y < platform.y) {
-                            enemy.y = platform.y - enemy.height;
-                            enemy.velY = 0;
-                        }
-                    }
-                });
-            }
-            
-            // 横移動
             enemy.x += enemy.velX;
             
-            // プラットフォームの端での方向転換
-            if (enemy.type !== 'bird') {
-                // 現在立っているプラットフォームを確認
-                this.platforms.forEach(platform => {
-                    if (enemy.y + enemy.height >= platform.y && 
-                        enemy.y + enemy.height <= platform.y + 10 &&
-                        enemy.x + enemy.width > platform.x && 
-                        enemy.x < platform.x + platform.width) {
-                        
-                        // プラットフォームの端に近づいたら方向転換（振動防止のため一度だけ実行）
-                        if ((enemy.velX > 0 && enemy.x + enemy.width >= platform.x + platform.width - 10) ||
-                            (enemy.velX < 0 && enemy.x <= platform.x + 10)) {
-                            enemy.velX *= -1;
-                            enemy.direction *= -1;
-                            
-                            // 位置を少し調整して振動を防ぐ
-                            if (enemy.velX > 0) {
-                                enemy.x = platform.x + 15;
-                            } else {
-                                enemy.x = platform.x + platform.width - enemy.width - 15;
-                            }
-                        }
-                    }
-                });
-            } else {
-                // 鳥の場合は境界での方向転換は行わない（ワープ処理のみ）
-                // updateEnemiesでの横移動は継続
+            if (enemy.type === 'slime') {
+                // スライムの移動パターン
+                if (Math.abs(enemy.x - enemy.originalX) > 100) {
+                    enemy.velX *= -1;
+                    enemy.direction *= -1;
+                }
+            } else if (enemy.type === 'bird') {
+                // 鳥の飛行パターン
+                enemy.y = enemy.originalY + Math.sin(enemy.animTimer * 0.05) * 30;
             }
         });
     }
     
-    updateSprings(deltaTime) {
-        this.springs.forEach(spring => {
-            // クールダウン処理
-            if (spring.cooldown > 0) {
-                spring.cooldown--;
+    updateCoins() {
+        this.coins.forEach((coin) => {
+            if (!coin.collected) {
+                // 回転アニメーション
+                coin.rotation += 0.05;
+                
+                // 浮遊アニメーション
+                coin.floatOffset = Math.sin(this.gameTime * 2 + coin.x * 0.01) * 5;
+                coin.y = coin.baseY + coin.floatOffset;
             }
-            
-            // 圧縮アニメーション
+        });
+    }
+    
+    updateSprings() {
+        this.springs.forEach(spring => {
+            // スプリングの圧縮アニメーション
             if (spring.compression > 0) {
-                spring.compression -= SPRING_CONFIG.animationSpeed;
-                if (spring.compression < 0) {
+                spring.compression *= 0.9;
+                if (spring.compression < 0.01) {
                     spring.compression = 0;
                     spring.triggered = false;
                 }
@@ -1629,17 +677,133 @@ class Game {
         });
     }
     
-    // ===== スコアアニメーション管理 =====
-    createScoreAnimation(x, y, points) {
-        const animation = new ScoreAnimation(x, y, points);
-        this.scoreAnimations.push(animation);
+    updateParticles(deltaTime) {
+        this.particles = this.particles.filter(particle => {
+            particle.life -= deltaTime;
+            particle.x += particle.velX * deltaTime * 60;
+            particle.y += particle.velY * deltaTime * 60;
+            particle.velY += GRAVITY * deltaTime * 60;
+            particle.opacity = Math.max(0, particle.life);
+            
+            return particle.life > 0;
+        });
     }
     
-    updateScoreAnimations(deltaTime) {
-        // 非アクティブなアニメーションを削除
-        this.scoreAnimations = this.scoreAnimations.filter(animation => {
-            animation.update(deltaTime);
-            return animation.isActive;
+    updateScoreAnimations() {
+        this.scoreAnimations = this.scoreAnimations.filter(anim => anim.update());
+    }
+    
+    createScoreAnimation(x, y, value) {
+        this.scoreAnimations.push(new ScoreAnimation(x, y, value));
+    }
+    
+    createParticle(x, y, velX, velY, color) {
+        this.particles.push({
+            x, y, velX, velY, color,
+            life: 1,
+            opacity: 1
+        });
+    }
+    
+    render() {
+        // 背景描画
+        this.svg.drawBackground(this.backgroundAnimation);
+        
+        // カメラ変換
+        this.ctx.save();
+        this.ctx.translate(-this.camera.x, 0);
+        
+        // プラットフォーム描画
+        this.platforms.forEach(platform => {
+            if (this.isInView(platform)) {
+                this.svg.drawPlatform(platform);
+            }
+        });
+        
+        // スプリング描画
+        this.springs.forEach(spring => {
+            if (this.isInView(spring)) {
+                const compressionScale = 1 - spring.compression * 0.5;
+                this.svg.drawItem('spring', spring.x, spring.y + spring.height * (1 - compressionScale), 
+                                spring.width, spring.height * compressionScale, 
+                                { compression: spring.compression });
+            }
+        });
+        
+        // コイン描画
+        this.coins.forEach(coin => {
+            if (!coin.collected && this.isInView(coin)) {
+                this.svg.drawItem('coin', coin.x, coin.y, coin.width, coin.height, 
+                                { rotation: coin.rotation });
+            }
+        });
+        
+        // 敵描画
+        this.enemies.forEach(enemy => {
+            if (this.isInView(enemy)) {
+                this.svg.drawEnemy(enemy.type, enemy.x, enemy.y, enemy.width, enemy.height, 
+                                 enemy.animTimer, enemy.direction);
+            }
+        });
+        
+        // プレイヤー描画
+        if (!this.player.isDead) {
+            const blinkRate = this.player.invulnerable ? Math.floor(this.player.invulnerabilityTime / 10) % 2 : 0;
+            if (!blinkRate) {
+                this.svg.drawPlayer(
+                    this.player.x, 
+                    this.player.y, 
+                    this.player.width, 
+                    this.player.height,
+                    {
+                        velX: this.player.velX,
+                        velY: this.player.velY,
+                        animFrame: this.player.animFrame,
+                        onGround: this.player.onGround,
+                        health: this.player.health
+                    }
+                );
+            }
+        }
+        
+        // ゴールフラッグ描画
+        if (this.flag && this.isInView(this.flag)) {
+            this.svg.drawItem('flag', this.flag.x, this.flag.y, 60, 80);
+        }
+        
+        // パーティクル描画
+        this.renderParticles();
+        
+        this.ctx.restore();
+        
+        // スコアアニメーション描画（カメラ変換外）
+        this.renderScoreAnimations();
+        
+        // UI描画
+        this.renderUI();
+        
+        // ダメージエフェクト
+        if (this.damageEffect > 0) {
+            this.ctx.fillStyle = `rgba(255, 0, 0, ${this.damageEffect / 60 * 0.3})`;
+            this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+        }
+        
+        // ジャンプデバッグ表示
+        this.renderJumpStats();
+    }
+    
+    isInView(obj) {
+        return obj.x + obj.width > this.camera.x &&
+               obj.x < this.camera.x + CANVAS_WIDTH;
+    }
+    
+    renderParticles() {
+        this.particles.forEach(particle => {
+            this.ctx.save();
+            this.ctx.globalAlpha = particle.opacity;
+            this.ctx.fillStyle = particle.color;
+            this.ctx.fillRect(particle.x - 2, particle.y - 2, 4, 4);
+            this.ctx.restore();
         });
     }
     
@@ -1662,12 +826,10 @@ class Game {
             } else {
                 this.player.reset();
             }
-        } else {
         }
     }
     
     fallDeath() {
-        
         // 穴落ち効果音を再生
         if (this.musicSystem.isInitialized) {
             this.musicSystem.playFallDeathSound();
@@ -1675,6 +837,22 @@ class Game {
         
         // プレイヤーを即死状態にする
         this.player.isDead = true;
+        this.player.health = 0;
+        
+        // 落下パーティクル生成
+        for (let i = 0; i < 20; i++) {
+            const angle = (Math.PI * 2 * i) / 20;
+            const speed = Math.random() * 5 + 2;
+            this.createParticle(
+                this.player.x + this.player.width / 2,
+                CANVAS_HEIGHT - 10,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed - 5,
+                '#FF6B6B'
+            );
+        }
+        
+        // 画面を停止
         this.player.velX = 0;
         this.player.velY = 0;
         
@@ -1695,279 +873,87 @@ class Game {
         }
     }
     
-    levelComplete() {
-        this.gameState.setState('levelComplete');
-        this.updateUIVisibility();
-        
-        // 勝利ジングルを再生
-        if (this.musicSystem.isInitialized) {
-            this.musicSystem.playVictoryJingle();
-        }
-    }
-    
     gameOver() {
         this.gameState.setState('gameOver');
         this.updateUIVisibility();
         
-        // ゲームオーバージングルを再生
+        // ゲームオーバー効果音を再生
         if (this.musicSystem.isInitialized) {
-            this.musicSystem.playGameOverJingle();
+            this.musicSystem.playGameOverSound();
+        }
+        
+        // BGMを停止
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.stopBGM();
+        }
+        
+        // 最終スコアを表示
+        const finalScoreEl = document.getElementById('finalScore');
+        if (finalScoreEl) {
+            finalScoreEl.textContent = this.gameState.score;
         }
     }
     
-    render() {
-        // 画面クリア
-        this.ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    levelComplete() {
+        this.gameState.completeLevel();
+        this.updateUIVisibility();
         
-        // 背景
-        this.drawBackground();
-        
-        if (this.gameState.state === 'playing' || this.gameState.state === 'levelComplete') {
-            // ゲームオブジェクト描画
-            this.drawPlatforms();
-            this.drawSprings();
-            this.drawCoins();
-            this.drawEnemies();
-            this.drawPlayer();
-            this.drawFlag();
-            
-            // スコアアニメーション描画
-            this.renderScoreAnimations();
+        // BGMを停止
+        if (this.musicSystem.isInitialized) {
+            this.musicSystem.stopBGM();
         }
         
-        // ダメージエフェクト
-        if (this.damageEffect > 0) {
-            this.ctx.save();
-            this.ctx.fillStyle = `rgba(255, 0, 0, ${this.damageEffect / 60})`;
-            this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-            this.ctx.restore();
+        // レベルクリアスコアを表示
+        const levelScoreEl = document.getElementById('levelScore');
+        if (levelScoreEl) {
+            levelScoreEl.textContent = this.gameState.score;
         }
         
-        // デバッグ表示を最前面に
-        this.renderJumpStats();
-    }
-    
-    drawBackground() {
-        // モダンなダイナミックグラデーション背景
-        const time = this.gameTime * 0.001; // 時間ベースのアニメーション
-        
-        // ダークモードベースのグラデーション
-        const gradient = this.ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
-        
-        // 時間によって変化する色彩
-        const hue1 = 220 + Math.sin(time * 0.5) * 30; // ブルー系ベース
-        const hue2 = 280 + Math.cos(time * 0.3) * 40; // パープル系ベース
-        
-        gradient.addColorStop(0, `hsl(${hue1}, 70%, 15%)`);
-        gradient.addColorStop(0.5, `hsl(${(hue1 + hue2) / 2}, 60%, 8%)`);
-        gradient.addColorStop(1, `hsl(${hue2}, 80%, 12%)`);
-        
-        this.ctx.fillStyle = gradient;
-        this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-        
-        // 背景パーティクル（星空効果）
-        this.drawBackgroundParticles();
-    }
-    
-    drawBackgroundParticles() {
-        // 背景用パーティクルを生成
-        if (this.particles.length < 100) {
-            for (let i = 0; i < 3; i++) {
-                this.particles.push({
-                    x: Math.random() * CANVAS_WIDTH,
-                    y: Math.random() * CANVAS_HEIGHT,
-                    size: Math.random() * 2 + 1,
-                    speed: Math.random() * 0.5 + 0.2,
-                    opacity: Math.random() * 0.8 + 0.2,
-                    twinkle: Math.random() * Math.PI * 2,
-                    color: Math.random() > 0.7 ? '#FFD700' : '#FFFFFF'
-                });
-            }
-        }
-        
-        // パーティクルの描画と更新
-        this.particles.forEach((particle, index) => {
-            // きらめき効果
-            particle.twinkle += 0.1;
-            const alpha = particle.opacity * (0.5 + 0.5 * Math.sin(particle.twinkle));
+        // 花火エフェクト
+        for (let i = 0; i < 50; i++) {
+            const x = this.player.x + this.player.width / 2;
+            const y = this.player.y + this.player.height / 2;
+            const angle = (Math.PI * 2 * i) / 50;
+            const speed = Math.random() * 10 + 5;
             
-            this.ctx.save();
-            this.ctx.globalAlpha = alpha;
-            this.ctx.fillStyle = particle.color;
-            
-            // グロー効果
-            this.ctx.shadowColor = particle.color;
-            this.ctx.shadowBlur = particle.size * 3;
-            
-            this.ctx.beginPath();
-            this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fill();
-            
-            this.ctx.restore();
-            
-            // パーティクルの移動
-            particle.y -= particle.speed;
-            particle.x += Math.sin(this.gameTime * 0.001 + index) * 0.2;
-            
-            // 画面外に出たら再配置
-            if (particle.y < -10) {
-                particle.y = CANVAS_HEIGHT + 10;
-                particle.x = Math.random() * CANVAS_WIDTH;
-            }
-        });
-    }
-    
-    drawPlatforms() {
-        this.platforms.forEach(platform => {
-            const x = platform.x - this.camera.x;
-            if (x + platform.width > 0 && x < CANVAS_WIDTH) {
-                this.ctx.save();
-                
-                // モダンなグラデーションプラットフォーム
-                const gradient = this.ctx.createLinearGradient(x, platform.y, x, platform.y + platform.height);
-                gradient.addColorStop(0, '#4A5568');
-                gradient.addColorStop(0.5, '#2D3748');
-                gradient.addColorStop(1, '#1A202C');
-                
-                this.ctx.fillStyle = gradient;
-                this.ctx.fillRect(x, platform.y, platform.width, platform.height);
-                
-                // 上面のハイライト
-                this.ctx.fillStyle = '#63B3ED';
-                this.ctx.fillRect(x, platform.y, platform.width, 2);
-                
-                // グロー効果
-                this.ctx.shadowColor = '#63B3ED';
-                this.ctx.shadowBlur = 8;
-                this.ctx.fillRect(x, platform.y, platform.width, 1);
-                
-                this.ctx.restore();
-            }
-        });
-    }
-    
-    drawPlayer() {
-        const x = this.player.x - this.camera.x;
-        
-        // SVGグラフィックでプレイヤーを描画
-        this.svg.drawPlayer(
-            x, 
-            this.player.y, 
-            this.player.width, 
-            this.player.height, 
-            this.player.health, 
-            this.player.direction, 
-            this.player.invulnerable, 
-            this.player.animFrame,
-            this.player.velX,
-            this.player.velY
-        );
-    }
-    
-    drawEnemies() {
-        this.enemies.forEach(enemy => {
-            const x = enemy.x - this.camera.x;
-            if (x + enemy.width > 0 && x < CANVAS_WIDTH) {
-                // 敵の種類に応じてSVG描画
-                if (enemy.type === 'slime') {
-                    this.svg.drawSlime(x, enemy.y, enemy.width, enemy.height, enemy.animTimer);
-                } else if (enemy.type === 'bird') {
-                    this.svg.drawBird(x, enemy.y, enemy.width, enemy.height, enemy.animTimer);
-                }
-            }
-        });
-    }
-    
-    drawCoins() {
-        this.coins.forEach(coin => {
-            if (!coin.collected) {
-                const x = coin.x - this.camera.x;
-                if (x + coin.width > 0 && x < CANVAS_WIDTH) {
-                    // SVGグラフィックでコインを描画
-                    this.svg.drawCoin(x, coin.y, coin.width, coin.height, coin.rotation);
-                }
-            }
-        });
-    }
-    
-    drawSprings() {
-        this.springs.forEach(spring => {
-            const x = spring.x - this.camera.x;
-            if (x + spring.width > 0 && x < CANVAS_WIDTH) {
-                // SVGグラフィックでスプリングを描画
-                this.svg.drawSpring(x, spring.y, spring.width, spring.height, spring.compression);
-            }
-        });
-    }
-    
-    drawFlag() {
-        if (!this.flag) return;
-        
-        const x = this.flag.x - this.camera.x;
-        if (x + 60 > 0 && x < CANVAS_WIDTH) {
-            // SVGグラフィックでフラグを描画
-            this.svg.drawFlag(x, this.flag.y, 60, 80);
+            this.createParticle(
+                x, y,
+                Math.cos(angle) * speed,
+                Math.sin(angle) * speed,
+                `hsl(${Math.random() * 360}, 100%, 50%)`
+            );
         }
     }
     
-    updateUI() {
-        // HTML UI要素を更新
-        const scoreElement = document.getElementById('score');
-        if (scoreElement) scoreElement.textContent = this.gameState.score;
+    renderUI() {
+        // UIの背景パネル
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(10, 10, 200, 100);
         
-        const livesElement = document.getElementById('lives');
-        if (livesElement) livesElement.textContent = this.gameState.lives;
+        // テキストスタイル
+        this.ctx.fillStyle = 'white';
+        this.ctx.font = 'bold 20px Arial';
         
-        const coinsElement = document.getElementById('coins');
-        if (coinsElement) coinsElement.textContent = this.gameState.coins;
+        // スコア
+        this.ctx.fillText(`Score: ${this.gameState.score}`, 20, 35);
         
-        const finalScoreElement = document.getElementById('finalScore');
-        if (finalScoreElement) finalScoreElement.textContent = this.gameState.score;
-        
-        const clearScoreElement = document.getElementById('clearScore');
-        if (clearScoreElement) clearScoreElement.textContent = this.gameState.score;
-    }
-    
-    updateUIVisibility() {
-        // Node.js環境ではUIアップデートをスキップ
-        if (typeof window === 'undefined' || typeof document === 'undefined') {
-            return;
+        // ライフ（ハートで表示）
+        this.ctx.fillText('Life: ', 20, 65);
+        for (let i = 0; i < this.gameState.lives; i++) {
+            this.ctx.fillText('❤️', 80 + i * 30, 65);
         }
         
-        const startScreen = document.getElementById('startScreen');
-        const gameOverScreen = document.getElementById('gameOverScreen');
-        const gameClearScreen = document.getElementById('gameClearScreen');
-        const gameArea = document.querySelector('.game-area');
-        const hudTop = document.querySelector('.hud-top');
+        // タイマー
+        const remainingTime = Math.max(0, this.gameState.maxTime - this.gameState.time);
+        const minutes = Math.floor(remainingTime / 60);
+        const seconds = Math.floor(remainingTime % 60);
+        this.ctx.fillText(`Time: ${minutes}:${seconds.toString().padStart(2, '0')}`, 20, 95);
         
-        // 全て非表示
-        if (startScreen) startScreen.style.display = 'none';
-        if (gameOverScreen) gameOverScreen.style.display = 'none';
-        if (gameClearScreen) gameClearScreen.style.display = 'none';
-        
-        // 対応する画面を表示
-        if (this.gameState.state === 'start') {
-            if (startScreen) startScreen.style.display = 'flex';
-            // スタート画面の時はゲームキャンバスとHUDを非表示
-            if (gameArea) gameArea.style.display = 'none';
-            if (hudTop) hudTop.style.display = 'none';
-        } else if (this.gameState.state === 'gameOver') {
-            if (gameOverScreen) gameOverScreen.style.display = 'flex';
-            // ゲームオーバー画面の時もゲームキャンバスとHUDを非表示
-            if (gameArea) gameArea.style.display = 'none';
-            if (hudTop) hudTop.style.display = 'none';
-        } else if (this.gameState.state === 'levelComplete') {
-            if (gameClearScreen) gameClearScreen.style.display = 'flex';
-            // ゲームクリア画面の時もゲームキャンバスとHUDを非表示
-            if (gameArea) gameArea.style.display = 'none';
-            if (hudTop) hudTop.style.display = 'none';
-        } else {
-            // ゲーム中はゲームキャンバスとHUDを表示
-            if (gameArea) gameArea.style.display = 'flex';
-            if (hudTop) hudTop.style.display = 'flex';
-            // ゲーム開始時にキャンバスサイズを再計算
-            this.setupCanvas();
-        }
+        // コイン収集状況
+        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+        this.ctx.fillRect(CANVAS_WIDTH - 160, 10, 150, 40);
+        this.ctx.fillStyle = 'white';
+        this.ctx.fillText(`Coins: ${this.gameState.coinsCollected}`, CANVAS_WIDTH - 150, 35);
     }
     
     // SVGファイルの事前読み込み
@@ -1976,6 +962,7 @@ class Game {
             try {
                 await this.svg.playerRenderer.preloadSVGs();
             } catch (error) {
+                // エラーは無視
             }
         }
     }
@@ -1999,92 +986,68 @@ class Game {
                 return;
             }
             
+            // 保存された状態でレンダリング
             ctx.save();
             
-            // 強制的に見えるデバッグ表示（赤い背景で目立たせる）
-            ctx.fillStyle = 'rgba(255, 0, 0, 0.9)';
-            ctx.fillRect(5, 5, 400, 250);
+            // 黒い半透明の背景
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(10, 130, 350, 180);
             
-            // 白い枠線
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 3;
-            ctx.strokeRect(5, 5, 400, 250);
+            // タイトル
+            ctx.fillStyle = '#FFD700';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('🐞 ジャンプデバッグ情報', 20, 155);
             
-            // テキスト設定
+            // 区切り線
+            ctx.strokeStyle = '#FFD700';
+            ctx.beginPath();
+            ctx.moveTo(15, 165);
+            ctx.lineTo(355, 165);
+            ctx.stroke();
+            
+            // 通常のテキスト設定
             ctx.fillStyle = 'white';
-            ctx.font = 'bold 18px Arial';
+            ctx.font = '14px monospace';
             
-            let y = 28;
-            ctx.fillText('🚨 ジャンプデバッグ表示 🚨', 15, y);
-            y += 18;
-            ctx.font = '11px monospace';
-            ctx.fillStyle = 'lightgray';
-            ctx.fillText('(@キーまたは2キーで切り替え)', 15, y);
-            y += 18;
+            let y = 185;
+            const lineHeight = 20;
             
-            // 設定値の表示
-            ctx.font = '13px monospace';
-            ctx.fillStyle = 'yellow';
-            ctx.fillText('⚙️ 設定値:', 15, y);
-            y += 16;
-            ctx.fillStyle = 'white';
-            ctx.fillText(`jumpPower: ${PLAYER_CONFIG.jumpPower}`, 15, y);
-            y += 14;
-            ctx.fillText(`minJumpTime: ${PLAYER_CONFIG.minJumpTime}f`, 15, y);
-            y += 14;
-            ctx.fillText(`maxJumpTime: ${PLAYER_CONFIG.maxJumpTime}f`, 15, y);
-            y += 14;
-            ctx.fillText(`gravity: ${GRAVITY}`, 15, y);
-            y += 18;
-            
-            // プレイヤー状態の詳細表示
-            ctx.fillStyle = 'lightblue';
-            ctx.fillText('🎮 プレイヤー状態:', 15, y);
-            y += 16;
-            
+            // プレイヤー存在確認
             if (this.player) {
-                ctx.fillStyle = 'white';
-                ctx.fillText(`Player位置: (${this.player.x.toFixed(1)}, ${this.player.y.toFixed(1)})`, 15, y);
-                y += 14;
-                ctx.fillText(`isJumping: ${this.player.isJumping}`, 15, y);
-                y += 14;
-                ctx.fillText(`onGround: ${this.player.onGround}`, 15, y);
-                y += 14;
-                ctx.fillText(`velY: ${this.player.velY.toFixed(2)}`, 15, y);
-                y += 14;
-                ctx.fillText(`jumpButtonPressed: ${this.player.jumpButtonPressed}`, 15, y);
-                y += 14;
+                // リアルタイム情報
+                ctx.fillStyle = '#4ADE80';
+                ctx.fillText(`[リアルタイム]`, 20, y);
+                y += lineHeight;
                 
-                // 現在のジャンプ状態
-                if (this.player.isJumping) {
-                    ctx.fillStyle = 'yellow';
-                    ctx.fillText(`🦘 ジャンプ中!`, 15, y);
-                    y += 14;
-                    ctx.fillText(`ボタン保持: ${this.player.jumpButtonHoldTime}f`, 15, y);
-                    y += 14;
-                    ctx.fillText(`ジャンプ時間: ${this.player.jumpTime}f`, 15, y);
-                    y += 14;
-                    if (this.player.jumpStartY !== undefined) {
-                        const currentHeight = this.player.jumpStartY - this.player.y;
-                        ctx.fillText(`現在高さ: ${currentHeight.toFixed(1)}px`, 15, y);
-                        y += 14;
-                        const heightInUnits = (currentHeight / PLAYER_CONFIG.height).toFixed(1);
-                        ctx.fillText(`身長比: ${heightInUnits}人分`, 15, y);
-                        y += 14;
-                    }
-                }
+                ctx.fillStyle = 'white';
+                ctx.fillText(`ジャンプ中: ${this.player.isJumping ? '✅' : '❌'}`, 30, y);
+                y += lineHeight;
+                
+                ctx.fillText(`地面判定: ${this.player.onGround ? '✅' : '❌'}`, 30, y);
+                y += lineHeight;
+                
+                ctx.fillText(`Y速度: ${this.player.velY.toFixed(2)}`, 30, y);
+                y += lineHeight;
                 
                 // 最後のジャンプ統計
                 if (this.player.lastJumpStats) {
-                    ctx.fillStyle = 'lightgreen';
-                    ctx.fillText('📊 前回のジャンプ:', 15, y);
-                    y += 14;
-                    ctx.fillText(`保持: ${this.player.lastJumpStats.buttonHoldTime}f`, 15, y);
-                    y += 14;
-                    ctx.fillText(`高さ: ${this.player.lastJumpStats.maxHeight.toFixed(1)}px`, 15, y);
-                    y += 14;
-                    ctx.fillText(`身長比: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 15, y);
-                    y += 14;
+                    ctx.fillStyle = '#60A5FA';
+                    ctx.fillText(`[最後のジャンプ]`, 20, y);
+                    y += lineHeight;
+                    
+                    ctx.fillStyle = 'white';
+                    ctx.fillText(`最高到達: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 30, y);
+                    y += lineHeight;
+                    
+                    ctx.fillText(`ボタン保持: ${this.player.lastJumpStats.buttonHoldTime}フレーム`, 30, y);
+                    y += lineHeight;
+                }
+                
+                // 現在のジャンプ高さ（ジャンプ中のみ）
+                if (this.player.isJumping && !this.player.onGround) {
+                    const currentHeight = this.player.jumpStartY - this.player.y;
+                    ctx.fillStyle = '#F59E0B';
+                    ctx.fillText(`現在高さ: ${(currentHeight / this.player.height).toFixed(1)}人分`, 30, y);
                 }
             } else {
                 ctx.fillStyle = 'red';
@@ -2092,11 +1055,8 @@ class Game {
             }
             
             ctx.restore();
-            // 1回だけコンソールログを出力
-            if (!this._debugLogShown) {
-                this._debugLogShown = true;
-            }
         } catch (error) {
+            // エラーは無視
         }
     }
 }
@@ -2105,7 +1065,6 @@ class Game {
 if (typeof document !== 'undefined') {
     document.addEventListener('DOMContentLoaded', async () => {
         try {
-            
             // ゲームインスタンスを作成（コンストラクタは同期）
             const game = new Game();
             
@@ -2117,24 +1076,22 @@ if (typeof document !== 'undefined') {
             // 非同期初期化を待機
             await game.initialize();
             
-            
             // テスト用関数
             if (typeof window !== 'undefined') {
                 window.testStart = function() {
                     if (window.game && window.game.isInitialized) {
                         window.game.startGame();
+                        return true;
                     }
+                    return false;
                 };
             }
             
-            // 自動テストシステムの統合
-            if (typeof GameStateManager !== 'undefined') {
-                window.gameStateManager = new GameStateManager();
-                
-                // ゲーム更新時に状態をキャプチャ
+            // 自動ゲーム状態記録の設定（デバッグ用）
+            if (typeof window !== 'undefined' && window.gameStateManager) {
                 const originalUpdate = game.update.bind(game);
-                game.update = function() {
-                    originalUpdate();
+                game.update = function(deltaTime) {
+                    originalUpdate(deltaTime);
                     if (window.gameStateManager && window.gameStateManager.recording) {
                         window.gameStateManager.captureState(game);
                     }
@@ -2142,7 +1099,6 @@ if (typeof document !== 'undefined') {
             }
             
         } catch (error) {
-            
             // テスト用にエラー情報を保存
             if (typeof window !== 'undefined') {
                 window.gameInitError = error;
@@ -2150,18 +1106,18 @@ if (typeof document !== 'undefined') {
                 // テスト実行のため、空のwindow.gameオブジェクトを作成
                 window.game = {
                     svg: null,
-                    isRunning: false,
-                    initializationError: error
+                    player: null,
+                    gameState: null,
+                    isInitialized: false,
+                    error: error.message
                 };
             }
+            throw error;
         }
     });
 }
 
-// Node.js環境用にクラスをグローバルに設定
-if (typeof global !== 'undefined') {
-    global.GameState = GameState;
-    global.Player = Player;
-    global.InputManager = InputManager;
-    global.Game = Game;
+// エクスポート
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = Game;
 }

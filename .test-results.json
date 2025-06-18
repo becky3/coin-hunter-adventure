@@ -1,9 +1,9 @@
 {
-  "timestamp": "2025-06-18T00:03:55.258Z",
+  "timestamp": "2025-06-18T00:13:46.352Z",
   "method": "curl_validation",
   "status": "error",
   "validation_results": {
-    "error": "connect ECONNREFUSED 127.0.0.1:8080"
+    "error": "HTTP 404"
   },
   "manual_test_required": true
 }
