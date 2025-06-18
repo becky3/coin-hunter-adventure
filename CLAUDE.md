@@ -30,7 +30,12 @@ python3 -m http.server 8080
 │   ├── svg-player-renderer.js  # プレイヤーSVGレンダラー
 │   ├── svg-enemy-renderer.js   # 敵SVGレンダラー
 │   ├── svg-item-renderer.js    # アイテムSVGレンダラー
-│   └── svg-renderer.js         # 共通SVGレンダラー
+│   ├── svg-renderer.js         # 共通SVGレンダラー
+│   ├── svg-graphics.js         # SVGグラフィックシステム
+│   ├── game-state.js           # ゲーム状態管理
+│   ├── score-animation.js      # スコアアニメーション
+│   ├── player.js               # プレイヤークラス
+│   └── input-manager.js        # 入力管理
 ├── assets/                 # ゲームアセット
 │   ├── player-*.svg            # プレイヤーアニメーション
 │   ├── slime.svg, bird.svg     # 敵キャラクター
@@ -193,10 +198,9 @@ python3 -m http.server 8080
 ### 検証ツール一覧
 
 - `scripts/curl-test-validator.js` - HTTP基本構造検証（メイン）
-- `scripts/comprehensive-test-results.js` - 包括的検証
-- `scripts/verify-test-accessibility.js` - アクセス可能性確認
-- `scripts/simple-http-test.js` - 基本HTTP確認
-- `scripts/lightweight-js-test.js` - JavaScript基本動作確認
+- `scripts/comprehensive-test-results.js` - 包括的検証（アクセス可能性とHTTP確認を統合）
+- `scripts/jsdom-test.js` - JavaScript基本動作確認
+- `scripts/run-automated-tests.js` - 自動ゲームテスト実行
 
 ### 技術的制限の明確化
 
