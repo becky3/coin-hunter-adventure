@@ -2,24 +2,6 @@
  * プレイヤークラス
  */
 
-// グローバル変数から設定を読み込み
-const PLAYER_CONFIG = typeof window !== 'undefined' && window.PLAYER_CONFIG ? window.PLAYER_CONFIG : {
-    width: 40,
-    height: 40,
-    speed: 5,
-    jumpPower: -12,
-    maxHealth: 3,
-    invulnerabilityTime: 120,
-    spawnX: 100,
-    spawnY: 300,
-    minJumpTime: 5,
-    maxJumpTime: 20
-};
-
-const GRAVITY = typeof window !== 'undefined' && window.GRAVITY ? window.GRAVITY : 0.5;
-const CANVAS_WIDTH = typeof window !== 'undefined' && window.CANVAS_WIDTH ? window.CANVAS_WIDTH : 1024;
-const CANVAS_HEIGHT = typeof window !== 'undefined' && window.CANVAS_HEIGHT ? window.CANVAS_HEIGHT : 576;
-
 class Player {
     constructor() {
         this.width = PLAYER_CONFIG.width;

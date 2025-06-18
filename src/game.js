@@ -1,24 +1,6 @@
 /**
- * コインハンターアドベンチャー - リファクタリング版
- * モジュール化されたコードを使用
+ * コインハンターアドベンチャー - メインゲームクラス
  */
-
-// 依存関係の確認とロード
-if (typeof SVGGraphics === 'undefined' && typeof require !== 'undefined') {
-    const SVGGraphics = require('./svg-graphics.js');
-    const GameState = require('./game-state.js');
-    const ScoreAnimation = require('./score-animation.js');
-    const Player = require('./player.js');
-    const InputManager = require('./input-manager.js');
-}
-
-// グローバル設定値の確認
-const CANVAS_WIDTH = typeof window !== 'undefined' && window.CANVAS_WIDTH ? window.CANVAS_WIDTH : 1024;
-const CANVAS_HEIGHT = typeof window !== 'undefined' && window.CANVAS_HEIGHT ? window.CANVAS_HEIGHT : 576;
-const GRAVITY = typeof window !== 'undefined' && window.GRAVITY ? window.GRAVITY : 0.5;
-const ENEMY_CONFIG = typeof window !== 'undefined' && window.ENEMY_CONFIG ? window.ENEMY_CONFIG : {};
-const COIN_CONFIG = typeof window !== 'undefined' && window.COIN_CONFIG ? window.COIN_CONFIG : { width: 30, height: 30 };
-const SPRING_CONFIG = typeof window !== 'undefined' && window.SPRING_CONFIG ? window.SPRING_CONFIG : { width: 40, height: 20, bouncePower: -20 };
 
 class Game {
     constructor() {
@@ -291,7 +273,7 @@ class Game {
         
         // BGMを開始
         if (this.musicSystem.isInitialized) {
-            this.musicSystem.playBGM();
+            this.musicSystem.playGameBGM();
         }
         
         this.updateUIVisibility();
