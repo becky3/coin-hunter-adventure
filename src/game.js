@@ -175,7 +175,11 @@ class Game {
             baseY: c.y
         }));
         
-        this.flag = stageData.goal || { x: 2900, y: 396 };
+        this.flag = stageData.goal ? { 
+            ...stageData.goal,
+            width: 60,
+            height: 80
+        } : { x: 2900, y: 396, width: 60, height: 80 };
         
         // スプリングの初期化
         this.springs = (stageData.springs || []).map(s => ({
@@ -297,7 +301,7 @@ class Game {
         const screens = {
             'start': document.querySelector('.start-screen'),
             'gameOver': document.querySelector('.game-over-screen'),
-            'levelComplete': document.querySelector('.level-complete-screen'),
+            'levelComplete': document.querySelector('.game-clear-screen'),
             'playing': document.querySelector('.game-area')
         };
         
@@ -694,9 +698,25 @@ class Game {
                 
                 // 移動パターン（プラットフォーム上にいる時のみ）
                 if (onPlatform) {
-                    if (Math.abs(enemy.x - enemy.originalX) > 100) {
-                        enemy.velX *= -1;
-                        enemy.direction *= -1;
+                    // 現在乗っているプラットフォームを探す
+                    let currentPlatform = null;
+                    this.platforms.forEach(platform => {
+                        if (enemy.y + enemy.height === platform.y &&
+                            enemy.x + enemy.width > platform.x &&
+                            enemy.x < platform.x + platform.width) {
+                            currentPlatform = platform;
+                        }
+                    });
+                    
+                    // プラットフォームの端で折り返す
+                    if (currentPlatform) {
+                        if (enemy.x <= currentPlatform.x && enemy.velX < 0) {
+                            enemy.velX *= -1;
+                            enemy.direction *= -1;
+                        } else if (enemy.x + enemy.width >= currentPlatform.x + currentPlatform.width && enemy.velX > 0) {
+                            enemy.velX *= -1;
+                            enemy.direction *= -1;
+                        }
                     }
                 }
             } else if (enemy.type === 'bird') {
@@ -815,7 +835,8 @@ class Game {
                         velY: this.player.velY,
                         animFrame: this.player.animFrame,
                         onGround: this.player.onGround,
-                        health: this.player.health
+                        health: this.player.health,
+                        facing: this.player.facing
                     }
                 );
             }
@@ -967,7 +988,7 @@ class Game {
         
         // レベルクリアスコアを表示
         try {
-            const levelScoreEl = document.getElementById('levelScore');
+            const levelScoreEl = document.getElementById('clearScore');
             if (levelScoreEl) {
                 levelScoreEl.textContent = this.gameState.score;
             }
