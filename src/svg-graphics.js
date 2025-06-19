@@ -6,7 +6,6 @@
 class SVGGraphics {
     constructor(ctx) {
         this.ctx = ctx;
-        this.cache = new Map(); // パスキャッシュ
         
         // プレイヤーグラフィックレンダラーを初期化
         if (typeof SVGPlayerRenderer !== 'undefined') {
@@ -51,10 +50,6 @@ class SVGGraphics {
     // プロトコルチェックと警告表示
     checkProtocolAndWarn() {
         if (window.location.protocol === 'file:') {
-            // test.html専用：CORS警告を無効化
-            if (window.DISABLE_CORS_WARNING) {
-                return;
-            }
             
             // ビジュアル警告を表示（一度だけ）
             if (!window._corsWarningShown) {

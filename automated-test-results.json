@@ -4,14 +4,14 @@
     "passed": 10,
     "failed": 2,
     "successRate": "83.3%",
-    "duration": "29996ms"
+    "duration": "30118ms"
   },
   "details": [
     {
       "name": "状態キャプチャの正確性",
       "passed": true,
       "error": null,
-      "duration": 102,
+      "duration": 101,
       "details": {
         "captured": true,
         "stateSize": 288
@@ -21,7 +21,7 @@
       "name": "状態履歴の記録",
       "passed": true,
       "error": null,
-      "duration": 163,
+      "duration": 165,
       "details": {
         "historyLength": 10
       }
@@ -39,21 +39,21 @@
       "name": "右移動の検証",
       "passed": false,
       "error": "右移動が機能していない",
-      "duration": 1001,
+      "duration": 1008,
       "details": {}
     },
     {
       "name": "ジャンプ動作の検証",
       "passed": false,
       "error": "ジャンプが機能していない",
-      "duration": 701,
+      "duration": 702,
       "details": {}
     },
     {
       "name": "複合動作の検証",
       "passed": true,
       "error": null,
-      "duration": 22860,
+      "duration": 22965,
       "details": {
         "totalActions": 3,
         "successful": 3,
@@ -73,7 +73,7 @@
           }
         ],
         "finalState": {
-          "timestamp": 1750376050573,
+          "timestamp": 1750376761594,
           "frame": 0,
           "player": {
             "x": 50,
@@ -113,7 +113,7 @@
       "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 5006,
+      "duration": 5012,
       "details": {
         "coinsCollected": 0,
         "success": false
@@ -133,7 +133,7 @@
       "name": "重力の適用",
       "passed": true,
       "error": null,
-      "duration": 162,
+      "duration": 164,
       "details": {
         "fallDistance": 27.5,
         "velocity": 5
@@ -173,20 +173,20 @@
       }
     }
   ],
-  "timestamp": "2025-06-19T23:34:15.743Z",
+  "timestamp": "2025-06-19T23:46:06.773Z",
   "statistics": {
     "byCategory": {
       "状態キャプチャの正確性": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 102
+        "totalDuration": 101
       },
       "状態履歴の記録": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 163
+        "totalDuration": 165
       },
       "状態検証機能": {
         "total": 1,
@@ -198,25 +198,25 @@
         "total": 1,
         "passed": 0,
         "failed": 1,
-        "totalDuration": 1001
+        "totalDuration": 1008
       },
       "ジャンプ動作の検証": {
         "total": 1,
         "passed": 0,
         "failed": 1,
-        "totalDuration": 701
+        "totalDuration": 702
       },
       "複合動作の検証": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 22860
+        "totalDuration": 22965
       },
       "コイン収集メカニクス": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 5006
+        "totalDuration": 5012
       },
       "ライフシステム": {
         "total": 1,
@@ -228,7 +228,7 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 162
+        "totalDuration": 164
       },
       "速度制限の確認": {
         "total": 1,
@@ -249,12 +249,12 @@
         "totalDuration": 0
       }
     },
-    "averageDuration": 2499.6666666666665,
+    "averageDuration": 2509.8333333333335,
     "slowestTest": {
       "name": "複合動作の検証",
       "passed": true,
       "error": null,
-      "duration": 22860,
+      "duration": 22965,
       "details": {
         "totalActions": 3,
         "successful": 3,
@@ -274,7 +274,7 @@
           }
         ],
         "finalState": {
-          "timestamp": 1750376050573,
+          "timestamp": 1750376761594,
           "frame": 0,
           "player": {
             "x": 50,

@@ -30,9 +30,6 @@ class Game {
         this.backgroundAnimation = 0;
         this.scoreAnimations = [];
         
-        // デバッグ表示制御
-        this.showJumpDebug = false;
-        
         this.camera = { x: 0, y: 0 };
         this.platforms = [];
         this.enemies = [];
@@ -430,11 +427,6 @@ class Game {
         // 入力状態を更新
         this.inputManager.update();
         
-        // デバッグ表示切り替え（2キーまたは@キー）
-        if (this.inputManager.isKeyJustPressed('Digit2') || this.inputManager.isKeyJustPressed('KeyD')) {
-            this.showJumpDebug = !this.showJumpDebug;
-        }
-        
         if (!this.gameState.isPlaying()) return;
         
         // タイマー更新
@@ -668,7 +660,6 @@ class Game {
         
         // プレイヤー座標の妥当性チェック
         if (!isFinite(this.player.x) || !isFinite(this.player.y)) {
-            console.error('プレイヤー座標が無効です:', this.player.x, this.player.y);
             this.player.x = this.player.width;
             this.player.y = this.player.height;
             return;
@@ -714,13 +705,11 @@ class Game {
     
     updateEnemies() {
         if (!Array.isArray(this.enemies)) {
-            console.error('enemies配列が無効です');
             return;
         }
         
         this.enemies.forEach(enemy => {
             if (!enemy || typeof enemy !== 'object') {
-                console.warn('無効な敵オブジェクト:', enemy);
                 return;
             }
             
@@ -968,9 +957,6 @@ class Game {
             this.ctx.fillStyle = `rgba(255, 0, 0, ${this.damageEffect / 60 * 0.3})`;
             this.ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
         }
-        
-        // ジャンプデバッグ表示
-        this.renderJumpStats();
     }
     
     isInView(obj) {
@@ -1151,99 +1137,6 @@ class Game {
         }
     }
     
-    // ジャンプ統計をリアルタイムで表示
-    renderJumpStats() {
-        try {
-            // デバッグ表示がオフの場合は何もしない
-            if (!this.showJumpDebug) {
-                return;
-            }
-            
-            // 確実にコンテキストを取得
-            const ctx = this.ctx;
-            if (!ctx) {
-                return;
-            }
-            
-            // ゲーム状態が'playing'の時のみ表示
-            if (this.gameState.state !== 'playing') {
-                return;
-            }
-            
-            // 保存された状態でレンダリング
-            ctx.save();
-            
-            // 黒い半透明の背景
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-            ctx.fillRect(10, 130, 350, 180);
-            
-            // タイトル
-            ctx.fillStyle = '#FFD700';
-            ctx.font = 'bold 16px Arial';
-            ctx.fillText('🐞 ジャンプデバッグ情報', 20, 155);
-            
-            // 区切り線
-            ctx.strokeStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.moveTo(15, 165);
-            ctx.lineTo(355, 165);
-            ctx.stroke();
-            
-            // 通常のテキスト設定
-            ctx.fillStyle = 'white';
-            ctx.font = '14px monospace';
-            
-            let y = 185;
-            const lineHeight = 20;
-            
-            // プレイヤー存在確認
-            if (this.player) {
-                // リアルタイム情報
-                ctx.fillStyle = '#4ADE80';
-                ctx.fillText(`[リアルタイム]`, 20, y);
-                y += lineHeight;
-                
-                ctx.fillStyle = 'white';
-                ctx.fillText(`ジャンプ中: ${this.player.isJumping ? '✅' : '❌'}`, 30, y);
-                y += lineHeight;
-                
-                ctx.fillText(`地面判定: ${this.player.onGround ? '✅' : '❌'}`, 30, y);
-                y += lineHeight;
-                
-                ctx.fillText(`Y速度: ${this.player.velY.toFixed(2)}`, 30, y);
-                y += lineHeight;
-                
-                // 最後のジャンプ統計
-                if (this.player.lastJumpStats) {
-                    ctx.fillStyle = '#60A5FA';
-                    ctx.fillText(`[最後のジャンプ]`, 20, y);
-                    y += lineHeight;
-                    
-                    ctx.fillStyle = 'white';
-                    ctx.fillText(`最高到達: ${this.player.lastJumpStats.heightInPlayerUnits}人分`, 30, y);
-                    y += lineHeight;
-                    
-                    ctx.fillText(`ボタン保持: ${this.player.lastJumpStats.buttonHoldTime}フレーム`, 30, y);
-                    y += lineHeight;
-                }
-                
-                // 現在のジャンプ高さ（ジャンプ中のみ）
-                if (this.player.isJumping && !this.player.onGround) {
-                    const currentHeight = this.player.jumpStartY - this.player.y;
-                    ctx.fillStyle = '#F59E0B';
-                    ctx.fillText(`現在高さ: ${(currentHeight / this.player.height).toFixed(1)}人分`, 30, y);
-                }
-            } else {
-                ctx.fillStyle = 'red';
-                ctx.fillText('❌ Player未定義', 15, y);
-            }
-            
-            ctx.restore();
-        } catch (error) {
-            // エラーは無視
-        }
-    }
-    
     // クリーンアップ
     destroy() {
         try {
@@ -1288,42 +1181,7 @@ if (typeof document !== 'undefined') {
             // 非同期初期化を待機
             await game.initialize();
             
-            // テスト用関数
-            if (typeof window !== 'undefined') {
-                window.testStart = function() {
-                    if (window.game && window.game.isInitialized) {
-                        window.game.startGame();
-                        return true;
-                    }
-                    return false;
-                };
-            }
-            
-            // 自動ゲーム状態記録の設定（デバッグ用）
-            if (typeof window !== 'undefined' && window.gameStateManager) {
-                const originalUpdate = game.update.bind(game);
-                game.update = function(deltaTime) {
-                    originalUpdate(deltaTime);
-                    if (window.gameStateManager && window.gameStateManager.recording) {
-                        window.gameStateManager.captureState(game);
-                    }
-                };
-            }
-            
         } catch (error) {
-            // テスト用にエラー情報を保存
-            if (typeof window !== 'undefined') {
-                window.gameInitError = error;
-                
-                // テスト実行のため、空のwindow.gameオブジェクトを作成
-                window.game = {
-                    svg: null,
-                    player: null,
-                    gameState: null,
-                    isInitialized: false,
-                    error: error.message
-                };
-            }
             throw error;
         }
     });

@@ -195,7 +195,7 @@ systemTests.test('ゲームの初期化', () => {
 systemTests.test('プレイヤーの生成と初期状態', () => {
     const player = new Player();
     assertEquals(player.x, PLAYER_CONFIG.spawnX, 'プレイヤーX座標が正しくありません');
-    assertEquals(player.y, 300, 'プレイヤーY座標が正しくありません');
+    assertEquals(player.y, PLAYER_CONFIG.spawnY, 'プレイヤーY座標が正しくありません');
     assertEquals(player.width, PLAYER_CONFIG.width, 'プレイヤー幅が正しくありません');
     assertEquals(player.height, PLAYER_CONFIG.height, 'プレイヤー高さが正しくありません');
     assertEquals(player.velX, 0, '初期X速度が0ではありません');
