@@ -686,6 +686,40 @@ class MusicSystem {
         );
     }
     
+    // スプリングの効果音を再生
+    playSpringSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // スプリングの弾む音（ボヨヨーン）
+        const time = this.audioContext.currentTime;
+        
+        // 低音から高音へのスイープ
+        for (let i = 0; i < 3; i++) {
+            const startFreq = 100 + i * 50;
+            const endFreq = 400 + i * 100;
+            const delay = i * 0.05;
+            
+            // 周波数スイープ
+            const osc = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(startFreq, time + delay);
+            osc.frequency.exponentialRampToValueAtTime(endFreq, time + delay + 0.15);
+            
+            gainNode.gain.setValueAtTime(0.3 - i * 0.1, time + delay);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, time + delay + 0.2);
+            
+            osc.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            osc.start(time + delay);
+            osc.stop(time + delay + 0.2);
+            
+            this.activeNodes.push({ osc, gainNode });
+        }
+    }
+    
     // 効果音の音量を設定
     setSfxVolume(volume) {
         this.sfxVolume = Math.max(0, Math.min(1, volume));
