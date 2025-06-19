@@ -1,0 +1,197 @@
+# 開発ガイド
+
+## セットアップ
+
+### 必要な環境
+- モダンなWebブラウザ（Chrome, Firefox, Safari, Edge）
+- Python 3.x（HTTPサーバー用）
+- Git
+- GitHub CLI（gh）- PR作成用
+
+### 初期セットアップ
+```bash
+# リポジトリのクローン
+git clone https://github.com/becky3/coin-hunter-adventure.git
+cd coin-hunter-adventure
+
+# HTTPサーバーの起動
+python3 -m http.server 8080
+
+# ブラウザでアクセス
+open http://localhost:8080/
+```
+
+## 開発フロー
+
+### 1. 新機能の開発
+```bash
+# 最新のmainブランチを取得
+git checkout main
+git pull origin main
+
+# 新しいブランチを作成
+git checkout -b feature/新機能名
+
+# HTTPサーバーを起動
+python3 -m http.server 8080
+```
+
+### 2. コーディング
+- `src/`ディレクトリ内のファイルを編集
+- ブラウザで動作確認（自動リロード）
+- テストを実行して確認
+
+### 3. テスト実行
+
+#### ブラウザテスト
+```bash
+# テストページを開く
+open http://localhost:8080/tests/test.html
+```
+
+#### 自動検証
+```bash
+# 構造検証
+node scripts/curl-test-validator.js
+
+# 自動ゲームテスト
+node scripts/run-automated-tests.js
+
+# 包括的検証
+node scripts/comprehensive-test-results.js
+```
+
+### 4. コミット
+```bash
+# 変更をステージング
+git add -A
+
+# コミット（日本語メッセージ）
+git commit -m "feat: 新機能の説明"
+```
+
+### 5. プルリクエスト
+```bash
+# ブランチをプッシュ
+git push origin feature/新機能名
+
+# PRを作成
+gh pr create --title "新機能の追加" --body "詳細な説明"
+```
+
+## テスト戦略
+
+### 単体テスト
+`tests/test.js`に新しいテストケースを追加：
+
+```javascript
+systemTests.test('新機能のテスト', () => {
+    // テストコード
+    assertEquals(実際の値, 期待値, 'エラーメッセージ');
+});
+```
+
+### 統合テスト
+実際のゲームプレイで以下を確認：
+- プレイヤーの操作性
+- 敵との衝突判定
+- アイテム収集
+- ゲームクリア/ゲームオーバー
+
+### 自動テスト
+`scripts/run-automated-tests.js`が以下を検証：
+- ゲーム状態管理
+- プレイヤー動作
+- 物理エンジン
+- 衝突検出
+
+## デバッグ方法
+
+### ブラウザ開発者ツール
+1. F12キーで開発者ツールを開く
+2. Consoleタブでエラーを確認
+3. Sourcesタブでブレークポイントを設定
+4. Networkタブでファイル読み込みを確認
+
+### よくある問題と解決策
+
+#### SVGファイルが表示されない
+- HTTPサーバーが起動しているか確認
+- `file://`プロトコルではなく`http://`でアクセス
+- ブラウザコンソールでCORSエラーを確認
+
+#### JavaScriptの変更が反映されない
+- Ctrl+F5（Cmd+Shift+R）で強制リロード
+- 開発者ツールのNetworkタブで「Disable cache」を有効化
+- キャッシュバスティングが機能しているか確認
+
+#### テストが失敗する
+- `config.js`の定数が変更されていないか確認
+- 依存関係の読み込み順序を確認
+- エラーメッセージを詳しく読む
+
+## コード規約
+
+### 命名規則
+- 変数名: camelCase（例: `playerScore`）
+- 定数: UPPER_SNAKE_CASE（例: `MAX_SPEED`）
+- クラス名: PascalCase（例: `GameState`）
+- ファイル名: kebab-case（例: `game-state.js`）
+
+### コメント
+- 日本語でのコメントOK
+- 複雑なロジックには必ずコメントを追加
+- JSDocスタイルで関数の説明を記述
+
+### エラーハンドリング
+```javascript
+// 良い例
+if (!this.canvas) {
+    throw new Error('gameCanvasが見つかりません');
+}
+
+// 悪い例（フォールバックは避ける）
+this.canvas = document.getElementById('gameCanvas') || createFallbackCanvas();
+```
+
+## パフォーマンス最適化
+
+### レンダリング
+- 画面外のオブジェクトは描画しない（`isInView`チェック）
+- アニメーションフレームの最適化
+- 不要な再描画を避ける
+
+### メモリ管理
+- 使用済みオブジェクトの適切な削除
+- イベントリスナーの解除
+- 大きな配列の効率的な管理
+
+## リリース手順
+
+### バージョニング
+- セマンティックバージョニングを使用
+- major.minor.patch（例: 1.2.3）
+
+### デプロイ
+1. mainブランチにマージ
+2. GitHubリリースを作成
+3. 静的ホスティングサービスにデプロイ
+
+## トラブルシューティング
+
+### よくある質問
+
+**Q: ゲームが起動しない**
+A: ブラウザコンソールでエラーを確認し、HTTPサーバーが起動しているか確認
+
+**Q: キャラクターが動かない**
+A: 入力管理システムが正しく初期化されているか確認
+
+**Q: 音が出ない**
+A: ブラウザの自動再生ポリシーにより、ユーザー操作後に音が出るようになっています
+
+## 参考リソース
+
+- [MDN Web Docs](https://developer.mozilla.org/ja/)
+- [Canvas API](https://developer.mozilla.org/ja/docs/Web/API/Canvas_API)
+- [Web Audio API](https://developer.mozilla.org/ja/docs/Web/API/Web_Audio_API)
