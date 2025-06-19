@@ -67,13 +67,44 @@ class Game {
             
             this.isInitialized = true;
             
+            // 初期化完了後、ゲーム開始ボタンを有効化
+            this.enableStartButton();
+            
             // Node.js環境ではゲームを自動開始しない
             if (typeof window !== 'undefined' && typeof requestAnimationFrame !== 'undefined') {
                 this.start();
             }
             
         } catch (error) {
+            // 初期化エラー時はボタンをエラー状態に
+            this.showInitError();
             throw error;
+        }
+    }
+    
+    enableStartButton() {
+        if (typeof document === 'undefined') return;
+        
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            startBtn.disabled = false;
+            const btnText = startBtn.querySelector('.btn-text');
+            if (btnText) {
+                btnText.textContent = 'ゲーム開始';
+            }
+        }
+    }
+    
+    showInitError() {
+        if (typeof document === 'undefined') return;
+        
+        const startBtn = document.getElementById('startBtn');
+        if (startBtn) {
+            const btnText = startBtn.querySelector('.btn-text');
+            if (btnText) {
+                btnText.textContent = '読み込みエラー';
+            }
+            startBtn.classList.add('error');
         }
     }
     
@@ -207,6 +238,11 @@ class Game {
         if (startBtn && typeof startBtn.addEventListener === 'function' && !startBtn.hasListener) {
             startBtn.hasListener = true;
             startBtn.addEventListener('click', async () => {
+                // 初期化が完了していない場合は何もしない
+                if (!this.isInitialized || startBtn.disabled) {
+                    return;
+                }
+                
                 // ボタンクリック効果音を再生
                 if (this.musicSystem.isInitialized) {
                     this.musicSystem.playButtonClickSound();
@@ -220,6 +256,10 @@ class Game {
                         // 音楽初期化エラーは無視
                     }
                 }
+                // ゲームループが停止している場合は再開
+                if (!this.isRunning) {
+                    this.start();
+                }
                 await this.startGame();
             });
         }
@@ -228,12 +268,12 @@ class Game {
         restartBtns.forEach(btn => {
             if (btn && typeof btn.addEventListener === 'function' && !btn.hasListener) {
                 btn.hasListener = true;
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', async () => {
                     // リスタート効果音を再生
                     if (this.musicSystem.isInitialized) {
                         this.musicSystem.playRestartSound();
                     }
-                    this.restartGame();
+                    await this.restartGame();
                 });
             }
         });
@@ -259,6 +299,19 @@ class Game {
             muteBtn.addEventListener('click', () => {
                 const isMuted = this.musicSystem.toggleMute();
                 muteBtn.classList.toggle('muted', isMuted);
+                muteBtn.textContent = isMuted ? '🔇' : '🔊';
+            });
+        }
+        
+        // 音量スライダー
+        const volumeSlider = document.getElementById('volumeSlider');
+        if (volumeSlider && typeof volumeSlider.addEventListener === 'function' && !volumeSlider.hasListener) {
+            volumeSlider.hasListener = true;
+            volumeSlider.addEventListener('input', (e) => {
+                const volume = parseInt(e.target.value) / 100;
+                if (this.musicSystem.isInitialized) {
+                    this.musicSystem.setVolume(volume);
+                }
             });
         }
     }
@@ -269,10 +322,8 @@ class Game {
             this.musicSystem.playGameStartSound();
         }
         
-        // ステージデータを読み込む（初回のみ）
-        if (!this.levelLoader.getCurrentStageData()) {
-            await this.initializeStageData();
-        }
+        // ステージデータを毎回新しく読み込む
+        await this.initializeStageData();
         
         // レベルを初期化（敵、コイン、スプリングを初期状態に戻す）
         this.initLevel();
@@ -280,6 +331,11 @@ class Game {
         // ゲーム状態とプレイヤーをリセット
         this.gameState.reset();
         this.player.reset();
+        
+        // ゲームループが停止している場合は再開
+        if (!this.isRunning) {
+            this.start();
+        }
         
         // カメラ位置をリセット
         this.camera = { x: 0, y: 0 };
@@ -312,8 +368,12 @@ class Game {
         });
     }
     
-    restartGame() {
-        this.startGame();
+    async restartGame() {
+        // ゲームループが停止している場合は再開
+        if (!this.isRunning) {
+            this.start();
+        }
+        await this.startGame();
     }
     
     backToTitle() {
@@ -323,6 +383,11 @@ class Game {
         // タイトル画面では音楽を停止
         if (this.musicSystem.isInitialized) {
             this.musicSystem.stopBGM();
+        }
+        
+        // ゲームループは継続（タイトル画面でも必要）
+        if (!this.isRunning) {
+            this.start();
         }
     }
     
@@ -635,17 +700,7 @@ class Game {
                     enemy.x = -enemy.width;
                 }
             } else {
-                // 地上敵の境界処理
-                if (enemy.x < 0) {
-                    enemy.x = 0;
-                    enemy.velX *= -1;
-                    enemy.direction *= -1;
-                }
-                if (enemy.x + enemy.width > worldWidth) {
-                    enemy.x = worldWidth - enemy.width;
-                    enemy.velX *= -1;
-                    enemy.direction *= -1;
-                }
+                // 地上敵の境界処理はupdateEnemiesで行う
             }
             
             // 敵の落下判定
@@ -675,7 +730,33 @@ class Game {
             }
             
             enemy.animTimer = (enemy.animTimer || 0) + 1;
-            enemy.x = (enemy.x || 0) + (enemy.velX || 0);
+            
+            // 鳥の場合は特別な処理
+            if (enemy.type === 'bird') {
+                // 鳥は単純に移動（ワープはcheckBoundariesで処理）
+                enemy.x = (enemy.x || 0) + (enemy.velX || 0);
+            } else {
+                // スライム等の地上敵は境界チェック
+                const nextX = (enemy.x || 0) + (enemy.velX || 0);
+                const worldWidth = 3000;
+                
+                // 左端チェック
+                if (nextX <= 0 && enemy.velX < 0) {
+                    enemy.x = 0;
+                    enemy.velX = Math.abs(enemy.velX);
+                    enemy.direction = 1;
+                }
+                // 右端チェック
+                else if (nextX + enemy.width >= worldWidth && enemy.velX > 0) {
+                    enemy.x = worldWidth - enemy.width;
+                    enemy.velX = -Math.abs(enemy.velX);
+                    enemy.direction = -1;
+                }
+                // 通常の移動
+                else {
+                    enemy.x = nextX;
+                }
+            }
             
             // スライムには重力を適用
             if (enemy.type === 'slime') {
@@ -696,7 +777,7 @@ class Game {
                     }
                 });
                 
-                // 移動パターン（プラットフォーム上にいる時のみ）
+                // 移動パターン
                 if (onPlatform) {
                     // 現在乗っているプラットフォームを探す
                     let currentPlatform = null;
@@ -711,12 +792,36 @@ class Game {
                     // プラットフォームの端で折り返す
                     if (currentPlatform) {
                         if (enemy.x <= currentPlatform.x && enemy.velX < 0) {
-                            enemy.velX *= -1;
-                            enemy.direction *= -1;
+                            enemy.velX = Math.abs(enemy.velX);
+                            enemy.direction = 1;
                         } else if (enemy.x + enemy.width >= currentPlatform.x + currentPlatform.width && enemy.velX > 0) {
-                            enemy.velX *= -1;
-                            enemy.direction *= -1;
+                            enemy.velX = -Math.abs(enemy.velX);
+                            enemy.direction = -1;
                         }
+                    } else {
+                        // プラットフォームがない場合はステージの端で折り返す
+                        const worldWidth = 3000;
+                        if (enemy.x <= 0 && enemy.velX < 0) {
+                            enemy.x = 0;
+                            enemy.velX = Math.abs(enemy.velX);
+                            enemy.direction = 1;
+                        } else if (enemy.x + enemy.width >= worldWidth && enemy.velX > 0) {
+                            enemy.x = worldWidth - enemy.width;
+                            enemy.velX = -Math.abs(enemy.velX);
+                            enemy.direction = -1;
+                        }
+                    }
+                } else {
+                    // プラットフォーム上にいない場合もステージの端で折り返す
+                    const worldWidth = 3000;
+                    if (enemy.x <= 0 && enemy.velX < 0) {
+                        enemy.x = 0;
+                        enemy.velX = Math.abs(enemy.velX);
+                        enemy.direction = 1;
+                    } else if (enemy.x + enemy.width >= worldWidth && enemy.velX > 0) {
+                        enemy.x = worldWidth - enemy.width;
+                        enemy.velX = -Math.abs(enemy.velX);
+                        enemy.direction = -1;
                     }
                 }
             } else if (enemy.type === 'bird') {
@@ -1013,34 +1118,26 @@ class Game {
     }
     
     renderUI() {
-        // UIの背景パネル
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(10, 10, 200, 100);
+        // HTMLのHUDを更新
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const coinsEl = document.getElementById('coins');
+        const timerEl = document.getElementById('timer');
         
-        // テキストスタイル
-        this.ctx.fillStyle = 'white';
-        this.ctx.font = 'bold 20px Arial';
-        
-        // スコア
-        this.ctx.fillText(`Score: ${this.gameState.score}`, 20, 35);
-        
-        // ライフ（ハートで表示）
-        this.ctx.fillText('Life: ', 20, 65);
-        for (let i = 0; i < this.gameState.lives; i++) {
-            this.ctx.fillText('❤️', 80 + i * 30, 65);
+        if (scoreEl) scoreEl.textContent = this.gameState.score;
+        if (livesEl) {
+            // ハートで表示
+            livesEl.innerHTML = '❤️'.repeat(this.gameState.lives);
         }
+        if (coinsEl) coinsEl.textContent = this.gameState.coinsCollected;
         
-        // タイマー
-        const remainingTime = Math.max(0, this.gameState.maxTime - this.gameState.time);
-        const minutes = Math.floor(remainingTime / 60);
-        const seconds = Math.floor(remainingTime % 60);
-        this.ctx.fillText(`Time: ${minutes}:${seconds.toString().padStart(2, '0')}`, 20, 95);
-        
-        // コイン収集状況
-        this.ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-        this.ctx.fillRect(CANVAS_WIDTH - 160, 10, 150, 40);
-        this.ctx.fillStyle = 'white';
-        this.ctx.fillText(`Coins: ${this.gameState.coinsCollected}`, CANVAS_WIDTH - 150, 35);
+        // タイマーをHTMLのHUDに更新
+        if (timerEl) {
+            const remainingTime = Math.max(0, this.gameState.maxTime - this.gameState.time);
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = Math.floor(remainingTime % 60);
+            timerEl.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
     }
     
     // SVGファイルの事前読み込み

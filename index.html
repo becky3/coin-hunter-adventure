@@ -22,6 +22,10 @@
                     <span class="label">LIVES</span>
                     <span class="value" id="lives">3</span>
                 </div>
+                <div class="timer-display">
+                    <span class="label">TIME</span>
+                    <span class="value" id="timer">0:00</span>
+                </div>
             </div>
             <div class="hud-right">
                 <div class="coins-display">
@@ -118,7 +122,10 @@
                     </div>
                 </div>
                 <div class="button-section">
-                    <button id="startBtn" class="primary-btn">ゲーム開始</button>
+                    <button id="startBtn" class="primary-btn" disabled>
+                        <span class="btn-text">読み込み中...</span>
+                        <span class="loading-spinner"></span>
+                    </button>
                 </div>
             </div>
         </div>

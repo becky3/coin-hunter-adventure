@@ -387,6 +387,68 @@ class MusicSystem {
         });
     }
     
+    // ゲームオーバー効果音（ジングルの後にBGMを再生）
+    playGameOverSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // まずジングルを再生
+        this.playGameOverJingle();
+        
+        // ジングル終了後にゲームオーバーBGMを開始
+        setTimeout(() => {
+            if (!this.isInitialized || this.isMuted) return;
+            this.playGameOverBGM();
+        }, 1800);
+    }
+    
+    // ゲームオーバーBGM
+    playGameOverBGM() {
+        if (!this.isInitialized || this.isMuted) return;
+        if (this.currentBGM === 'gameOver') return;
+        
+        this.stopBGM();
+        
+        const beatLength = 0.5; // 120 BPM
+        let currentBeat = 0;
+        
+        const playBar = () => {
+            if (!this.isInitialized || this.isMuted || this.currentBGM !== 'gameOver') return;
+            
+            const now = this.audioContext.currentTime;
+            
+            // 悲しげな和音進行
+            const chords = [
+                ['C3', 'Eb3', 'G3'],
+                ['Ab3', 'C4', 'Eb4'],
+                ['F3', 'Ab3', 'C4'],
+                ['G3', 'B3', 'D4']
+            ];
+            
+            const chordIndex = Math.floor(currentBeat / 2) % 4;
+            this.playChord(chords[chordIndex], beatLength * 2, now, 'sine', 0.2);
+            
+            // 低いベースライン
+            const bassNote = chords[chordIndex][0];
+            this.playNote(
+                this.getNoteFrequency(bassNote) / 2,
+                beatLength * 1.8,
+                now,
+                'triangle',
+                0.3
+            );
+            
+            currentBeat += 2;
+        };
+        
+        playBar();
+        
+        this.bgmLoopInterval = setInterval(() => {
+            playBar();
+        }, beatLength * 2 * 1000);
+        
+        this.currentBGM = 'gameOver';
+    }
+    
     // 全てのアクティブノードを強制停止
     stopAllActiveNodes() {
         
@@ -684,6 +746,43 @@ class MusicSystem {
             0.2,
             { attack: 0.01, decayTime: 0.02, decay: 0.5, sustain: 0.3, release: 0.02 }
         );
+    }
+    
+    // リスタート効果音
+    playRestartSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // リセット音（下降→上昇）
+        const now = this.audioContext.currentTime;
+        
+        // 下降音
+        const osc1 = this.audioContext.createOscillator();
+        const gain1 = this.audioContext.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(600, now);
+        osc1.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc1.connect(gain1);
+        gain1.connect(this.masterGain);
+        osc1.start(now);
+        osc1.stop(now + 0.1);
+        
+        // 上昇音
+        setTimeout(() => {
+            if (!this.isInitialized || this.isMuted) return;
+            const osc2 = this.audioContext.createOscillator();
+            const gain2 = this.audioContext.createGain();
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(400, this.audioContext.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.15);
+            gain2.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+            osc2.connect(gain2);
+            gain2.connect(this.masterGain);
+            osc2.start(this.audioContext.currentTime);
+            osc2.stop(this.audioContext.currentTime + 0.15);
+        }, 100);
     }
     
     // スプリングの効果音を再生

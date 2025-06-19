@@ -170,7 +170,17 @@ class SVGGraphics {
     // プレイヤー描画メソッド
     drawPlayer(x, y, width, height, animState = {}) {
         if (this.playerRenderer) {
-            this.playerRenderer.drawPlayer(x, y, width, height, animState);
+            // animStateから必要なパラメータを抽出して渡す
+            const direction = animState.facing === 'left' ? -1 : 1;
+            this.playerRenderer.drawPlayer(
+                x, y, width, height, 
+                animState.health || 3,
+                direction,
+                animState.invulnerable || false,
+                animState.animFrame || 0,
+                animState.velX || 0,
+                animState.velY || 0
+            );
         } else {
             // フォールバック：シンプルな四角形
             this.ctx.fillStyle = '#4299E1';
