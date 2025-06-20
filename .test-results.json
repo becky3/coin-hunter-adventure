@@ -1,7 +1,7 @@
 {
-  "timestamp": "2025-06-16T23:11:38.667Z",
+  "timestamp": "2025-06-19T23:45:06.821Z",
   "method": "curl_validation",
-  "status": "structure_valid",
+  "status": "issues_found",
   "validation_results": {
     "pageLoaded": true,
     "scriptsIncluded": {
@@ -13,9 +13,11 @@
     "elementsPresent": {
       "gameCanvas": true,
       "testResults": true,
-      "corsWarning": true
+      "corsWarning": false
     },
-    "issues": []
+    "issues": [
+      "Missing element: corsWarning"
+    ]
   },
   "manual_test_required": true
 }

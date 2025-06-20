@@ -27,15 +27,26 @@ class MusicSystem {
         if (this.isInitialized) return;
         
         try {
-            this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContextClass) {
+                throw new Error('Web Audio API is not supported in this browser');
+            }
+            
+            this.audioContext = new AudioContextClass();
+            
+            // suspended状態の場合はresume
+            if (this.audioContext.state === 'suspended') {
+                await this.audioContext.resume();
+            }
+            
             this.masterGain = this.audioContext.createGain();
             this.masterGain.connect(this.audioContext.destination);
             this.masterGain.gain.value = this.bgmVolume;
             
             this.isInitialized = true;
-            console.log('音楽システムを初期化しました');
         } catch (error) {
-            console.error('音楽システムの初期化に失敗しました:', error);
+            console.warn('音楽システムの初期化に失敗しました:', error);
+            this.isInitialized = false;
         }
     }
     
@@ -152,15 +163,12 @@ class MusicSystem {
     // タイトル画面のBGM
     playTitleBGM() {
         if (this.currentBGM === 'title') {
-            console.log('タイトルBGMは既に再生中です');
             return;
         }
         
-        console.log('タイトルBGMを開始します（現在のBGM:', this.currentBGM, '）');
         this.stopBGM();
         
         if (!this.isInitialized) {
-            console.log('音楽システムが初期化されていません');
             return;
         }
         
@@ -241,15 +249,12 @@ class MusicSystem {
     // ゲームプレイ中のBGM
     playGameBGM() {
         if (this.currentBGM === 'game') {
-            console.log('ゲームBGMは既に再生中です');
             return;
         }
         
-        console.log('ゲームBGMを開始します（現在のBGM:', this.currentBGM, '）');
         this.stopBGM();
         
         if (!this.isInitialized) {
-            console.log('音楽システムが初期化されていません');
             return;
         }
         
@@ -382,9 +387,70 @@ class MusicSystem {
         });
     }
     
+    // ゲームオーバー効果音（ジングルの後にBGMを再生）
+    playGameOverSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // まずジングルを再生
+        this.playGameOverJingle();
+        
+        // ジングル終了後にゲームオーバーBGMを開始
+        setTimeout(() => {
+            if (!this.isInitialized || this.isMuted) return;
+            this.playGameOverBGM();
+        }, 1800);
+    }
+    
+    // ゲームオーバーBGM
+    playGameOverBGM() {
+        if (!this.isInitialized || this.isMuted) return;
+        if (this.currentBGM === 'gameOver') return;
+        
+        this.stopBGM();
+        
+        const beatLength = 0.5; // 120 BPM
+        let currentBeat = 0;
+        
+        const playBar = () => {
+            if (!this.isInitialized || this.isMuted || this.currentBGM !== 'gameOver') return;
+            
+            const now = this.audioContext.currentTime;
+            
+            // 悲しげな和音進行
+            const chords = [
+                ['C3', 'Eb3', 'G3'],
+                ['Ab3', 'C4', 'Eb4'],
+                ['F3', 'Ab3', 'C4'],
+                ['G3', 'B3', 'D4']
+            ];
+            
+            const chordIndex = Math.floor(currentBeat / 2) % 4;
+            this.playChord(chords[chordIndex], beatLength * 2, now, 'sine', 0.2);
+            
+            // 低いベースライン
+            const bassNote = chords[chordIndex][0];
+            this.playNote(
+                this.getNoteFrequency(bassNote) / 2,
+                beatLength * 1.8,
+                now,
+                'triangle',
+                0.3
+            );
+            
+            currentBeat += 2;
+        };
+        
+        playBar();
+        
+        this.bgmLoopInterval = setInterval(() => {
+            playBar();
+        }, beatLength * 2 * 1000);
+        
+        this.currentBGM = 'gameOver';
+    }
+    
     // 全てのアクティブノードを強制停止
     stopAllActiveNodes() {
-        console.log('アクティブノードを停止します。ノード数:', this.activeNodes.length);
         
         this.activeNodes.forEach(({ oscillator, gainNode }) => {
             try {
@@ -398,7 +464,6 @@ class MusicSystem {
                     oscillator.stop(this.audioContext.currentTime);
                 }
             } catch (e) {
-                console.log('ノード停止エラー:', e);
             }
         });
         
@@ -408,11 +473,9 @@ class MusicSystem {
     
     // BGMを停止
     stopBGM() {
-        console.log('BGMを停止します。現在のBGM:', this.currentBGM);
         
         // 既に停止済みの場合はスキップ
         if (!this.currentBGM && !this.bgmLoopInterval) {
-            console.log('BGMは既に停止済みです');
             return;
         }
         
@@ -428,7 +491,6 @@ class MusicSystem {
         // 現在のBGMを無効化
         this.currentBGM = null;
         
-        console.log('BGM停止完了');
     }
     
     // 音量を設定
@@ -686,6 +748,77 @@ class MusicSystem {
         );
     }
     
+    // リスタート効果音
+    playRestartSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // リセット音（下降→上昇）
+        const now = this.audioContext.currentTime;
+        
+        // 下降音
+        const osc1 = this.audioContext.createOscillator();
+        const gain1 = this.audioContext.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(600, now);
+        osc1.frequency.exponentialRampToValueAtTime(300, now + 0.1);
+        gain1.gain.setValueAtTime(0.3, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc1.connect(gain1);
+        gain1.connect(this.masterGain);
+        osc1.start(now);
+        osc1.stop(now + 0.1);
+        
+        // 上昇音
+        setTimeout(() => {
+            if (!this.isInitialized || this.isMuted) return;
+            const osc2 = this.audioContext.createOscillator();
+            const gain2 = this.audioContext.createGain();
+            osc2.type = 'square';
+            osc2.frequency.setValueAtTime(400, this.audioContext.currentTime);
+            osc2.frequency.exponentialRampToValueAtTime(800, this.audioContext.currentTime + 0.15);
+            gain2.gain.setValueAtTime(0.25, this.audioContext.currentTime);
+            gain2.gain.exponentialRampToValueAtTime(0.01, this.audioContext.currentTime + 0.15);
+            osc2.connect(gain2);
+            gain2.connect(this.masterGain);
+            osc2.start(this.audioContext.currentTime);
+            osc2.stop(this.audioContext.currentTime + 0.15);
+        }, 100);
+    }
+    
+    // スプリングの効果音を再生
+    playSpringSound() {
+        if (!this.isInitialized || this.isMuted) return;
+        
+        // スプリングの弾む音（ボヨヨーン）
+        const time = this.audioContext.currentTime;
+        
+        // 低音から高音へのスイープ
+        for (let i = 0; i < 3; i++) {
+            const startFreq = 100 + i * 50;
+            const endFreq = 400 + i * 100;
+            const delay = i * 0.05;
+            
+            // 周波数スイープ
+            const osc = this.audioContext.createOscillator();
+            const gainNode = this.audioContext.createGain();
+            
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(startFreq, time + delay);
+            osc.frequency.exponentialRampToValueAtTime(endFreq, time + delay + 0.15);
+            
+            gainNode.gain.setValueAtTime(0.3 - i * 0.1, time + delay);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, time + delay + 0.2);
+            
+            osc.connect(gainNode);
+            gainNode.connect(this.masterGain);
+            
+            osc.start(time + delay);
+            osc.stop(time + delay + 0.2);
+            
+            this.activeNodes.push({ osc, gainNode });
+        }
+    }
+    
     // 効果音の音量を設定
     setSfxVolume(volume) {
         this.sfxVolume = Math.max(0, Math.min(1, volume));
@@ -694,6 +827,21 @@ class MusicSystem {
     // 効果音の音量を取得
     getSfxVolume() {
         return this.sfxVolume;
+    }
+    
+    // クリーンアップ
+    destroy() {
+        try {
+            this.stopAllActiveNodes();
+            if (this.audioContext && this.audioContext.state !== 'closed') {
+                this.audioContext.close().catch(error => {
+                    console.error('AudioContext closing error:', error);
+                });
+            }
+            this.isInitialized = false;
+        } catch (error) {
+            console.error('音楽システムのクリーンアップエラー:', error);
+        }
     }
 }
 

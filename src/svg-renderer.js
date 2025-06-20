@@ -67,7 +67,6 @@ class SVGRenderer {
                 return svgText;
             })
             .catch(error => {
-                console.error(error);
                 this.loadPromises.delete(filename);
                 return null;
             });
@@ -96,7 +95,6 @@ class SVGRenderer {
     drawEnemy(type, x, y, width, height, animTimer, direction = 1) {
         const filename = this.svgFiles.enemies[type];
         if (!filename) {
-            console.warn(`未対応の敵タイプ: ${type}`);
             return;
         }
         
@@ -156,7 +154,6 @@ class SVGRenderer {
             
             // 非同期で読み込み開始
             this.loadSVG(filename).catch(error => {
-                console.warn(`SVG読み込みエラー: ${filename}`, error);
             });
         }
     }
@@ -225,7 +222,6 @@ class SVGRenderer {
         
         img.onerror = () => {
             URL.revokeObjectURL(url);
-            console.error('SVG画像の作成に失敗');
         };
         
         img.src = url;
@@ -354,15 +350,12 @@ class SVGRenderer {
             ...Object.values(this.svgFiles.objects)
         ];
         
-        console.log('全SVGファイルを事前読み込み中...');
         
         const loadPromises = allFiles.map(filename => this.loadSVG(filename));
         
         try {
             await Promise.all(loadPromises);
-            console.log('全SVGファイルの事前読み込み完了');
         } catch (error) {
-            console.error('SVGファイルの事前読み込みでエラー:', error);
         }
     }
 }

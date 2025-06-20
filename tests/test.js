@@ -193,15 +193,47 @@ systemTests.test('ゲームの初期化', () => {
 
 // プレイヤーのテスト
 systemTests.test('プレイヤーの生成と初期状態', () => {
-    const player = new Player(100, 300);
-    assertEquals(player.x, 100, 'プレイヤーX座標が正しくありません');
-    assertEquals(player.y, 300, 'プレイヤーY座標が正しくありません');
+    const player = new Player();
+    assertEquals(player.x, PLAYER_CONFIG.spawnX, 'プレイヤーX座標が正しくありません');
+    assertEquals(player.y, PLAYER_CONFIG.spawnY, 'プレイヤーY座標が正しくありません');
     assertEquals(player.width, PLAYER_CONFIG.width, 'プレイヤー幅が正しくありません');
     assertEquals(player.height, PLAYER_CONFIG.height, 'プレイヤー高さが正しくありません');
     assertEquals(player.velX, 0, '初期X速度が0ではありません');
     assertEquals(player.velY, 0, '初期Y速度が0ではありません');
     assertEquals(player.health, PLAYER_CONFIG.maxHealth, '初期体力が正しくありません');
     assert(!player.isJumping, 'プレイヤーが初期状態でジャンプ中です');
+});
+
+// ジャンプ機能の詳細テスト
+systemTests.test('ジャンプ機能の動作確認', () => {
+    const player = new Player();
+    
+    // 地面にいる状態を設定
+    player.onGround = true;
+    player.isJumping = false;
+    player.jumpButtonPressed = false;
+    player.jumpTime = 0;
+    player.velY = 0;
+    const initialY = player.y;
+    
+    // ジャンプ入力を実行（実際のゲームループと同じ順序でupdateを呼ぶ）
+    const jumpInput = { jump: true, left: false, right: false };
+    const beforeUpdateVelY = player.velY;
+    player.update(jumpInput);
+    
+    // ジャンプ後の状態を確認
+    // updateメソッドでは、handleJump後に重力が適用され、さらに可変ジャンプ処理が行われる
+    // 期待値: -jumpPower + GRAVITY - (GRAVITY * 1.8) = -12 + 0.65 - 1.17 = -12.52
+    const expectedVelY = -PLAYER_CONFIG.jumpPower + GRAVITY - (GRAVITY * 1.8);
+    const tolerance = 0.01; // 浮動小数点の誤差許容範囲
+    assert(Math.abs(player.velY - expectedVelY) < tolerance, 
+        `ジャンプ時の速度が正しくありません。期待値: ${expectedVelY.toFixed(2)}, 実際: ${player.velY.toFixed(2)}`);
+    assert(!player.onGround, 'ジャンプ後もonGroundがtrueのままです');
+    assert(player.isJumping, 'ジャンプ後にisJumpingがtrueになっていません');
+    assert(player.jumpButtonPressed, 'ジャンプ後にjumpButtonPressedがtrueになっていません');
+    assert(player.canVariableJump, 'ジャンプ後にcanVariableJumpがtrueになっていません');
+    assertEquals(player.jumpTime, 1, 'ジャンプ時間が正しくカウントされていません');
+    assertEquals(player.jumpStartY, initialY, 'ジャンプ開始Y座標が記録されていません');
 });
 
 // 入力処理のテスト
@@ -211,19 +243,19 @@ systemTests.test('入力マネージャーの動作', () => {
     // 初期状態
     assert(typeof inputManager.keys === 'object', 'keysオブジェクトが存在しません');
     
-    // getInputStateメソッドのテスト（直接keysを設定）
+    // getInputメソッドのテスト（直接keysを設定）
     inputManager.keys.ArrowLeft = true;
     inputManager.keys.ArrowRight = false;
-    inputManager.keys.Space = true;
+    inputManager.keys.Space = true;  // 'Space'キーコードに修正
     
-    const state = inputManager.getInputState();
-    assert(state.left === true, 'getInputStateでleftが検出されません');
-    assert(!state.right, 'getInputStateでrightが誤検出されています');
-    assert(state.jump === true, 'getInputStateでjumpが検出されません');
+    const state = inputManager.getInput();
+    assert(state.left === true, 'getInputでleftが検出されません');
+    assert(!state.right, 'getInputでrightが誤検出されています');
+    assert(state.jump === true, 'getInputでjumpが検出されません');
     
     // キーの状態をリセット
     inputManager.keys = {};
-    const state2 = inputManager.getInputState();
+    const state2 = inputManager.getInput();
     assert(!state2.left, 'リセット後もleftが検出されています');
     assert(!state2.right, 'リセット後もrightが検出されています');
     assert(!state2.jump, 'リセット後もjumpが検出されています');
@@ -248,41 +280,47 @@ systemTests.test('AABB衝突判定', () => {
 
 // プレイヤー移動のテスト
 systemTests.test('プレイヤーの移動処理', () => {
-    const player = new Player(100, 300);
+    const player = new Player();
     
     // 右移動
-    player.handleInput({ right: true, left: false, jump: false });
+    player.update({ right: true, left: false, jump: false });
     assertEquals(player.velX, PLAYER_CONFIG.speed, '右移動速度が正しくありません');
-    assertEquals(player.direction, 1, '右向きの方向が正しくありません');
+    assertEquals(player.facing, 'right', '右向きの方向が正しくありません');
     
     // 左移動
-    player.handleInput({ right: false, left: true, jump: false });
+    player.update({ right: false, left: true, jump: false });
     assertEquals(player.velX, -PLAYER_CONFIG.speed, '左移動速度が正しくありません');
-    assertEquals(player.direction, -1, '左向きの方向が正しくありません');
+    assertEquals(player.facing, 'left', '左向きの方向が正しくありません');
     
     // 停止
-    player.handleInput({ right: false, left: false, jump: false });
-    assertEquals(player.velX, 0, '停止時の速度が0ではありません');
+    player.update({ right: false, left: false, jump: false });
+    assert(Math.abs(player.velX) < PLAYER_CONFIG.speed, '停止時の速度が減速されていません');
     
     // ジャンプ（地面にいる状態で）
     player.onGround = true;
     player.isJumping = false;
-    player.jumpButtonHeldTime = 0;  // ジャンプボタン保持時間をリセット
-    player.handleInput({ right: false, left: false, jump: true });
-    assert(player.velY < 0, 'ジャンプ時の垂直速度が負でありません');
+    player.jumpButtonPressed = false;
+    player.jumpTime = 0;
+    player.jumpButtonHoldTime = 0;
+    player.velY = 0;  // 初期速度を0に設定
+    player.update({ right: false, left: false, jump: true });
+    // updateメソッドでは、handleJump後に重力が適用され、さらに可変ジャンプ処理が行われる
+    const expectedVelY = -PLAYER_CONFIG.jumpPower + GRAVITY - (GRAVITY * 1.8);
+    const tolerance = 0.01;
+    assert(Math.abs(player.velY - expectedVelY) < tolerance, 
+        `ジャンプ時の垂直速度が正しくありません。期待値: ${expectedVelY.toFixed(2)}, 実際: ${player.velY.toFixed(2)}`);
     assert(!player.onGround, 'ジャンプ後も地面にいる状態です');
     assert(player.isJumping, 'ジャンプ中フラグが設定されていません');
 });
 
 // 重力のテスト
 systemTests.test('重力の適用', () => {
-    const player = new Player(100, 100);
+    const player = new Player();
     const initialY = player.y;
     const initialVelY = player.velY;
     
-    // 重力を適用
-    player.velY += GRAVITY;
-    player.y += player.velY;
+    // 重力を適用（updateメソッドが重力を適用する）
+    player.update({ left: false, right: false, jump: false });
     
     assert(player.velY > initialVelY, '重力により速度が増加していません');
     assert(player.y > initialY, '重力によりY座標が増加していません');
@@ -307,11 +345,11 @@ systemTests.test('ゲーム状態の遷移', () => {
     gameState.setState('levelComplete');
     assertEquals(gameState.state, 'levelComplete', 'クリア状態が正しくありません');
     
-    // resetGameDataメソッドのテスト
+    // resetメソッドのテスト
     gameState.score = 100;
-    gameState.resetGameData();
-    assertEquals(gameState.score, 0, 'resetGameDataでスコアがリセットされていません');
-    assertEquals(gameState.lives, 3, 'resetGameDataでライフがリセットされていません');
+    gameState.reset();
+    assertEquals(gameState.score, 0, 'resetでスコアがリセットされていません');
+    assertEquals(gameState.lives, 3, 'resetでライフがリセットされていません');
 });
 
 // === SVGレンダリングテスト ===
@@ -453,11 +491,11 @@ svgRenderingTests.test('SVG描画メソッドの動作確認', () => {
     if (window.location.protocol !== 'file:') {
         try {
             // SVGファイルが読み込まれている場合のみテスト
-            svgGraphics.drawSlime(0, 0, 40, 40, 0);
-            svgGraphics.drawBird(0, 0, 40, 40, 0);
-            svgGraphics.drawCoin(0, 0, 30, 30, 0);
-            svgGraphics.drawFlag(0, 0, 60, 80);
-            svgGraphics.drawSpring(0, 0, 40, 40, 0);
+            svgGraphics.drawEnemy('slime', 0, 0, 40, 40, 0);
+            svgGraphics.drawEnemy('bird', 0, 0, 40, 40, 0);
+            svgGraphics.drawItem('coin', 0, 0, 30, 30, { rotation: 0 });
+            svgGraphics.drawItem('flag', 0, 0, 60, 80);
+            svgGraphics.drawItem('spring', 0, 0, 40, 40, { animTimer: 0 });
             svgGraphics.drawPlayer(0, 0, 32, 48, 2, 1, false, 0, 0, 0);
         } catch (error) {
             // SVGファイル未読み込みの場合は期待されるエラー

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>自動ゲームテスト - Coin Hunter Adventure</title>
+    <style>
+        body {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #4fc3f7;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .test-controls {
+            background: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        button {
+            background: #4fc3f7;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #29b6f6;
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
+        
+        .test-output {
+            background: #1e1e1e;
+            border: 1px solid #3e3e3e;
+            border-radius: 8px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        
+        .test-summary {
+            background: #2d2d2d;
+            border: 1px solid #3e3e3e;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .success { color: #4caf50; }
+        .error { color: #f44336; }
+        .warning { color: #ff9800; }
+        .info { color: #2196f3; }
+        
+        .game-canvas {
+            display: none;
+            margin: 20px auto;
+            border: 2px solid #4fc3f7;
+            border-radius: 8px;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-running { background: #ff9800; }
+        .status-success { background: #4caf50; }
+        .status-failed { background: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 自動ゲームテストシステム</h1>
+        
+        <div class="test-controls">
+            <h2>テストコントロール</h2>
+            <button id="runAllTests">全テスト実行</button>
+            <button id="runStateTests">状態管理テストのみ</button>
+            <button id="runMovementTests">動作テストのみ</button>
+            <button id="clearOutput">出力クリア</button>
+            <button id="exportResults">結果エクスポート</button>
+            
+            <div style="margin-top: 20px;">
+                <label>
+                    <input type="checkbox" id="showGameCanvas"> 
+                    ゲーム画面を表示（デバッグ用）
+                </label>
+            </div>
+        </div>
+        
+        <canvas id="gameCanvas" class="game-canvas" width="800" height="400"></canvas>
+        
+        <div class="test-output" id="testOutput">
+            テスト出力がここに表示されます...
+        </div>
+        
+        <div class="test-summary" id="testSummary">
+            <h2>テスト結果サマリー</h2>
+            <div id="summaryContent"></div>
+        </div>
+    </div>
+
+    <!-- ゲームスクリプトの読み込み -->
+    <script src="../src/config.js"></script>
+    <script src="../src/levels.js"></script>
+    <script src="../src/svg-renderer.js"></script>
+    <script src="../src/svg-player-renderer.js"></script>
+    <script src="../src/svg-enemy-renderer.js"></script>
+    <script src="../src/svg-item-renderer.js"></script>
+    <script src="../src/player-graphics.js"></script>
+    <script src="../src/music.js"></script>
+    <script src="../src/game.js"></script>
+    
+    <!-- テストシステムの読み込み -->
+    <script src="../src/game-state-manager.js"></script>
+    <script src="../src/automated-test-player.js"></script>
+    <script src="./automated-game-tests.js"></script>
+    
+    <script>
+        // グローバル変数
+        let testRunner = null;
+        let gameInstance = null;
+        let outputElement = document.getElementById('testOutput');
+        let summaryElement = document.getElementById('testSummary');
+        let isRunning = false;
+
+        // コンソール出力をキャプチャ
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        function captureConsole() {
+            console.log = function(...args) {
+                originalLog.apply(console, args);
+                appendOutput(args.join(' '), 'info');
+            };
+            
+            console.error = function(...args) {
+                originalError.apply(console, args);
+                appendOutput(args.join(' '), 'error');
+            };
+        }
+        
+        function restoreConsole() {
+            console.log = originalLog;
+            console.error = originalError;
+        }
+
+        // 出力追加
+        function appendOutput(text, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const line = `[${timestamp}] ${text}\n`;
+            
+            if (type === 'error') {
+                outputElement.innerHTML += `<span class="error">${line}</span>`;
+            } else if (type === 'success') {
+                outputElement.innerHTML += `<span class="success">${line}</span>`;
+            } else {
+                outputElement.innerHTML += line;
+            }
+            
+            outputElement.scrollTop = outputElement.scrollHeight;
+        }
+
+        // ゲームの初期化
+        async function initializeGame() {
+            const canvas = document.getElementById('gameCanvas');
+            const showCanvas = document.getElementById('showGameCanvas').checked;
+            
+            if (showCanvas) {
+                canvas.style.display = 'block';
+            } else {
+                canvas.style.display = 'none';
+            }
+
+            // ゲームインスタンスが既に存在する場合は再利用
+            if (!gameInstance) {
+                // 簡易的なゲームモックを作成
+                gameInstance = {
+                    canvas: canvas,
+                    ctx: canvas.getContext('2d'),
+                    player: {
+                        x: 50,
+                        y: 350,
+                        vx: 0,
+                        vy: 0,
+                        grounded: true,
+                        lives: 3,
+                        facingRight: true,
+                        animation: 'idle'
+                    },
+                    coins: 0,
+                    enemies: [],
+                    levelCoins: [
+                        { x: 200, y: 300, collected: false },
+                        { x: 400, y: 250, collected: false },
+                        { x: 600, y: 300, collected: false }
+                    ],
+                    springs: [],
+                    keys: {
+                        left: false,
+                        right: false,
+                        up: false
+                    },
+                    state: 'playing',
+                    currentLevel: 1,
+                    frameCount: 0,
+                    levelWidth: 3000,
+                    cameraX: 0,
+                    cameraY: 0,
+                    
+                    // メソッドのモック
+                    update: function() {
+                        // 簡易的な物理更新
+                        if (this.keys.right) this.player.vx = Math.min(this.player.vx + 0.5, 5);
+                        else if (this.keys.left) this.player.vx = Math.max(this.player.vx - 0.5, -5);
+                        else this.player.vx *= 0.8;
+                        
+                        if (this.keys.up && this.player.grounded) {
+                            this.player.vy = -10;
+                            this.player.grounded = false;
+                        }
+                        
+                        if (!this.player.grounded) {
+                            this.player.vy += 0.5;
+                        }
+                        
+                        this.player.x += this.player.vx;
+                        this.player.y += this.player.vy;
+                        
+                        // 地面との衝突
+                        if (this.player.y > 350) {
+                            this.player.y = 350;
+                            this.player.vy = 0;
+                            this.player.grounded = true;
+                        }
+                        
+                        this.frameCount++;
+                    },
+                    
+                    draw: function() {
+                        // 描画処理（必要に応じて実装）
+                    }
+                };
+            }
+            
+            window.game = gameInstance;
+            return gameInstance;
+        }
+
+        // 全テスト実行
+        async function runAllTests() {
+            if (isRunning) return;
+            
+            isRunning = true;
+            outputElement.innerHTML = '';
+            summaryElement.style.display = 'none';
+            
+            appendOutput('🚀 自動ゲームテストを開始します...', 'info');
+            
+            captureConsole();
+            
+            try {
+                await initializeGame();
+                
+                testRunner = new AutomatedGameTests();
+                testRunner.game = gameInstance;
+                
+                const results = await testRunner.runAllTests();
+                
+                displaySummary(results);
+                
+            } catch (error) {
+                appendOutput(`❌ エラー: ${error.message}`, 'error');
+            } finally {
+                restoreConsole();
+                isRunning = false;
+            }
+        }
+
+        // サマリー表示
+        function displaySummary(results) {
+            const summaryContent = document.getElementById('summaryContent');
+            const { summary, details } = results;
+            
+            let html = `
+                <div>
+                    <span class="status-indicator ${summary.failed > 0 ? 'status-failed' : 'status-success'}"></span>
+                    <strong>テスト結果:</strong> ${summary.passed}/${summary.total} 成功
+                </div>
+                <div>成功率: ${summary.successRate}</div>
+                <div>実行時間: ${summary.duration}</div>
+                <hr>
+                <h3>詳細結果:</h3>
+            `;
+            
+            details.forEach(test => {
+                const icon = test.passed ? '✅' : '❌';
+                const className = test.passed ? 'success' : 'error';
+                html += `<div class="${className}">${icon} ${test.name} (${test.duration}ms)</div>`;
+                if (test.error) {
+                    html += `<div style="margin-left: 20px; color: #ff9800;">→ ${test.error}</div>`;
+                }
+            });
+            
+            summaryContent.innerHTML = html;
+            summaryElement.style.display = 'block';
+        }
+
+        // 結果エクスポート
+        function exportResults() {
+            if (!testRunner || !testRunner.testResults.length) {
+                alert('エクスポートするテスト結果がありません');
+                return;
+            }
+            
+            const results = {
+                summary: testRunner.generateReport().summary,
+                details: testRunner.testResults,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `automated-test-results-${Date.now()}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            appendOutput('💾 テスト結果をエクスポートしました', 'success');
+        }
+
+        // イベントリスナー設定
+        document.getElementById('runAllTests').addEventListener('click', runAllTests);
+        document.getElementById('clearOutput').addEventListener('click', () => {
+            outputElement.innerHTML = '';
+            summaryElement.style.display = 'none';
+        });
+        document.getElementById('exportResults').addEventListener('click', exportResults);
+        
+        document.getElementById('showGameCanvas').addEventListener('change', (e) => {
+            const canvas = document.getElementById('gameCanvas');
+            canvas.style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // 初期メッセージ
+        appendOutput('✨ 自動テストシステム準備完了', 'success');
+        appendOutput('「全テスト実行」ボタンをクリックしてテストを開始してください', 'info');
+    </script>
+</body>
+</html>

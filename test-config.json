@@ -1,0 +1,94 @@
+{
+  "automated-tests": {
+    "enabled": true,
+    "categories": {
+      "state-management": {
+        "enabled": true,
+        "priority": "high",
+        "timeout": 5000
+      },
+      "player-movement": {
+        "enabled": true,
+        "priority": "high",
+        "timeout": 10000
+      },
+      "game-mechanics": {
+        "enabled": true,
+        "priority": "medium",
+        "timeout": 15000
+      },
+      "physics": {
+        "enabled": true,
+        "priority": "medium",
+        "timeout": 8000
+      },
+      "collision": {
+        "enabled": true,
+        "priority": "high",
+        "timeout": 8000
+      }
+    },
+    "reporting": {
+      "formats": ["console", "json", "markdown"],
+      "saveResults": true,
+      "outputDir": "./test-results",
+      "includeStatistics": true
+    },
+    "environment": {
+      "headless": true,
+      "browserTimeout": 30000,
+      "retryFailedTests": 1,
+      "parallelExecution": false
+    },
+    "coverage": {
+      "enabled": false,
+      "minCoverage": {
+        "statements": 70,
+        "branches": 60,
+        "functions": 70,
+        "lines": 70
+      }
+    }
+  },
+  "manual-verification": {
+    "required": [
+      "visual-rendering",
+      "audio-playback",
+      "user-experience",
+      "performance-smoothness"
+    ],
+    "optional": [
+      "cross-browser-compatibility",
+      "mobile-responsiveness"
+    ]
+  },
+  "test-scenarios": {
+    "basic": {
+      "name": "基本動作確認",
+      "steps": [
+        "ゲーム起動",
+        "プレイヤー移動（左右）",
+        "ジャンプ動作",
+        "コイン収集"
+      ]
+    },
+    "complete-level": {
+      "name": "レベルクリア",
+      "steps": [
+        "ゲーム開始",
+        "全コイン収集",
+        "敵回避",
+        "ゴール到達"
+      ]
+    },
+    "stress-test": {
+      "name": "ストレステスト",
+      "steps": [
+        "長時間プレイ",
+        "多数の敵同時処理",
+        "高速移動",
+        "連続ジャンプ"
+      ]
+    }
+  }
+}

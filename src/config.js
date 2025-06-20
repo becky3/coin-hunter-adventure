@@ -70,5 +70,4 @@ var COLORS = {
 };
 
 if (typeof console !== 'undefined') {
-    console.log('config.js loaded');
 }
