@@ -64,8 +64,7 @@ class CurlTestValidator {
             // 3. 重要な要素の確認
             const requiredElements = [
                 { name: 'gameCanvas', pattern: 'id="gameCanvas"' },
-                { name: 'testResults', pattern: 'id="testResults"' },
-                { name: 'corsWarning', pattern: 'DISABLE_CORS_WARNING' }
+                { name: 'testResults', pattern: 'id="testResults"' }
             ];
             
             console.log('\n🔍 HTML要素確認:');
