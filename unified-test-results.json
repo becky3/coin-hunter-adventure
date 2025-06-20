@@ -1,0 +1,73 @@
+{
+  "timestamp": "2025-06-20T23:40:07.843Z",
+  "environment": {
+    "node": "v22.16.0",
+    "platform": "linux",
+    "cwd": "/mnt/d/claude/testAction"
+  },
+  "tests": {
+    "structure": {
+      "passed": 9,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "ファイル存在確認: index.html",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "ファイル存在確認: src/game.js",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "ファイル存在確認: src/config.js",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "ファイル存在確認: src/player.js",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "ファイル存在確認: src/music.js",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "ファイル存在確認: levels/stage1.json",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "ファイル存在確認: assets/player-idle.svg",
+          "passed": true,
+          "message": "✅ 存在"
+        },
+        {
+          "name": "JSON妥当性: levels/stage1.json",
+          "passed": true,
+          "message": "✅ 有効なJSON"
+        },
+        {
+          "name": "JSON妥当性: levels/stages.json",
+          "passed": true,
+          "message": "✅ 有効なJSON"
+        }
+      ]
+    },
+    "unit": null,
+    "integration": null,
+    "automated": null,
+    "performance": null
+  },
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "duration": 12,
+    "successRate": "100.0"
+  }
+}
