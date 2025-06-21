@@ -200,9 +200,11 @@ class ErrorMonitor {
             const match = line.match(/at .* \((.*:\d+:\d+)\)/);
             if (match) {
                 const location = match[1];
+                // OSに依存しないパス比較のため、パス区切り文字を正規化
+                const normalizedLocation = location.replace(/\\/g, '/');
                 // node_modulesやErrorMonitor自身を除外
-                if (!location.includes('node_modules') && 
-                    !location.includes('error-monitor.js')) {
+                if (!normalizedLocation.includes('node_modules') && 
+                    !normalizedLocation.includes('error-monitor.js')) {
                     return location;
                 }
             }
