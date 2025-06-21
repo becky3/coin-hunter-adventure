@@ -1,0 +1,51 @@
+{
+  "name": "gameOver",
+  "timestamp": "2025-06-21T11:08:30.100Z",
+  "operations": [
+    {
+      "method": "fillStyle",
+      "value": "#2c3e50"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        0,
+        0,
+        1024,
+        576
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#e74c3c"
+    },
+    {
+      "method": "font",
+      "value": "64px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "GAME OVER",
+        350,
+        250
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#ffffff"
+    },
+    {
+      "method": "font",
+      "value": "24px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Press R to Restart",
+        380,
+        350
+      ]
+    }
+  ]
+}

@@ -129,10 +129,10 @@ class CanvasSnapshotTest {
     }
 
     /**
-     * スナップショットを保存
+     * スナップショットを保存（ベースラインが存在しない場合のみ）
      */
     saveSnapshots(screens) {
-        const snapshotDir = path.join(__dirname, '..', 'tests', 'snapshots');
+        const snapshotDir = path.join(__dirname, '..', '..', 'tests', 'snapshots');
         
         if (!fs.existsSync(snapshotDir)) {
             fs.mkdirSync(snapshotDir, { recursive: true });
@@ -140,19 +140,34 @@ class CanvasSnapshotTest {
 
         Object.entries(screens).forEach(([name, operations]) => {
             const filePath = path.join(snapshotDir, `${name}-baseline.json`);
-            const snapshot = {
-                name,
-                timestamp: new Date().toISOString(),
-                operations
-            };
             
-            fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2));
-            
-            this.addTestResult(
-                `${name}画面のスナップショット保存`,
-                true,
-                `${operations.length}個の描画操作を記録`
-            );
+            // ベースラインが存在しない場合のみ保存
+            if (!fs.existsSync(filePath)) {
+                const snapshot = {
+                    name,
+                    operations
+                };
+                
+                fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2));
+                
+                // メタデータファイルに作成日時を記録
+                const metadataPath = path.join(snapshotDir, 'metadata.json');
+                let metadata = {};
+                if (fs.existsSync(metadataPath)) {
+                    metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+                }
+                metadata[`${name}-baseline`] = {
+                    created: new Date().toISOString(),
+                    operationCount: operations.length
+                };
+                fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+                
+                this.addTestResult(
+                    `${name}画面のスナップショット保存`,
+                    true,
+                    `${operations.length}個の描画操作を記録（新規作成）`
+                );
+            }
         });
     }
 
@@ -303,8 +318,8 @@ class CanvasSnapshotTest {
             this.visualizeOperations(ops, `${name}画面`);
         });
         
-        // 3. スナップショットの保存
-        console.log('\n💾 スナップショットを保存中...');
+        // 3. ベースラインが存在しない場合のみ保存
+        console.log('\n💾 ベースラインをチェック中...');
         this.saveSnapshots(screens);
         
         // 4. ベースラインとの比較
@@ -331,7 +346,7 @@ class CanvasSnapshotTest {
         console.log('='.repeat(60));
         
         // 結果をファイルに保存
-        const resultPath = path.join(__dirname, '..', 'test-results', 'canvas-snapshot-results.json');
+        const resultPath = path.join(__dirname, '..', '..', 'test-results', 'canvas-snapshot-results.json');
         fs.writeFileSync(resultPath, JSON.stringify(this.results, null, 2));
         console.log(`\n💾 詳細な結果を保存しました: ${resultPath}`);
     }

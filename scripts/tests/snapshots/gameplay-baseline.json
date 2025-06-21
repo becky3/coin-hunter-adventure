@@ -1,0 +1,126 @@
+{
+  "name": "gameplay",
+  "timestamp": "2025-06-21T11:08:30.097Z",
+  "operations": [
+    {
+      "method": "fillStyle",
+      "value": "#87ceeb"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        0,
+        0,
+        1024,
+        576
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#8b4513"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        0,
+        476,
+        1024,
+        100
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#654321"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        200,
+        350,
+        150,
+        20
+      ]
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        400,
+        280,
+        150,
+        20
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#ff6b6b"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        100,
+        416,
+        40,
+        60
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#ffd93d"
+    },
+    {
+      "method": "beginPath",
+      "args": []
+    },
+    {
+      "method": "arc",
+      "args": [
+        250,
+        320,
+        15,
+        0,
+        6.283185307179586
+      ]
+    },
+    {
+      "method": "fill",
+      "args": []
+    },
+    {
+      "method": "fillStyle",
+      "value": "#4ecdc4"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        500,
+        436,
+        50,
+        40
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#000000"
+    },
+    {
+      "method": "font",
+      "value": "20px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Score: 0",
+        20,
+        30
+      ]
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Lives: 3",
+        20,
+        60
+      ]
+    }
+  ]
+}

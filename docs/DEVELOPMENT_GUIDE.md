@@ -41,6 +41,19 @@ nohup python3 -m http.server 8080 > server.log 2>&1 &
 - ブラウザで動作確認（自動リロード）
 - テストを実行して確認
 
+#### デバッグツール
+`debug/`ディレクトリには、開発・デバッグ用のHTMLファイルが用意されています：
+- **check-game.html** - ゲームの基本動作確認用
+- **debug-game.html** - デバッグ情報表示付きゲーム画面
+- **error-check.html** - エラー検出とログ表示
+- **test-game-init.html** - ゲーム初期化テスト
+
+使用例：
+```bash
+# デバッグ画面にアクセス
+http://localhost:8080/debug/debug-game.html
+```
+
 ### 3. テスト実行
 
 #### 統合テストランナー

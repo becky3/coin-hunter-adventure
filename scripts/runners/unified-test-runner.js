@@ -8,8 +8,8 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
-const CoverageAnalyzer = require('./coverage-analyzer');
-const ErrorMonitor = require('./error-monitor');
+const CoverageAnalyzer = require('../validators/coverage-analyzer');
+const ErrorMonitor = require('../validators/error-monitor');
 
 class UnifiedTestRunner {
     constructor() {
@@ -252,14 +252,14 @@ class UnifiedTestRunner {
      */
     async runAutomatedGameTests() {
         // run-automated-testsを実行
-        return this.runScript('scripts/run-automated-tests.js', '自動ゲームテスト');
+        return this.runScript('scripts/runners/run-automated-tests.js', '自動ゲームテスト');
     }
 
     /**
      * レベル検証テストの実行
      */
     async runLevelValidationTests() {
-        const LevelValidationTest = require('./level-validation-test.js');
+        const LevelValidationTest = require('../validators/level-validation-test.js');
         const validator = new LevelValidationTest();
         
         try {
@@ -288,7 +288,7 @@ class UnifiedTestRunner {
      * ビジュアルテストの実行
      */
     async runVisualTests() {
-        const CanvasSnapshotTest = require('./canvas-snapshot-test.js');
+        const CanvasSnapshotTest = require('../validators/canvas-snapshot-test.js');
         const tester = new CanvasSnapshotTest();
         
         try {
