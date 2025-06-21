@@ -150,6 +150,18 @@ class CanvasSnapshotTest {
                 
                 fs.writeFileSync(filePath, JSON.stringify(snapshot, null, 2));
                 
+                // メタデータファイルに作成日時を記録
+                const metadataPath = path.join(snapshotDir, 'metadata.json');
+                let metadata = {};
+                if (fs.existsSync(metadataPath)) {
+                    metadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+                }
+                metadata[`${name}-baseline`] = {
+                    created: new Date().toISOString(),
+                    operationCount: operations.length
+                };
+                fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+                
                 this.addTestResult(
                     `${name}画面のスナップショット保存`,
                     true,
