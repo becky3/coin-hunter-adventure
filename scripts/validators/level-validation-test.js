@@ -14,7 +14,7 @@ class LevelValidationTest {
     // レベルデータを読み込む
     async loadLevelData(stageName = 'stage1') {
         try {
-            const levelPath = path.join(__dirname, '..', 'levels', `${stageName}.json`);
+            const levelPath = path.join(__dirname, '..', '..', 'levels', `${stageName}.json`);
             const data = fs.readFileSync(levelPath, 'utf8');
             return JSON.parse(data);
         } catch (error) {

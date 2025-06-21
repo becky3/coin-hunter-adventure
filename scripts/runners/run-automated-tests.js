@@ -48,9 +48,9 @@ async function runTests() {
         const { dom, canvas, ctx } = setupTestEnvironment();
         
         // 必要なモジュールの読み込み
-        const GameStateManager = require('../src/game-state-manager.js');
-        const AutomatedTestPlayer = require('../src/automated-test-player.js');
-        const AutomatedGameTests = require('../tests/automated-game-tests.js');
+        const GameStateManager = require('../../src/game-state-manager.js');
+        const AutomatedTestPlayer = require('../../src/automated-test-player.js');
+        const AutomatedGameTests = require('../../tests/automated-game-tests.js');
         
         // グローバルに設定
         global.GameStateManager = GameStateManager;
@@ -63,7 +63,7 @@ async function runTests() {
         const results = await tester.runAllTests();
         
         // 結果の保存
-        const outputPath = path.join(__dirname, '..', 'test-results', 'automated-test-results.json');
+        const outputPath = path.join(__dirname, '..', '..', 'test-results', 'automated-test-results.json');
         fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
         console.log(`\n💾 テスト結果を保存しました: ${outputPath}`);
         
