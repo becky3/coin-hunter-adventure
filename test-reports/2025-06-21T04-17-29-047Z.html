@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>統合テストレポート - 2025/6/21 13:16:45</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header h1 {
+            margin: 0 0 1rem 0;
+            font-size: 2.5rem;
+        }
+        
+        .header .meta {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+        
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0.5rem 0;
+        }
+        
+        .summary-card .label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .summary-card.success { border-top: 4px solid #4CAF50; }
+        .summary-card.failure { border-top: 4px solid #f44336; }
+        .summary-card.skip { border-top: 4px solid #FF9800; }
+        .summary-card.rate { border-top: 4px solid #2196F3; }
+        .summary-card.time { border-top: 4px solid #9C27B0; }
+        
+        .category {
+            background: white;
+            margin-bottom: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        .category-header {
+            background: #f8f9fa;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .category-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .category-content {
+            padding: 1.5rem;
+        }
+        
+        .test-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .test-item {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .test-item:last-child {
+            border-bottom: none;
+        }
+        
+        .test-icon {
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+        
+        .test-name {
+            flex: 1;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .badge.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .badge.failure {
+            background: #ffebee;
+            color: #c62828;
+        }
+        
+        .footer {
+            text-align: center;
+            color: #666;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid #e0e0e0;
+        }
+        
+        details {
+            margin-top: 1rem;
+        }
+        
+        summary {
+            cursor: pointer;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        summary:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🧪 統合テストレポート</h1>
+        <div class="meta">
+            <div>実行日時: 2025/6/21 13:16:45</div>
+            <div>環境: v22.16.0 on linux</div>
+            <div>作業ディレクトリ: /mnt/d/claude/testAction</div>
+        </div>
+    </div>
+    
+    <div class="summary">
+        <div class="summary-card">
+            <div class="label">総テスト数</div>
+            <div class="value">23</div>
+        </div>
+        <div class="summary-card success">
+            <div class="label">成功</div>
+            <div class="value">23</div>
+        </div>
+        <div class="summary-card failure">
+            <div class="label">失敗</div>
+            <div class="value">0</div>
+        </div>
+        <div class="summary-card skip">
+            <div class="label">スキップ</div>
+            <div class="value">0</div>
+        </div>
+        <div class="summary-card rate">
+            <div class="label">成功率</div>
+            <div class="value">100.0%</div>
+        </div>
+        <div class="summary-card time">
+            <div class="label">実行時間</div>
+            <div class="value">27.5秒</div>
+        </div>
+    </div>
+    
+    
+                <div class="category">
+                    <div class="category-header">
+                        <h2 class="category-title">📁 構造テスト</h2>
+                        <span class="badge success">9/9</span>
+                    </div>
+                    <div class="category-content">
+                        
+                        <details>
+                            <summary>テスト詳細を表示</summary>
+                            <ul class="test-list">
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: index.html</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: src/game.js</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: src/config.js</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: src/player.js</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: src/music.js</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: levels/stage1.json</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">ファイル存在確認: assets/player-idle.svg</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">JSON妥当性: levels/stage1.json</span>
+                                    </li>
+                                
+                                    <li class="test-item">
+                                        <span class="test-icon">✅</span>
+                                        <span class="test-name">JSON妥当性: levels/stages.json</span>
+                                    </li>
+                                
+                            </ul>
+                        </details>
+                    
+                    </div>
+                </div>
+            
+                <div class="category">
+                    <div class="category-header">
+                        <h2 class="category-title">🌐 HTTPサーバーテスト</h2>
+                        <span class="badge success">成功</span>
+                    </div>
+                    <div class="category-content">
+                        <p>HTTPサーバー: ✅ 起動中</p>
+                    </div>
+                </div>
+            
+                <div class="category">
+                    <div class="category-header">
+                        <h2 class="category-title">🔗 統合テスト</h2>
+                        <span class="badge success">完了</span>
+                    </div>
+                    <div class="category-content">
+                        <p>テストが正常に実行されました。</p>
+                    </div>
+                </div>
+            
+                <div class="category">
+                    <div class="category-header">
+                        <h2 class="category-title">🎮 自動ゲームテスト</h2>
+                        <span class="badge success">12/12</span>
+                    </div>
+                    <div class="category-content">
+                        <p>テストが正常に実行されました。</p>
+                    </div>
+                </div>
+            
+                <div class="category">
+                    <div class="category-header">
+                        <h2 class="category-title">🏗️ レベル検証テスト</h2>
+                        <span class="badge success">0/0</span>
+                    </div>
+                    <div class="category-content">
+                        
+                    </div>
+                </div>
+            
+    
+    <div class="footer">
+        <p>このレポートは統合テストランナーによって自動生成されました</p>
+        <p>生成日時: 2025/6/21 13:17:29</p>
+    </div>
+</body>
+</html>
