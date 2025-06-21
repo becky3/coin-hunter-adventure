@@ -1,23 +1,17 @@
 {
-  "timestamp": "2025-06-20T23:52:05.819Z",
-  "method": "curl_validation",
-  "status": "issues_found",
-  "validation_results": {
-    "pageLoaded": true,
-    "scriptsIncluded": {
-      "level-loader.js": true,
-      "config.js": true,
-      "game.js": true,
-      "test.js": true
-    },
-    "elementsPresent": {
-      "gameCanvas": true,
-      "testResults": true,
-      "corsWarning": false
-    },
-    "issues": [
-      "Missing element: corsWarning"
-    ]
+  "timestamp": "2025-06-21T00:29:26.514Z",
+  "status": "issues_detected",
+  "verification_summary": {
+    "infrastructure": "❌",
+    "http_structure": "✅",
+    "javascript_basic": "❌",
+    "javascript_advanced": "⚠️ VM制限"
   },
-  "manual_test_required": true
+  "automated_verification_status": "completed",
+  "manual_browser_test_required": true,
+  "next_action": "検出された問題を修正",
+  "technical_notes": {
+    "vm_limitation": "GameクラスのCanvas操作はVM環境で制限される",
+    "browser_test_essential": "実際の動作確認にはブラウザテストが必須"
+  }
 }

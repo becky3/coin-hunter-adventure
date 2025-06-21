@@ -4,7 +4,7 @@
     "passed": 10,
     "failed": 2,
     "successRate": "83.3%",
-    "duration": "5361ms"
+    "duration": "20809ms"
   },
   "details": [
     {
@@ -21,7 +21,7 @@
       "name": "状態履歴の記録",
       "passed": true,
       "error": null,
-      "duration": 166,
+      "duration": 164,
       "details": {
         "historyLength": 10
       }
@@ -30,7 +30,7 @@
       "name": "状態検証機能",
       "passed": true,
       "error": null,
-      "duration": 0,
+      "duration": 1,
       "details": {
         "validationCount": 0
       }
@@ -39,7 +39,7 @@
       "name": "右移動の検証",
       "passed": false,
       "error": "右移動が機能していない",
-      "duration": 1009,
+      "duration": 1010,
       "details": {}
     },
     {
@@ -53,7 +53,7 @@
       "name": "複合動作の検証",
       "passed": true,
       "error": null,
-      "duration": 1213,
+      "duration": 1212,
       "details": {
         "totalActions": 3,
         "successful": 3,
@@ -73,7 +73,7 @@
           }
         ],
         "finalState": {
-          "timestamp": 1750463534944,
+          "timestamp": 1750465791872,
           "frame": 0,
           "player": {
             "x": 50,
@@ -113,7 +113,7 @@
       "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 2003,
+      "duration": 17452,
       "details": {
         "coinsCollected": 0,
         "success": false
@@ -173,7 +173,7 @@
       }
     }
   ],
-  "timestamp": "2025-06-20T23:52:17.115Z",
+  "timestamp": "2025-06-21T00:30:09.492Z",
   "statistics": {
     "byCategory": {
       "状態キャプチャの正確性": {
@@ -186,19 +186,19 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 166
+        "totalDuration": 164
       },
       "状態検証機能": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 0
+        "totalDuration": 1
       },
       "右移動の検証": {
         "total": 1,
         "passed": 0,
         "failed": 1,
-        "totalDuration": 1009
+        "totalDuration": 1010
       },
       "ジャンプ動作の検証": {
         "total": 1,
@@ -210,13 +210,13 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 1213
+        "totalDuration": 1212
       },
       "コイン収集メカニクス": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 2003
+        "totalDuration": 17452
       },
       "ライフシステム": {
         "total": 1,
@@ -249,24 +249,28 @@
         "totalDuration": 1
       }
     },
-    "averageDuration": 446.75,
+    "averageDuration": 1734.0833333333333,
     "slowestTest": {
       "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 2003,
+      "duration": 17452,
       "details": {
         "coinsCollected": 0,
         "success": false
       }
     },
     "fastestTest": {
-      "name": "状態検証機能",
+      "name": "プラットフォーム衝突",
       "passed": true,
       "error": null,
       "duration": 0,
       "details": {
-        "validationCount": 0
+        "collision": false,
+        "playerPos": {
+          "x": 50,
+          "y": 227.5
+        }
       }
     }
   }
