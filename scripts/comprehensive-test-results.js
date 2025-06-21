@@ -82,7 +82,7 @@ async function runComprehensiveTest() {
         }
         
         // 6. .test-results.jsonを更新
-        const testResultsPath = path.join(__dirname, '..', '.test-results.json');
+        const testResultsPath = path.join(__dirname, '..', 'test-results', '.test-results.json');
         const testResultsData = {
             timestamp: results.timestamp,
             status: results.overall.ready_for_browser_test ? 'ready_for_browser_test' : 'issues_detected',

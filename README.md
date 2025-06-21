@@ -54,11 +54,19 @@ cd coin-hunter-adventure
 2. **HTTPサーバーを起動**
 
 <details>
-<summary>Python を使用する場合</summary>
+<summary>Python を使用する場合（推奨）</summary>
 
 ```bash
+# バックグラウンドで起動（推奨）
+nohup python3 -m http.server 8080 > server.log 2>&1 &
+
+# または前面で起動（別のターミナルが必要）
 python3 -m http.server 8080
 ```
+
+**トラブルシューティング:**
+- サーバーが応答しない場合: `pkill -f "python3 -m http.server" && python3 -m http.server 8080`
+- ポートが使用中の場合: 別のポート（例: 8081）を使用
 </details>
 
 <details>
@@ -88,6 +96,7 @@ http://localhost:8080/
 ### ⚠️ 重要な注意事項
 - **CORS制限**: SVGファイルの読み込みのため、必ずHTTPサーバー経由でアクセスしてください
 - **file://プロトコル非対応**: index.htmlを直接開いてもグラフィックは表示されません
+- **HTTPサーバーの安定性**: 長時間使用する場合は定期的にサーバーを再起動することを推奨
 
 ## 🛠️ 開発者向け情報
 

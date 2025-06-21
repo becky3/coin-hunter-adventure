@@ -15,8 +15,16 @@
 
 1. **HTTPサーバーを起動**（CORS制限回避のため必須）
    ```bash
-   python3 -m http.server 8080
+   # バックグラウンドで起動（推奨）
+   nohup python3 -m http.server 8080 > server.log 2>&1 &
+   
+   # サーバーの動作確認
+   curl -I http://localhost:8080/
    ```
+   
+   **トラブルシューティング:**
+   - サーバーが応答しない場合: `pkill -f "python3 -m http.server" && nohup python3 -m http.server 8080 > server.log 2>&1 &`
+   - ポートが使用中の場合: 別のポートを使用
 
 2. **開発ドキュメントを確認**
    - 上記の関連ドキュメントを読み込む
@@ -57,6 +65,7 @@
 
 ### 5. 作業終了時
 - **HTTPサーバーを停止**: `pkill -f "python3 -m http.server"`
+- **プロセスの確認**: `ps aux | grep "python3 -m http.server" | grep -v grep`
 
 ## 🎯 開発時の重要ルール
 

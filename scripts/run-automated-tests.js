@@ -63,7 +63,7 @@ async function runTests() {
         const results = await tester.runAllTests();
         
         // 結果の保存
-        const outputPath = path.join(__dirname, '..', 'automated-test-results.json');
+        const outputPath = path.join(__dirname, '..', 'test-results', 'automated-test-results.json');
         fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
         console.log(`\n💾 テスト結果を保存しました: ${outputPath}`);
         
