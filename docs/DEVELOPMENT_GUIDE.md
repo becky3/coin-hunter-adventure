@@ -43,22 +43,17 @@ python3 -m http.server 8080
 
 ### 3. テスト実行
 
-#### ブラウザテスト
+#### 統合テストランナー
 ```bash
-# テストページを開く
-open http://localhost:8080/tests/test.html
-```
+# すべてのテストを実行
+node scripts/unified-test-runner.js
 
-#### 自動検証
-```bash
-# 構造検証
-node scripts/curl-test-validator.js
-
-# 自動ゲームテスト
-node scripts/run-automated-tests.js
-
-# 包括的検証
-node scripts/comprehensive-test-results.js
+# 特定のカテゴリのみ実行
+node scripts/unified-test-runner.js --category structure    # 構造テスト
+node scripts/unified-test-runner.js --category http        # HTTPサーバーテスト
+node scripts/unified-test-runner.js --category integration # 統合テスト
+node scripts/unified-test-runner.js --category automated   # 自動ゲームテスト
+node scripts/unified-test-runner.js --category level       # レベル検証テスト
 ```
 
 ### 4. コミット
@@ -81,15 +76,13 @@ gh pr create --title "新機能の追加" --body "詳細な説明"
 
 ## テスト戦略
 
-### 単体テスト
-`tests/test.js`に新しいテストケースを追加：
-
-```javascript
-systemTests.test('新機能のテスト', () => {
-    // テストコード
-    assertEquals(実際の値, 期待値, 'エラーメッセージ');
-});
-```
+### 統合テストランナー
+`scripts/unified-test-runner.js`を使用して、すべてのテストを一元管理：
+- 構造テスト：ファイル存在確認、JSON妥当性チェック
+- HTTPサーバーテスト：サーバー起動確認、アセット読み込み
+- 統合テスト：包括的検証
+- 自動ゲームテスト：ゲームプレイシミュレーション
+- レベル検証テスト：レベルデータの妥当性確認
 
 ### 統合テスト
 実際のゲームプレイで以下を確認：
@@ -99,11 +92,12 @@ systemTests.test('新機能のテスト', () => {
 - ゲームクリア/ゲームオーバー
 
 ### 自動テスト
-`scripts/run-automated-tests.js`が以下を検証：
+統合テストランナー経由で以下を検証：
 - ゲーム状態管理
 - プレイヤー動作
 - 物理エンジン
 - 衝突検出
+- レベルデータ検証
 
 ## デバッグ方法
 
