@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
+const CoverageAnalyzer = require('./coverage-analyzer');
 
 class UnifiedTestRunner {
     constructor() {
@@ -587,6 +588,15 @@ class UnifiedTestRunner {
             
             // 失敗したテストを表示
             allFailedTests.forEach(test => console.log(test));
+        }
+
+        // カバレッジ分析を実行（詳細な未テスト関数リストは非表示）
+        console.log('\n📈 カバレッジ分析を実行中...');
+        try {
+            const analyzer = new CoverageAnalyzer();
+            analyzer.run(false); // showDetails = false
+        } catch (error) {
+            console.error('カバレッジ分析でエラーが発生しました:', error.message);
         }
 
         // exit codeを返す

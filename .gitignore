@@ -21,3 +21,13 @@ svg-debug.html
 # Node.js
 node_modules/
 package-lock.json
+
+# テスト結果ファイル
+automated-test-results.json
+.test-results.json
+unified-test-results.json
+test-reports/
+
+# カバレッジレポート
+coverage-report.html
+coverage-report.json
