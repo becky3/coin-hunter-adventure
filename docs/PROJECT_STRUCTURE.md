@@ -48,16 +48,14 @@ coin-hunter-adventure/
 │   └── stage1.json             # ステージ1データ
 │
 ├── tests/                  # テストファイル
-│   ├── test.html               # テストランナーHTML
-│   ├── test.js                 # メインテストスイート
-│   ├── test-jump.js            # ジャンプテスト
 │   └── automated-test.html     # 自動テストHTML
 │
 ├── scripts/                # 開発・検証スクリプト
-│   ├── curl-test-validator.js      # HTTP構造検証
+│   ├── unified-test-runner.js      # 統合テストランナー
 │   ├── comprehensive-test-results.js # 包括的検証
 │   ├── jsdom-test.js               # JSDOM環境テスト
-│   └── run-automated-tests.js      # 自動ゲームテスト
+│   ├── run-automated-tests.js      # 自動ゲームテスト
+│   └── level-validation-test.js    # レベル検証テスト
 │
 ├── docs/                   # プロジェクトドキュメント
 │   ├── PROJECT_STRUCTURE.md        # このファイル
@@ -93,7 +91,7 @@ coin-hunter-adventure/
 - **stage1.json**: ステージ1の詳細データ（プラットフォーム、敵、アイテムの配置）
 
 ### テストシステム（tests/, scripts/）
-- **test.html + test.js**: ブラウザベースの単体テスト
+- **unified-test-runner.js**: すべてのテストを一元管理する統合ランナー
 - **automated-test.html**: 自動ゲームプレイテスト
 - **scripts/**: Node.js環境での検証ツール群
 

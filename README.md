@@ -101,11 +101,15 @@ http://localhost:8080/
 
 ### テスト実行
 ```bash
-# ブラウザテスト
-open http://localhost:8080/tests/test.html
+# 統合テストランナー（すべてのテストを実行）
+node scripts/unified-test-runner.js
 
-# 自動検証
-node scripts/run-automated-tests.js
+# 特定のカテゴリのみ実行
+node scripts/unified-test-runner.js --category structure    # 構造テスト
+node scripts/unified-test-runner.js --category http        # HTTPサーバーテスト
+node scripts/unified-test-runner.js --category integration # 統合テスト
+node scripts/unified-test-runner.js --category automated   # 自動ゲームテスト
+node scripts/unified-test-runner.js --category level       # レベル検証テスト
 ```
 
 ## 🎨 ゲーム要素

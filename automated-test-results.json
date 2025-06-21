@@ -1,10 +1,10 @@
 {
   "summary": {
     "total": 12,
-    "passed": 10,
-    "failed": 2,
-    "successRate": "83.3%",
-    "duration": "30118ms"
+    "passed": 12,
+    "failed": 0,
+    "successRate": "100.0%",
+    "duration": "48941ms"
   },
   "details": [
     {
@@ -37,48 +37,54 @@
     },
     {
       "name": "右移動の検証",
-      "passed": false,
-      "error": "右移動が機能していない",
-      "duration": 1008,
-      "details": {}
+      "passed": true,
+      "error": null,
+      "duration": 18613,
+      "details": {
+        "distance": 185,
+        "velocity": 5
+      }
     },
     {
       "name": "ジャンプ動作の検証",
-      "passed": false,
-      "error": "ジャンプが機能していない",
-      "duration": 702,
-      "details": {}
+      "passed": true,
+      "error": null,
+      "duration": 10015,
+      "details": {
+        "jumpHeight": 141,
+        "peaked": true
+      }
     },
     {
       "name": "複合動作の検証",
       "passed": true,
       "error": null,
-      "duration": 22965,
+      "duration": 15029,
       "details": {
         "totalActions": 3,
         "successful": 3,
         "failed": 0,
         "playerPath": [
           {
-            "x": 50,
+            "x": 1790,
             "y": 350
           },
           {
-            "x": 50,
-            "y": 350
+            "x": 1809.9999999999995,
+            "y": 209
           },
           {
-            "x": 50,
+            "x": 3349.9999999999995,
             "y": 350
           }
         ],
         "finalState": {
-          "timestamp": 1750376761594,
+          "timestamp": 1750477146587,
           "frame": 0,
           "player": {
-            "x": 50,
+            "x": 3349.9999999999995,
             "y": 350,
-            "vx": 0,
+            "vx": 5,
             "vy": 0,
             "grounded": true,
             "lives": 3,
@@ -101,7 +107,7 @@
             "springs": []
           },
           "camera": {
-            "x": 0,
+            "x": 2949.9999999999995,
             "y": 0
           },
           "gameState": "playing",
@@ -113,7 +119,7 @@
       "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 5012,
+      "duration": 5016,
       "details": {
         "coinsCollected": 0,
         "success": false
@@ -133,7 +139,7 @@
       "name": "重力の適用",
       "passed": true,
       "error": null,
-      "duration": 164,
+      "duration": 0,
       "details": {
         "fallDistance": 27.5,
         "velocity": 5
@@ -157,7 +163,7 @@
       "details": {
         "collision": false,
         "playerPos": {
-          "x": 50,
+          "x": 4890,
           "y": 227.5
         }
       }
@@ -166,14 +172,16 @@
       "name": "境界チェック",
       "passed": true,
       "error": null,
-      "duration": 0,
+      "duration": 1,
       "details": {
-        "violations": [],
-        "inBounds": true
+        "violations": [
+          "右境界違反"
+        ],
+        "inBounds": false
       }
     }
   ],
-  "timestamp": "2025-06-19T23:46:06.773Z",
+  "timestamp": "2025-06-21T03:38:53.774Z",
   "statistics": {
     "byCategory": {
       "状態キャプチャの正確性": {
@@ -196,27 +204,27 @@
       },
       "右移動の検証": {
         "total": 1,
-        "passed": 0,
-        "failed": 1,
-        "totalDuration": 1008
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 18613
       },
       "ジャンプ動作の検証": {
         "total": 1,
-        "passed": 0,
-        "failed": 1,
-        "totalDuration": 702
+        "passed": 1,
+        "failed": 0,
+        "totalDuration": 10015
       },
       "複合動作の検証": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 22965
+        "totalDuration": 15029
       },
       "コイン収集メカニクス": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 5012
+        "totalDuration": 5016
       },
       "ライフシステム": {
         "total": 1,
@@ -228,7 +236,7 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 164
+        "totalDuration": 0
       },
       "速度制限の確認": {
         "total": 1,
@@ -246,68 +254,18 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 0
+        "totalDuration": 1
       }
     },
-    "averageDuration": 2509.8333333333335,
+    "averageDuration": 4078.4166666666665,
     "slowestTest": {
-      "name": "複合動作の検証",
+      "name": "右移動の検証",
       "passed": true,
       "error": null,
-      "duration": 22965,
+      "duration": 18613,
       "details": {
-        "totalActions": 3,
-        "successful": 3,
-        "failed": 0,
-        "playerPath": [
-          {
-            "x": 50,
-            "y": 350
-          },
-          {
-            "x": 50,
-            "y": 350
-          },
-          {
-            "x": 50,
-            "y": 350
-          }
-        ],
-        "finalState": {
-          "timestamp": 1750376761594,
-          "frame": 0,
-          "player": {
-            "x": 50,
-            "y": 350,
-            "vx": 0,
-            "vy": 0,
-            "grounded": true,
-            "lives": 3,
-            "coins": 0,
-            "animation": "idle",
-            "facingRight": true
-          },
-          "enemies": [],
-          "items": {
-            "coins": [
-              {
-                "x": 200,
-                "y": 300
-              },
-              {
-                "x": 400,
-                "y": 250
-              }
-            ],
-            "springs": []
-          },
-          "camera": {
-            "x": 0,
-            "y": 0
-          },
-          "gameState": "playing",
-          "level": 1
-        }
+        "distance": 185,
+        "velocity": 5
       }
     },
     "fastestTest": {

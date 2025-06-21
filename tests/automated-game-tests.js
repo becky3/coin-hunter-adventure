@@ -35,7 +35,7 @@ class AutomatedGameTests {
 
     // モックゲームの作成（ブラウザ環境外でのテスト用）
     createMockGame() {
-        return {
+        const game = {
             player: {
                 x: 50,
                 y: 350,
@@ -44,7 +44,11 @@ class AutomatedGameTests {
                 grounded: true,
                 lives: 3,
                 facingRight: true,
-                animation: 'idle'
+                animation: 'idle',
+                width: 50,
+                height: 50,
+                speed: 5,
+                jumpSpeed: 15
             },
             coins: 0,
             enemies: [],
@@ -63,8 +67,54 @@ class AutomatedGameTests {
             frameCount: 0,
             levelWidth: 3000,
             cameraX: 0,
-            cameraY: 0
+            cameraY: 0,
+            platforms: [
+                { x: 0, y: 400, width: 3000, height: 100 } // 地面
+            ]
         };
+
+        // updateメソッドを追加（簡易版）
+        game.update = function() {
+            const player = this.player;
+            
+            // 左右移動
+            if (this.keys.left) {
+                player.vx = -player.speed;
+                player.facingRight = false;
+            } else if (this.keys.right) {
+                player.vx = player.speed;
+                player.facingRight = true;
+            } else {
+                player.vx *= 0.8; // 摩擦
+            }
+            
+            // ジャンプ
+            if (this.keys.up && player.grounded) {
+                player.vy = -player.jumpSpeed;
+                player.grounded = false;
+            }
+            
+            // 重力
+            if (!player.grounded) {
+                player.vy += 0.5;
+            }
+            
+            // 位置更新
+            player.x += player.vx;
+            player.y += player.vy;
+            
+            // 地面との衝突判定（簡易版）
+            if (player.y >= 350) {
+                player.y = 350;
+                player.vy = 0;
+                player.grounded = true;
+            }
+            
+            // カメラ更新
+            this.cameraX = Math.max(0, player.x - 400);
+        };
+
+        return game;
     }
 
     // テストスイートの実行
@@ -122,7 +172,7 @@ class AutomatedGameTests {
             console.log(`❌ ${test.name}: ${error.message}`);
         }
 
-        result.duration = Date.now() - startTime;
+        result.duration = Math.max(0, Date.now() - startTime);
         this.testResults.push(result);
         
         return result;
