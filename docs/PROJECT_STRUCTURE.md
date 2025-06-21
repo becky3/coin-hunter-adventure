@@ -48,19 +48,38 @@ coin-hunter-adventure/
 │   └── stage1.json             # ステージ1データ
 │
 ├── tests/                  # テストファイル
-│   └── automated-test.html     # 自動テストHTML
+│   ├── automated-test.html     # 自動テストHTML
+│   └── snapshots/              # Canvasスナップショットベースライン
 │
 ├── scripts/                # 開発・検証スクリプト
-│   ├── unified-test-runner.js      # 統合テストランナー
-│   ├── comprehensive-test-results.js # 包括的検証
-│   ├── jsdom-test.js               # JSDOM環境テスト
-│   ├── run-automated-tests.js      # 自動ゲームテスト
-│   └── level-validation-test.js    # レベル検証テスト
+│   ├── README.md               # スクリプトディレクトリの説明
+│   ├── runners/                # テストランナー
+│   │   ├── unified-test-runner.js  # 統合テストランナー
+│   │   ├── run-automated-tests.js  # 自動ゲームテスト
+│   │   └── visual-test-runner.js   # ビジュアルテストランナー
+│   ├── validators/             # 検証・分析ツール
+│   │   ├── canvas-snapshot-test.js # Canvasスナップショットテスト
+│   │   ├── coverage-analyzer.js    # カバレッジ分析
+│   │   ├── error-monitor.js        # エラー監視
+│   │   └── level-validation-test.js # レベル検証
+│   ├── utils/                  # ユーティリティ
+│   │   ├── comprehensive-test-results.js # 包括的検証
+│   │   ├── server-check.js         # HTTPサーバー確認
+│   │   └── ...その他のユーティリティ
+│   └── examples/               # サンプル・実験的スクリプト
+│
+├── debug/                  # デバッグ・開発用ツール
+│   ├── README.md               # デバッグツールの説明
+│   ├── check-game.html         # ゲームの基本動作確認用
+│   ├── debug-game.html         # デバッグ情報表示付きゲーム画面
+│   ├── error-check.html        # エラー検出とログ表示
+│   └── test-game-init.html     # ゲーム初期化テスト
 │
 ├── docs/                   # プロジェクトドキュメント
 │   ├── PROJECT_STRUCTURE.md        # このファイル
 │   ├── DEVELOPMENT_GUIDE.md        # 開発ガイド
-│   └── TECHNICAL_SPECS.md          # 技術仕様
+│   ├── TECHNICAL_SPECS.md          # 技術仕様
+│   └── TEST_GUIDE.md               # 包括的なテストガイド
 │
 └── docs-old-gh-pages/      # 旧GitHub Pagesドキュメント（メンテナンス停止）
 ```
@@ -91,9 +110,16 @@ coin-hunter-adventure/
 - **stage1.json**: ステージ1の詳細データ（プラットフォーム、敵、アイテムの配置）
 
 ### テストシステム（tests/, scripts/）
-- **unified-test-runner.js**: すべてのテストを一元管理する統合ランナー
-- **automated-test.html**: 自動ゲームプレイテスト
-- **scripts/**: Node.js環境での検証ツール群
+- **scripts/runners/unified-test-runner.js**: すべてのテストを一元管理する統合ランナー
+- **tests/automated-test.html**: 自動ゲームプレイテスト
+- **scripts/validators/**: 各種検証・分析ツール
+- **scripts/utils/**: テスト用ユーティリティ
+- **tests/snapshots/**: Canvasレンダリングのベースラインデータ
+
+### デバッグツール（debug/）
+- **debug-game.html**: リアルタイムデバッグ情報付きゲーム画面
+- **error-check.html**: エラー検出と詳細ログ表示
+- **check-game.html**: 基本動作確認用のシンプルな画面
 
 ## 依存関係
 
