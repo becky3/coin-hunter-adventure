@@ -344,7 +344,7 @@ class CoverageAnalyzer {
     /**
      * カバレッジレポートを生成
      */
-    generateReport() {
+    generateReport(showDetails = true) {
         const functionCoverage = (this.coverage.summary.coveredFunctions / this.coverage.summary.totalFunctions * 100).toFixed(1);
         
         console.log('\n📊 テストカバレッジレポート');
@@ -365,23 +365,28 @@ class CoverageAnalyzer {
                 console.log(`${fileName.padEnd(25)} ${bar} ${coverage.padStart(5)}% (${data.coveredFunctions}/${data.totalFunctions})`);
             });
         
-        console.log('\n❌ 未テストの関数:');
-        console.log('─'.repeat(60));
-        
-        // 未テストの関数をリスト
-        Object.entries(this.coverage.files).forEach(([fileName, data]) => {
-            const untestedFuncs = data.functions.filter(f => !f.tested).map(f => f.name);
-            const untestedMethods = data.classes.flatMap(c => 
-                c.methods.filter(m => !m.tested).map(m => `${c.name}.${m.name}`)
-            );
+        // showDetailsがtrueの場合のみ、未テストの関数を表示
+        if (showDetails) {
+            console.log('\n❌ 未テストの関数:');
+            console.log('─'.repeat(60));
             
-            const allUntested = [...untestedFuncs, ...untestedMethods];
-            
-            if (allUntested.length > 0) {
-                console.log(`\n${fileName}:`);
-                allUntested.forEach(name => console.log(`  - ${name}`));
-            }
-        });
+            // 未テストの関数をリスト
+            Object.entries(this.coverage.files).forEach(([fileName, data]) => {
+                const untestedFuncs = data.functions.filter(f => !f.tested).map(f => f.name);
+                const untestedMethods = data.classes.flatMap(c => 
+                    c.methods.filter(m => !m.tested).map(m => `${c.name}.${m.name}`)
+                );
+                
+                const allUntested = [...untestedFuncs, ...untestedMethods];
+                
+                if (allUntested.length > 0) {
+                    console.log(`\n${fileName}:`);
+                    allUntested.forEach(name => console.log(`  - ${name}`));
+                }
+            });
+        } else {
+            console.log('\n💡 詳細な未テスト関数リストは coverage-report.html を参照してください');
+        }
         
         // HTMLレポートも生成
         this.generateHTMLReport();
@@ -571,7 +576,7 @@ class CoverageAnalyzer {
     /**
      * カバレッジ分析を実行
      */
-    async run() {
+    async run(showDetails = true) {
         console.log('🔍 カバレッジ分析を開始します...\n');
         
         // srcディレクトリのJavaScriptファイルを解析
@@ -598,7 +603,7 @@ class CoverageAnalyzer {
         });
         
         // レポート生成
-        this.generateReport();
+        this.generateReport(showDetails);
     }
 }
 
