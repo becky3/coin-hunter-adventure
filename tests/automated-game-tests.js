@@ -172,7 +172,7 @@ class AutomatedGameTests {
             console.log(`❌ ${test.name}: ${error.message}`);
         }
 
-        result.duration = Date.now() - startTime;
+        result.duration = Math.max(0, Date.now() - startTime);
         this.testResults.push(result);
         
         return result;
