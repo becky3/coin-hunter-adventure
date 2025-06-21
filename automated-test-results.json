@@ -4,14 +4,14 @@
     "passed": 12,
     "failed": 0,
     "successRate": "100.0%",
-    "duration": "39772ms"
+    "duration": "4361ms"
   },
   "details": [
     {
       "name": "状態キャプチャの正確性",
       "passed": true,
       "error": null,
-      "duration": 100,
+      "duration": 101,
       "details": {
         "captured": true,
         "stateSize": 288
@@ -21,7 +21,7 @@
       "name": "状態履歴の記録",
       "passed": true,
       "error": null,
-      "duration": 166,
+      "duration": 165,
       "details": {
         "historyLength": 10
       }
@@ -30,7 +30,7 @@
       "name": "状態検証機能",
       "passed": true,
       "error": null,
-      "duration": 0,
+      "duration": 1,
       "details": {
         "validationCount": 0
       }
@@ -39,7 +39,7 @@
       "name": "右移動の検証",
       "passed": true,
       "error": null,
-      "duration": 1004,
+      "duration": 1007,
       "details": {
         "distance": 305,
         "velocity": 5
@@ -49,9 +49,9 @@
       "name": "ジャンプ動作の検証",
       "passed": true,
       "error": null,
-      "duration": 18309,
+      "duration": 715,
       "details": {
-        "jumpHeight": 190,
+        "jumpHeight": 178.5,
         "peaked": true
       }
     },
@@ -59,34 +59,34 @@
       "name": "複合動作の検証",
       "passed": true,
       "error": null,
-      "duration": 15021,
+      "duration": 1216,
       "details": {
         "totalActions": 3,
         "successful": 3,
         "failed": 0,
         "playerPath": [
           {
-            "x": 1909.7117696238483,
+            "x": 524.9982985881654,
             "y": 350
           },
           {
-            "x": 1929.7117696238479,
-            "y": 200.5
+            "x": 543.6239090534456,
+            "y": 209
           },
           {
-            "x": 3464.711769623848,
-            "y": 350
+            "x": 693.6239090534456,
+            "y": 171.5
           }
         ],
         "finalState": {
-          "timestamp": 1750475594166,
+          "timestamp": 1750475955804,
           "frame": 0,
           "player": {
-            "x": 3464.711769623848,
-            "y": 350,
+            "x": 693.6239090534456,
+            "y": 171.5,
             "vx": 5,
-            "vy": 0,
-            "grounded": true,
+            "vy": 6,
+            "grounded": false,
             "lives": 3,
             "coins": 0,
             "animation": "idle",
@@ -107,7 +107,7 @@
             "springs": []
           },
           "camera": {
-            "x": 3064.711769623848,
+            "x": 293.6239090534456,
             "y": 0
           },
           "gameState": "playing",
@@ -119,7 +119,7 @@
       "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 5007,
+      "duration": 18967,
       "details": {
         "coinsCollected": 0,
         "success": false
@@ -139,7 +139,7 @@
       "name": "重力の適用",
       "passed": true,
       "error": null,
-      "duration": 164,
+      "duration": -17811,
       "details": {
         "fallDistance": 27.5,
         "velocity": 5
@@ -163,7 +163,7 @@
       "details": {
         "collision": false,
         "playerPos": {
-          "x": 4999.711769623847,
+          "x": 993.6239090534456,
           "y": 227.5
         }
       }
@@ -172,59 +172,57 @@
       "name": "境界チェック",
       "passed": true,
       "error": null,
-      "duration": 1,
+      "duration": 0,
       "details": {
-        "violations": [
-          "右境界違反"
-        ],
-        "inBounds": false
+        "violations": [],
+        "inBounds": true
       }
     }
   ],
-  "timestamp": "2025-06-21T03:13:19.340Z",
+  "timestamp": "2025-06-21T03:19:16.962Z",
   "statistics": {
     "byCategory": {
       "状態キャプチャの正確性": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 100
+        "totalDuration": 101
       },
       "状態履歴の記録": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 166
+        "totalDuration": 165
       },
       "状態検証機能": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 0
+        "totalDuration": 1
       },
       "右移動の検証": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 1004
+        "totalDuration": 1007
       },
       "ジャンプ動作の検証": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 18309
+        "totalDuration": 715
       },
       "複合動作の検証": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 15021
+        "totalDuration": 1216
       },
       "コイン収集メカニクス": {
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 5007
+        "totalDuration": 18967
       },
       "ライフシステム": {
         "total": 1,
@@ -236,7 +234,7 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 164
+        "totalDuration": -17811
       },
       "速度制限の確認": {
         "total": 1,
@@ -254,27 +252,28 @@
         "total": 1,
         "passed": 1,
         "failed": 0,
-        "totalDuration": 1
+        "totalDuration": 0
       }
     },
-    "averageDuration": 3314.3333333333335,
+    "averageDuration": 363.4166666666667,
     "slowestTest": {
-      "name": "ジャンプ動作の検証",
+      "name": "コイン収集メカニクス",
       "passed": true,
       "error": null,
-      "duration": 18309,
+      "duration": 18967,
       "details": {
-        "jumpHeight": 190,
-        "peaked": true
+        "coinsCollected": 0,
+        "success": false
       }
     },
     "fastestTest": {
-      "name": "状態検証機能",
+      "name": "重力の適用",
       "passed": true,
       "error": null,
-      "duration": 0,
+      "duration": -17811,
       "details": {
-        "validationCount": 0
+        "fallDistance": 27.5,
+        "velocity": 5
       }
     }
   }

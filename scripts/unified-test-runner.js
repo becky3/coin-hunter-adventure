@@ -245,7 +245,7 @@ class UnifiedTestRunner {
             
             // 統一テストランナーの形式に合わせる
             return {
-                passed: result.success ? result.summary.total - result.summary.critical : 0,
+                passed: result.success && result.summary.critical === 0 ? 1 : 0,
                 failed: result.summary.critical,
                 tests: result.issues.map(issue => ({
                     name: issue.message,
@@ -335,7 +335,7 @@ class UnifiedTestRunner {
         }
         
         // スクリプト実行結果の場合
-        else if (results.output || results.error) {
+        else if (results.output || results.error || results.skipped) {
             // ユニットテストの場合はシンプルに表示
             if (categoryName === 'ユニットテスト') {
                 if (results.skipped) {
@@ -354,10 +354,10 @@ class UnifiedTestRunner {
             else if (categoryName === '自動ゲームテスト' && results.output) {
                 this.displayAutomatedTestDetails(results.output, categoryNumber);
             }
-            // レベル検証テストの詳細表示
-            else if (categoryName === 'レベル検証テスト' && results.tests) {
-                this.displayLevelValidationDetails(results, categoryNumber);
-            }
+        }
+        // レベル検証テストの詳細表示
+        if (categoryName === 'レベル検証テスト') {
+            this.displayLevelValidationDetails(results, categoryNumber);
         }
     }
 
@@ -366,17 +366,25 @@ class UnifiedTestRunner {
      */
     displayLevelValidationDetails(results, categoryNumber) {
         if (results.tests && Array.isArray(results.tests)) {
-            let testIndex = 1;
-            results.tests.forEach(test => {
-                if (test.passed) {
-                    console.log(`[${categoryNumber}.${testIndex}] ✅ ${test.name}`);  
-                } else {
-                    console.log(`[${categoryNumber}.${testIndex}] ❌ ${test.name} : ${test.message}`);
-                }
-                testIndex++;
-            });
+            if (results.tests.length === 0) {
+                console.log(`[${categoryNumber}.1] ✅ レベル検証完了 : 問題は検出されませんでした`);
+            } else {
+                let testIndex = 1;
+                results.tests.forEach(test => {
+                    if (test.passed) {
+                        console.log(`[${categoryNumber}.${testIndex}] ✅ ${test.name}`);  
+                    } else {
+                        console.log(`[${categoryNumber}.${testIndex}] ❌ ${test.name} : ${test.message}`);
+                    }
+                    testIndex++;
+                });
+            }
         } else if (results.error) {
             console.log(`[${categoryNumber}.1] ❌ レベル検証エラー : ${results.error}`);
+        } else if (results.passed === 0 && results.failed === 0) {
+            console.log(`[${categoryNumber}.1] ✅ レベル検証完了 : 問題は検出されませんでした`);
+        } else {
+            console.log(`[${categoryNumber}.1] ⏭️  レベル検証がスキップされました`);
         }
     }
 
