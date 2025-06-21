@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawn } = require('child_process');
 const CoverageAnalyzer = require('./coverage-analyzer');
+const ErrorMonitor = require('./error-monitor');
 
 class UnifiedTestRunner {
     constructor() {
@@ -27,15 +28,22 @@ class UnifiedTestRunner {
                 level: null,
                 performance: null
             },
+            errorMonitoring: {
+                errors: [],
+                warnings: []
+            },
             summary: {
                 total: 0,
                 passed: 0,
                 failed: 0,
                 skipped: 0,
-                duration: 0
+                duration: 0,
+                errors: 0,
+                warnings: 0
             }
         };
         this.startTime = Date.now();
+        this.errorMonitor = new ErrorMonitor();
         
         // テストカテゴリの定義を共有
         this.testCategories = [
@@ -57,6 +65,10 @@ class UnifiedTestRunner {
         console.log(`  Node.js: ${this.results.environment.node}`);
         console.log(`  Platform: ${this.results.environment.platform}`);
         console.log(`  作業ディレクトリ: ${this.results.environment.cwd}\n`);
+
+        // エラー監視を開始
+        this.errorMonitor.start();
+        console.log('🚨 エラー監視を開始しました\n');
 
         const totalCategories = this.testCategories.length;
 
@@ -98,6 +110,18 @@ class UnifiedTestRunner {
                 }
             }
 
+            // エラー監視を停止
+            this.errorMonitor.stop();
+            
+            // エラー監視の結果を取得
+            const errorResults = this.errorMonitor.getTestResults();
+            this.results.errorMonitoring = {
+                errors: errorResults.errors,
+                warnings: errorResults.warnings
+            };
+            this.results.summary.errors = errorResults.errorCount;
+            this.results.summary.warnings = errorResults.warningCount;
+
             // サマリーの計算
             this.calculateSummary();
 
@@ -107,7 +131,16 @@ class UnifiedTestRunner {
         } catch (error) {
             console.error('\n❌ テスト実行中にエラーが発生しました:', error);
             this.results.error = error.message;
+            
+            // エラー監視を停止
+            this.errorMonitor.stop();
+            
             return this.generateReport();
+        } finally {
+            // エラー監視が確実に停止されるようにする
+            if (this.errorMonitor.isMonitoring) {
+                this.errorMonitor.stop();
+            }
         }
     }
 
@@ -482,13 +515,20 @@ class UnifiedTestRunner {
         }
 
         total = passed + failed + skipped;
+        
+        // エラー監視の結果を保持
+        const currentErrors = this.results.summary.errors || 0;
+        const currentWarnings = this.results.summary.warnings || 0;
+        
         this.results.summary = {
             total,
             passed,
             failed,
             skipped,
             duration: Date.now() - this.startTime,
-            successRate: total > 0 ? ((passed / total) * 100).toFixed(1) : 0
+            successRate: total > 0 ? ((passed / total) * 100).toFixed(1) : 0,
+            errors: currentErrors,
+            warnings: currentWarnings
         };
     }
 
@@ -620,6 +660,32 @@ class UnifiedTestRunner {
             allFailedTests.forEach(test => console.log(test));
         }
 
+        // エラー監視の結果を表示
+        if (this.results.summary.errors > 0 || this.results.summary.warnings > 0) {
+            console.log('\n🚨 エラー監視結果:');
+            console.log(`検出されたエラー: ${this.results.summary.errors}件`);
+            console.log(`検出された警告: ${this.results.summary.warnings}件`);
+            
+            if (this.results.summary.errors > 0) {
+                console.log('\n❌ エラー詳細:');
+                this.results.errorMonitoring.errors.forEach((err, index) => {
+                    console.log(`${index + 1}. ${err.message}`);
+                });
+            }
+            
+            if (this.results.summary.warnings > 0) {
+                console.log('\n⚠️  警告詳細:');
+                this.results.errorMonitoring.warnings.forEach((warn, index) => {
+                    console.log(`${index + 1}. ${warn.message}`);
+                });
+            }
+            
+            // エラーレポートの詳細表示
+            if (this.results.summary.errors > 0) {
+                this.errorMonitor.displayReport();
+            }
+        }
+
         // カバレッジ分析を実行（詳細な未テスト関数リストは非表示）
         console.log('\n📈 カバレッジ分析を実行中...');
         try {
@@ -629,8 +695,8 @@ class UnifiedTestRunner {
             console.error('カバレッジ分析でエラーが発生しました:', error.message);
         }
 
-        // exit codeを返す
-        return this.results.summary.failed > 0 ? 1 : 0;
+        // exit codeを返す（エラーが検出された場合も失敗とする）
+        return (this.results.summary.failed > 0 || this.results.summary.errors > 0) ? 1 : 0;
     }
 
     /**

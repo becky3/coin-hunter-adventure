@@ -1,0 +1,58 @@
+{
+  "timestamp": "2025-06-21T09:42:39.043Z",
+  "tests": [
+    {
+      "name": "title画面のスナップショット保存",
+      "passed": true,
+      "message": "7個の描画操作を記録",
+      "timestamp": "2025-06-21T09:42:39.048Z"
+    },
+    {
+      "name": "gameplay画面のスナップショット保存",
+      "passed": true,
+      "message": "19個の描画操作を記録",
+      "timestamp": "2025-06-21T09:42:39.050Z"
+    },
+    {
+      "name": "gameOver画面のスナップショット保存",
+      "passed": true,
+      "message": "8個の描画操作を記録",
+      "timestamp": "2025-06-21T09:42:39.052Z"
+    },
+    {
+      "name": "levelComplete画面のスナップショット保存",
+      "passed": true,
+      "message": "9個の描画操作を記録",
+      "timestamp": "2025-06-21T09:42:39.054Z"
+    },
+    {
+      "name": "title画面の比較",
+      "passed": true,
+      "message": "ベースラインと完全に一致",
+      "timestamp": "2025-06-21T09:42:39.058Z"
+    },
+    {
+      "name": "gameplay画面の比較",
+      "passed": true,
+      "message": "ベースラインと完全に一致",
+      "timestamp": "2025-06-21T09:42:39.062Z"
+    },
+    {
+      "name": "gameOver画面の比較",
+      "passed": true,
+      "message": "ベースラインと完全に一致",
+      "timestamp": "2025-06-21T09:42:39.065Z"
+    },
+    {
+      "name": "levelComplete画面の比較",
+      "passed": true,
+      "message": "ベースラインと完全に一致",
+      "timestamp": "2025-06-21T09:42:39.069Z"
+    }
+  ],
+  "summary": {
+    "total": 8,
+    "passed": 8,
+    "failed": 0
+  }
+}
