@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ゲーム初期化テスト</title>
+    <style>
+        body { font-family: monospace; background: #222; color: #fff; padding: 20px; }
+        .log { background: #333; padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .error { background: #800; }
+        .success { background: #080; }
+        .info { background: #008; }
+    </style>
+</head>
+<body>
+    <h1>ゲーム初期化テスト</h1>
+    <div id="logs"></div>
+    <canvas id="gameCanvas" width="1024" height="576" style="border: 1px solid #fff; display: block; margin: 20px 0;"></canvas>
+    
+    <script src="src/config.js"></script>
+    <script src="src/levels.js"></script>
+    <script src="src/level-loader.js"></script>
+    <script src="src/music.js"></script>
+    <script src="src/player-graphics.js"></script>
+    <script src="src/svg-renderer.js"></script>
+    <script src="src/svg-player-renderer.js"></script>
+    <script src="src/svg-enemy-renderer.js"></script>
+    <script src="src/svg-item-renderer.js"></script>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        
+        function addLog(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logs.appendChild(div);
+            console.log(message);
+        }
+        
+        // オリジナルのconsoleをラップ
+        const originalLog = console.log;
+        const originalError = console.error;
+        
+        console.log = (...args) => {
+            addLog(args.join(' '), 'info');
+            originalLog(...args);
+        };
+        
+        console.error = (...args) => {
+            addLog(args.join(' '), 'error');
+            originalError(...args);
+        };
+        
+        addLog('スクリプト読み込み完了', 'success');
+        
+        // ゲームクラスを部分的に実装してテスト
+        class TestGame {
+            constructor() {
+                addLog('TestGame constructor 開始');
+                
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                // LevelLoaderを初期化
+                this.levelLoader = new LevelLoader();
+                addLog('LevelLoader初期化完了');
+                
+                // 非同期初期化開始
+                this.initialize();
+            }
+            
+            async initialize() {
+                try {
+                    addLog('非同期初期化開始');
+                    
+                    // ステージデータの読み込み
+                    await this.initializeStageData();
+                    
+                    addLog('ステージデータ初期化完了', 'success');
+                    
+                    // ゲーム要素の初期化
+                    this.initLevel();
+                    
+                    addLog('レベル初期化完了', 'success');
+                    addLog('ゲーム初期化完了！', 'success');
+                    
+                } catch (error) {
+                    addLog(`初期化エラー: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            async initializeStageData() {
+                try {
+                    addLog('ステージリスト読み込み中...');
+                    await this.levelLoader.loadStageList();
+                    addLog('ステージリスト読み込み完了');
+                    
+                    addLog('進行状況読み込み中...');
+                    this.levelLoader.loadProgress();
+                    addLog('進行状況読み込み完了');
+                    
+                    const currentStage = this.levelLoader.stageList?.currentStage || 'stage1';
+                    addLog(`ステージ読み込み中: ${currentStage}`);
+                    
+                    this.currentStageData = await this.levelLoader.loadStage(currentStage);
+                    addLog(`ステージ読み込み完了: ${currentStage}`, 'success');
+                    
+                } catch (error) {
+                    addLog(`ステージデータ読み込み失敗: ${error.message}`, 'error');
+                    throw error;
+                }
+            }
+            
+            initLevel() {
+                if (!this.currentStageData) {
+                    throw new Error('ステージデータが読み込まれていません');
+                }
+                
+                addLog(`プラットフォーム数: ${this.currentStageData.platforms?.length || 0}`);
+                addLog(`敵数: ${this.currentStageData.enemies?.length || 0}`);
+                addLog(`コイン数: ${this.currentStageData.coins?.length || 0}`);
+                
+                // 簡単な描画テスト
+                this.ctx.fillStyle = '#4CAF50';
+                this.ctx.fillRect(10, 10, 100, 50);
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = '16px Arial';
+                this.ctx.fillText('ゲーム初期化成功！', 20, 35);
+            }
+        }
+        
+        // テスト実行
+        document.addEventListener('DOMContentLoaded', () => {
+            addLog('DOM読み込み完了、ゲーム初期化開始');
+            try {
+                const game = new TestGame();
+                window.testGame = game;
+            } catch (error) {
+                addLog(`ゲーム初期化失敗: ${error.message}`, 'error');
+                addLog(`スタック: ${error.stack}`, 'error');
+            }
+        });
+    </script>
+</body>
+</html>

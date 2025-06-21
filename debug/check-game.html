@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>ゲーム初期化チェック</title>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <style>
+        body { background: #222; color: #fff; font-family: monospace; padding: 20px; }
+        .log { background: #333; padding: 5px; margin: 2px; border-radius: 3px; font-size: 12px; }
+        .error { background: #800; }
+        .success { background: #080; }
+        .warning { background: #880; }
+        #status { font-size: 18px; margin: 20px 0; }
+    </style>
+</head>
+<body>
+    <h2>ゲーム初期化チェック</h2>
+    <div id="status">チェック中...</div>
+    <div id="logs"></div>
+    <canvas id="gameCanvas" width="1024" height="576" style="display:none;"></canvas>
+    
+    <script>
+        const logs = document.getElementById('logs');
+        const status = document.getElementById('status');
+        
+        function log(msg, type = '') {
+            const div = document.createElement('div');
+            div.className = `log ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            logs.appendChild(div);
+            console.log(msg);
+        }
+        
+        window.onerror = (msg, file, line, col, error) => {
+            log(`ERROR: ${msg} at ${file}:${line}:${col}`, 'error');
+            return false;
+        };
+        
+        window.addEventListener('unhandledrejection', e => {
+            log(`PROMISE REJECTION: ${e.reason}`, 'error');
+        });
+        
+        log('初期化チェック開始');
+    </script>
+    
+    <script src="src/config.js"></script>
+    <script src="src/levels.js"></script>
+    <script src="src/level-loader.js"></script>
+    <script src="src/music.js"></script>
+    <script src="src/player-graphics.js"></script>
+    <script src="src/svg-renderer.js"></script>
+    <script src="src/svg-player-renderer.js"></script>
+    <script src="src/svg-enemy-renderer.js"></script>
+    <script src="src/svg-item-renderer.js"></script>
+    <script src="src/game.js"></script>
+    
+    <script>
+        log('全スクリプト読み込み完了');
+        
+        setTimeout(async () => {
+            try {
+                log('初期化テスト開始');
+                
+                if (typeof Game === 'undefined') {
+                    throw new Error('Gameクラスが定義されていません');
+                }
+                
+                log('Gameインスタンス作成開始');
+                const game = new Game();
+                log('Gameインスタンス作成成功', 'success');
+                
+                window.testGame = game;
+                
+                log('初期化開始');
+                await game.initialize();
+                log('初期化完了', 'success');
+                
+                status.textContent = '✅ ゲーム初期化成功！';
+                status.style.color = '#0f0';
+                
+                log('ゲーム準備完了 - ブラウザでindex.htmlにアクセス可能', 'success');
+                
+            } catch (error) {
+                log(`エラー: ${error.message}`, 'error');
+                log(`スタック: ${error.stack}`, 'error');
+                status.textContent = '❌ ゲーム初期化失敗';
+                status.style.color = '#f00';
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
