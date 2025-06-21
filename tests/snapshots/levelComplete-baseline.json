@@ -1,0 +1,59 @@
+{
+  "name": "levelComplete",
+  "timestamp": "2025-06-21T09:37:18.596Z",
+  "operations": [
+    {
+      "method": "fillStyle",
+      "value": "#2ecc71"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        0,
+        0,
+        1024,
+        576
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#ffffff"
+    },
+    {
+      "method": "font",
+      "value": "64px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "LEVEL CLEAR!",
+        320,
+        250
+      ]
+    },
+    {
+      "method": "font",
+      "value": "32px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Score: 1000",
+        400,
+        320
+      ]
+    },
+    {
+      "method": "font",
+      "value": "24px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Press SPACE to Continue",
+        340,
+        400
+      ]
+    }
+  ]
+}

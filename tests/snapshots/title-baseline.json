@@ -1,0 +1,47 @@
+{
+  "name": "title",
+  "timestamp": "2025-06-21T09:37:18.588Z",
+  "operations": [
+    {
+      "method": "fillStyle",
+      "value": "#87ceeb"
+    },
+    {
+      "method": "fillRect",
+      "args": [
+        0,
+        0,
+        1024,
+        576
+      ]
+    },
+    {
+      "method": "fillStyle",
+      "value": "#ffffff"
+    },
+    {
+      "method": "font",
+      "value": "48px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Coin Hunter Adventure",
+        300,
+        200
+      ]
+    },
+    {
+      "method": "font",
+      "value": "24px Arial"
+    },
+    {
+      "method": "fillText",
+      "args": [
+        "Press SPACE to Start",
+        350,
+        300
+      ]
+    }
+  ]
+}

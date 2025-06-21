@@ -43,7 +43,8 @@ class UnifiedTestRunner {
             { name: 'HTTPサーバーの確認', key: 'http', icon: '🌐', runner: () => this.checkHttpServerCategory() },
             { name: '統合テスト', key: 'integration', icon: '🔗', runner: () => this.runIntegrationTests() },
             { name: '自動ゲームテスト', key: 'automated', icon: '🎮', runner: () => this.runAutomatedGameTests() },
-            { name: 'レベル検証テスト', key: 'level', icon: '🏗️', runner: () => this.runLevelValidationTests() }
+            { name: 'レベル検証テスト', key: 'level', icon: '🏗️', runner: () => this.runLevelValidationTests() },
+            { name: 'ビジュアルテスト', key: 'visual', icon: '🎨', runner: () => this.runVisualTests() }
         ];
     }
 
@@ -239,6 +240,35 @@ class UnifiedTestRunner {
                     name: issue.message,
                     passed: issue.severity !== 'critical',
                     message: `[${issue.severity}] ${issue.type}`
+                }))
+            };
+        } catch (error) {
+            return {
+                passed: 0,
+                failed: 1,
+                error: error.message
+            };
+        }
+    }
+
+    /**
+     * ビジュアルテストの実行
+     */
+    async runVisualTests() {
+        const CanvasSnapshotTest = require('./canvas-snapshot-test.js');
+        const tester = new CanvasSnapshotTest();
+        
+        try {
+            const result = await tester.runAllTests();
+            
+            // 統一テストランナーの形式に合わせる
+            return {
+                passed: result.summary.passed,
+                failed: result.summary.failed,
+                tests: result.tests.map(test => ({
+                    name: test.name,
+                    passed: test.passed,
+                    message: test.message
                 }))
             };
         } catch (error) {
