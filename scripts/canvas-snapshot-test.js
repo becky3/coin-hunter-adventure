@@ -9,6 +9,9 @@ const fs = require('fs');
 const path = require('path');
 
 class CanvasSnapshotTest {
+    // 数値比較の許容誤差
+    static NUMERICAL_TOLERANCE = 0.01;
+    
     constructor() {
         this.results = {
             timestamp: new Date().toISOString(),
@@ -233,7 +236,7 @@ class CanvasSnapshotTest {
             for (let i = 0; i < op1.args.length; i++) {
                 if (typeof op1.args[i] === 'number' && typeof op2.args[i] === 'number') {
                     // 数値の場合は誤差を許容
-                    if (Math.abs(op1.args[i] - op2.args[i]) > 0.01) return false;
+                    if (Math.abs(op1.args[i] - op2.args[i]) > CanvasSnapshotTest.NUMERICAL_TOLERANCE) return false;
                 } else if (op1.args[i] !== op2.args[i]) {
                     return false;
                 }
