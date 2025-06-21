@@ -23,6 +23,7 @@ class UnifiedTestRunner {
                 unit: null,
                 integration: null,
                 automated: null,
+                level: null,
                 performance: null
             },
             summary: {
@@ -34,6 +35,16 @@ class UnifiedTestRunner {
             }
         };
         this.startTime = Date.now();
+        
+        // テストカテゴリの定義を共有
+        this.testCategories = [
+            { name: '構造テスト', key: 'structure', icon: '📁', runner: () => this.runStructureTests() },
+            { name: 'HTTPサーバーの確認', key: 'http', icon: '🌐', runner: () => this.checkHttpServerCategory() },
+            { name: 'ユニットテスト', key: 'unit', icon: '🧪', runner: () => this.runUnitTests() },
+            { name: '統合テスト', key: 'integration', icon: '🔗', runner: () => this.runIntegrationTests() },
+            { name: '自動ゲームテスト', key: 'automated', icon: '🎮', runner: () => this.runAutomatedGameTests() },
+            { name: 'レベル検証テスト', key: 'level', icon: '🏗️', runner: () => this.runLevelValidationTests() }
+        ];
     }
 
     /**
@@ -46,37 +57,45 @@ class UnifiedTestRunner {
         console.log(`  Platform: ${this.results.environment.platform}`);
         console.log(`  作業ディレクトリ: ${this.results.environment.cwd}\n`);
 
+        const totalCategories = this.testCategories.length;
+
         try {
-            // 1. 構造テスト（最も基本的なテスト）
-            console.log('\n📁 [1/5] 構造テストを実行中...');
-            this.results.tests.structure = await this.runStructureTests();
-            this.displayCategoryResults('構造テスト', this.results.tests.structure, 1);
-            
-            // 2. HTTPサーバーの確認
-            console.log('\n🌐 [2/5] HTTPサーバーの確認中...');
-            const serverRunning = await this.checkHttpServer();
-            if (!serverRunning) {
-                console.log('[2.1] ❌ HTTPサーバー起動確認 : HTTPサーバーが起動していません');
-                this.results.summary.failed++;
-                return this.generateReport();
-            } else {
-                console.log('[2.1] ✅ HTTPサーバー起動確認');
+            // 各カテゴリのテストを実行
+            for (let i = 0; i < this.testCategories.length; i++) {
+                const category = this.testCategories[i];
+                const categoryNumber = i + 1;
+                
+                console.log(`\n${category.icon} [${categoryNumber}/${totalCategories}] ${category.name}を実行中...`);
+                
+                // HTTPサーバーチェックの特別処理
+                if (category.name === 'HTTPサーバーの確認') {
+                    const serverRunning = await this.checkHttpServer();
+                    if (!serverRunning) {
+                        console.log(`[${categoryNumber}.1] ❌ HTTPサーバー起動確認 : HTTPサーバーが起動していません`);
+                        // HTTPサーバーチェックの結果を記録
+                        this.results.tests.http = {
+                            passed: 0,
+                            failed: 1,
+                            serverRunning: false
+                        };
+                        // サマリー計算してからレポート生成
+                        this.calculateSummary();
+                        return this.generateReport();
+                    } else {
+                        console.log(`[${categoryNumber}.1] ✅ HTTPサーバー起動確認`);
+                        this.results.tests.http = {
+                            passed: 1,
+                            failed: 0,
+                            serverRunning: true
+                        };
+                    }
+                } else {
+                    // 通常のテスト実行
+                    const results = await category.runner();
+                    this.results.tests[this.getCategoryKey(category.name)] = results;
+                    this.displayCategoryResults(category.name, results, categoryNumber);
+                }
             }
-
-            // 3. ユニットテスト
-            console.log('\n🧪 [3/5] ユニットテストを実行中...');
-            this.results.tests.unit = await this.runUnitTests();
-            this.displayCategoryResults('ユニットテスト', this.results.tests.unit, 3);
-
-            // 4. 統合テスト（ブラウザ環境）
-            console.log('\n🔗 [4/5] 統合テストを実行中...');
-            this.results.tests.integration = await this.runIntegrationTests();
-            this.displayCategoryResults('統合テスト', this.results.tests.integration, 4);
-
-            // 5. 自動ゲームテスト
-            console.log('\n🎮 [5/5] 自動ゲームテストを実行中...');
-            this.results.tests.automated = await this.runAutomatedGameTests();
-            this.displayCategoryResults('自動ゲームテスト', this.results.tests.automated, 5);
 
             // サマリーの計算
             this.calculateSummary();
@@ -89,6 +108,14 @@ class UnifiedTestRunner {
             this.results.error = error.message;
             return this.generateReport();
         }
+    }
+
+    /**
+     * カテゴリ名からキーを取得
+     */
+    getCategoryKey(categoryName) {
+        const category = this.testCategories.find(cat => cat.name === categoryName);
+        return category ? category.key : categoryName;
     }
 
     /**
@@ -166,6 +193,15 @@ class UnifiedTestRunner {
     }
 
     /**
+     * HTTPサーバーチェックカテゴリの実行
+     */
+    async checkHttpServerCategory() {
+        // この特別なカテゴリは通常のテスト結果形式を返さない
+        // runAllTestsで特別に処理される
+        return null;
+    }
+
+    /**
      * ユニットテストの実行
      */
     async runUnitTests() {
@@ -190,6 +226,35 @@ class UnifiedTestRunner {
     async runAutomatedGameTests() {
         // run-automated-testsを実行
         return this.runScript('scripts/run-automated-tests.js', '自動ゲームテスト');
+    }
+
+    /**
+     * レベル検証テストの実行
+     */
+    async runLevelValidationTests() {
+        const LevelValidationTest = require('./level-validation-test.js');
+        const validator = new LevelValidationTest();
+        
+        try {
+            const result = await validator.runTests('stage1');
+            
+            // 統一テストランナーの形式に合わせる
+            return {
+                passed: result.success ? result.summary.total - result.summary.critical : 0,
+                failed: result.summary.critical,
+                tests: result.issues.map(issue => ({
+                    name: issue.message,
+                    passed: issue.severity !== 'critical',
+                    message: `[${issue.severity}] ${issue.type}`
+                }))
+            };
+        } catch (error) {
+            return {
+                passed: 0,
+                failed: 1,
+                error: error.message
+            };
+        }
     }
 
     /**
@@ -282,6 +347,29 @@ class UnifiedTestRunner {
             else if (categoryName === '自動ゲームテスト' && results.output) {
                 this.displayAutomatedTestDetails(results.output, categoryNumber);
             }
+            // レベル検証テストの詳細表示
+            else if (categoryName === 'レベル検証テスト' && results.tests) {
+                this.displayLevelValidationDetails(results, categoryNumber);
+            }
+        }
+    }
+
+    /**
+     * レベル検証テストの詳細表示
+     */
+    displayLevelValidationDetails(results, categoryNumber) {
+        if (results.tests && Array.isArray(results.tests)) {
+            let testIndex = 1;
+            results.tests.forEach(test => {
+                if (test.passed) {
+                    console.log(`[${categoryNumber}.${testIndex}] ✅ ${test.name}`);  
+                } else {
+                    console.log(`[${categoryNumber}.${testIndex}] ❌ ${test.name} : ${test.message}`);
+                }
+                testIndex++;
+            });
+        } else if (results.error) {
+            console.log(`[${categoryNumber}.1] ❌ レベル検証エラー : ${results.error}`);
         }
     }
 
@@ -395,6 +483,95 @@ class UnifiedTestRunner {
     }
 
     /**
+     * 失敗したテストの収集
+     */
+    collectFailedTests() {
+        const allFailedTests = [];
+        
+        // 各カテゴリを処理
+        this.testCategories.forEach((category, categoryIndex) => {
+            const categoryNumber = categoryIndex + 1;
+            const results = this.results.tests[category.key];
+            
+            if (!results) return;
+            
+            // 構造テストとレベル検証テストの処理
+            if (results.tests && Array.isArray(results.tests)) {
+                results.tests.forEach((test, testIndex) => {
+                    if (!test.passed) {
+                        allFailedTests.push(`[${categoryNumber}.${testIndex + 1}] ❌ ${test.name} : ${test.message}`);
+                    }
+                });
+            }
+            
+            // HTTPサーバーチェックの特別処理
+            else if (category.key === 'http') {
+                if (results && results.serverRunning === false) {
+                    allFailedTests.push(`[${categoryNumber}.1] ❌ HTTPサーバー起動確認 : HTTPサーバーが起動していません`);
+                }
+            }
+            
+            // ユニットテストの処理
+            else if (category.key === 'unit' && !results.success) {
+                allFailedTests.push(`[${categoryNumber}.1] ❌ cURLベーステスト検証 : テスト実行エラー`);
+            }
+            
+            // 統合テストの処理
+            else if (category.key === 'integration' && results.output) {
+                this.collectIntegrationTestFailures(results.output, categoryNumber, allFailedTests);
+            }
+            
+            // 自動ゲームテストの処理
+            else if (category.key === 'automated' && results.output) {
+                this.collectAutomatedTestFailures(results.output, categoryNumber, allFailedTests);
+            }
+        });
+        
+        return allFailedTests;
+    }
+
+    /**
+     * 統合テストの失敗を収集
+     */
+    collectIntegrationTestFailures(output, categoryNumber, allFailedTests) {
+        const checks = [
+            { pattern: /インフラストラクチャ: (❌)/, name: 'インフラストラクチャ検証', idx: 1 },
+            { pattern: /JavaScript基本: (❌)/, name: 'JavaScript基本読み込み', idx: 3 },
+            { pattern: /JavaScript高度: (❌)/, name: 'JavaScript高度機能', idx: 4 },
+            { pattern: /ブラウザテスト準備: (❌)/, name: 'ブラウザテスト準備', idx: 5 }
+        ];
+        
+        checks.forEach(check => {
+            if (output.match(check.pattern)) {
+                allFailedTests.push(`[${categoryNumber}.${check.idx}] ❌ ${check.name} : 検証に失敗しました`);
+            }
+        });
+    }
+
+    /**
+     * 自動ゲームテストの失敗を収集
+     */
+    collectAutomatedTestFailures(output, categoryNumber, allFailedTests) {
+        const allTestPattern = /([✅❌]) ([^:\n]+)(?:: (.+))?/g;
+        const allMatches = [...output.matchAll(allTestPattern)];
+        
+        let testIndex = 1;
+        allMatches.forEach(match => {
+            const testName = match[2].trim();
+            const status = match[1];
+            const error = match[3] || '';
+            
+            // 「失敗したテスト」という項目自体は除外
+            if (testName !== '失敗したテスト') {
+                if (status === '❌') {
+                    allFailedTests.push(`[${categoryNumber}.${testIndex}] ❌ ${testName} : ${error}`);
+                }
+                testIndex++;
+            }
+        });
+    }
+
+    /**
      * レポートの生成
      */
     generateReport() {
@@ -418,65 +595,8 @@ class UnifiedTestRunner {
         if (this.results.summary.failed > 0) {
             console.log('\n📋 失敗したテストの一覧:');
             
-            // すべてのテストをフラットに収集
-            const allFailedTests = [];
-            
-            // 構造テストから失敗を収集
-            if (this.results.tests.structure && this.results.tests.structure.tests) {
-                this.results.tests.structure.tests.forEach((test, idx) => {
-                    if (!test.passed) {
-                        allFailedTests.push(`[1.${idx + 1}] ❌ ${test.name} : ${test.message}`);
-                    }
-                });
-            }
-            
-            // HTTPサーバーチェックの失敗
-            if (!this.checkHttpServer()) {
-                allFailedTests.push('[2.1] ❌ HTTPサーバー起動確認 : HTTPサーバーが起動していません');
-            }
-            
-            // ユニットテストの失敗
-            if (this.results.tests.unit && !this.results.tests.unit.success) {
-                allFailedTests.push('[3.1] ❌ cURLベーステスト検証 : テスト実行エラー');
-            }
-            
-            // 統合テストから失敗を収集
-            if (this.results.tests.integration && this.results.tests.integration.output) {
-                const output = this.results.tests.integration.output;
-                const checks = [
-                    { pattern: /インフラストラクチャ: (❌)/, name: 'インフラストラクチャ検証', idx: 1 },
-                    { pattern: /JavaScript基本: (❌)/, name: 'JavaScript基本読み込み', idx: 3 },
-                    { pattern: /JavaScript高度: (❌)/, name: 'JavaScript高度機能', idx: 4 },
-                    { pattern: /ブラウザテスト準備: (❌)/, name: 'ブラウザテスト準備', idx: 5 }
-                ];
-                checks.forEach(check => {
-                    if (output.match(check.pattern)) {
-                        allFailedTests.push(`[4.${check.idx}] ❌ ${check.name} : 検証に失敗しました`);
-                    }
-                });
-            }
-            
-            // 自動ゲームテストから失敗を収集
-            if (this.results.tests.automated && this.results.tests.automated.output) {
-                // すべてのテストをカウントして正しい番号を取得
-                const allTestPattern = /([✅❌]) ([^:\n]+)(?:: (.+))?/g;
-                const allMatches = [...this.results.tests.automated.output.matchAll(allTestPattern)];
-                
-                let testIndex = 1;
-                allMatches.forEach(match => {
-                    const testName = match[2].trim();
-                    const status = match[1];
-                    const error = match[3] || '';
-                    
-                    // 「失敗したテスト」という項目自体は除外
-                    if (testName !== '失敗したテスト') {
-                        if (status === '❌') {
-                            allFailedTests.push(`[5.${testIndex}] ❌ ${testName} : ${error}`);
-                        }
-                        testIndex++;
-                    }
-                });
-            }
+            // collectFailedTestsメソッドを使用して失敗を収集
+            const allFailedTests = this.collectFailedTests();
             
             // 失敗したテストを表示
             allFailedTests.forEach(test => console.log(test));
@@ -505,9 +625,12 @@ class UnifiedTestRunner {
             case 'automated':
                 this.results.tests.automated = await this.runAutomatedGameTests();
                 break;
+            case 'level':
+                this.results.tests.level = await this.runLevelValidationTests();
+                break;
             default:
                 console.error(`❌ 不明なカテゴリ: ${category}`);
-                console.log('利用可能なカテゴリ: structure, unit, integration, automated');
+                console.log('利用可能なカテゴリ: structure, unit, integration, automated, level');
                 return 1;
         }
 
