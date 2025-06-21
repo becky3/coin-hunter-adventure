@@ -645,7 +645,7 @@ class UnifiedTestRunner {
         console.log('='.repeat(60));
 
         // 結果をJSONファイルに保存
-        const resultPath = path.join(process.cwd(), 'unified-test-results.json');
+        const resultPath = path.join(process.cwd(), 'test-results', 'unified-test-results.json');
         fs.writeFileSync(resultPath, JSON.stringify(this.results, null, 2));
         console.log(`\n💾 詳細な結果を保存しました: ${resultPath}`);
 

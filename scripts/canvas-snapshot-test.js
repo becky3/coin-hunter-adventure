@@ -331,7 +331,7 @@ class CanvasSnapshotTest {
         console.log('='.repeat(60));
         
         // 結果をファイルに保存
-        const resultPath = path.join(__dirname, '..', 'canvas-snapshot-results.json');
+        const resultPath = path.join(__dirname, '..', 'test-results', 'canvas-snapshot-results.json');
         fs.writeFileSync(resultPath, JSON.stringify(this.results, null, 2));
         console.log(`\n💾 詳細な結果を保存しました: ${resultPath}`);
     }
