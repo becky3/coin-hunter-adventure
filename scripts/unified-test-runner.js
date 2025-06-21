@@ -40,7 +40,6 @@ class UnifiedTestRunner {
         this.testCategories = [
             { name: '構造テスト', key: 'structure', icon: '📁', runner: () => this.runStructureTests() },
             { name: 'HTTPサーバーの確認', key: 'http', icon: '🌐', runner: () => this.checkHttpServerCategory() },
-            { name: 'ユニットテスト', key: 'unit', icon: '🧪', runner: () => this.runUnitTests() },
             { name: '統合テスト', key: 'integration', icon: '🔗', runner: () => this.runIntegrationTests() },
             { name: '自動ゲームテスト', key: 'automated', icon: '🎮', runner: () => this.runAutomatedGameTests() },
             { name: 'レベル検証テスト', key: 'level', icon: '🏗️', runner: () => this.runLevelValidationTests() }
@@ -201,18 +200,6 @@ class UnifiedTestRunner {
         return null;
     }
 
-    /**
-     * ユニットテストの実行
-     */
-    async runUnitTests() {
-        // curl-test-validatorは削除されたため、スキップ
-        return {
-            passed: 0,
-            failed: 0,
-            skipped: 1,
-            message: 'curl-test-validatorは統合テストランナーに置き換えられました'
-        };
-    }
 
     /**
      * 統合テストの実行
@@ -336,18 +323,8 @@ class UnifiedTestRunner {
         
         // スクリプト実行結果の場合
         else if (results.output || results.error || results.skipped) {
-            // ユニットテストの場合はシンプルに表示
-            if (categoryName === 'ユニットテスト') {
-                if (results.skipped) {
-                    console.log(`[${categoryNumber}.1] ⏭️  ${results.message || 'テストがスキップされました'}`);
-                } else if (results.success) {
-                    console.log(`[${categoryNumber}.1] ✅ cURLベーステスト検証`);
-                } else {
-                    console.log(`[${categoryNumber}.1] ❌ cURLベーステスト検証 : テスト実行エラー`);
-                }
-            }
             // 統合テストの詳細表示
-            else if (categoryName === '統合テスト' && results.output) {
+            if (categoryName === '統合テスト' && results.output) {
                 this.displayIntegrationTestDetails(results.output, categoryNumber);
             }
             // 自動ゲームテストの詳細表示
@@ -524,11 +501,6 @@ class UnifiedTestRunner {
                 if (results && results.serverRunning === false) {
                     allFailedTests.push(`[${categoryNumber}.1] ❌ HTTPサーバー起動確認 : HTTPサーバーが起動していません`);
                 }
-            }
-            
-            // ユニットテストの処理
-            else if (category.key === 'unit' && !results.success) {
-                allFailedTests.push(`[${categoryNumber}.1] ❌ cURLベーステスト検証 : テスト実行エラー`);
             }
             
             // 統合テストの処理
