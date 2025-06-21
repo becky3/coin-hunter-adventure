@@ -14,8 +14,8 @@
 git clone https://github.com/becky3/coin-hunter-adventure.git
 cd coin-hunter-adventure
 
-# HTTPサーバーの起動
-python3 -m http.server 8080
+# HTTPサーバーの起動（バックグラウンド推奨）
+nohup python3 -m http.server 8080 > server.log 2>&1 &
 
 # ブラウザでアクセス
 open http://localhost:8080/
@@ -32,8 +32,8 @@ git pull origin main
 # 新しいブランチを作成
 git checkout -b feature/新機能名
 
-# HTTPサーバーを起動
-python3 -m http.server 8080
+# HTTPサーバーを起動（バックグラウンド推奨）
+nohup python3 -m http.server 8080 > server.log 2>&1 &
 ```
 
 ### 2. コーディング
@@ -110,9 +110,14 @@ gh pr create --title "新機能の追加" --body "詳細な説明"
 ### よくある問題と解決策
 
 #### SVGファイルが表示されない
-- HTTPサーバーが起動しているか確認
+- HTTPサーバーが起動しているか確認: `curl -I http://localhost:8080/`
 - `file://`プロトコルではなく`http://`でアクセス
 - ブラウザコンソールでCORSエラーを確認
+
+#### HTTPサーバーが応答しない
+- 既存のプロセスを終了: `pkill -f "python3 -m http.server"`
+- サーバーを再起動: `nohup python3 -m http.server 8080 > server.log 2>&1 &`
+- ポートが使用中の場合は別ポートを使用: `python3 -m http.server 8081`
 
 #### JavaScriptの変更が反映されない
 - Ctrl+F5（Cmd+Shift+R）で強制リロード
