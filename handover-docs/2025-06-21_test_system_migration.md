@@ -8,6 +8,7 @@
 - `tests/test.js` - 古いテストフレームワーク
 - `tests/test-jump.js` - ジャンプ機能の単体テスト
 - `tests/test-levelplay-simple.js` - レベル検証テスト（SimpleLevelTest）
+- `scripts/curl-test-validator.js` - test.htmlを参照していたため削除
 
 ## 統一テストランナーへの移行
 
@@ -22,8 +23,8 @@ SimpleLevelTestの機能を統一テストランナーに統合：
    - 必須要素の存在確認
 
 2. **統一テストランナーへの追加**
-   - 6番目のテストカテゴリとして追加
-   - `[6/6] レベル検証テスト`として実行
+   - 5番目のテストカテゴリとして追加
+   - `[5/5] レベル検証テスト`として実行
    - コマンドライン引数 `--category level` で個別実行可能
 
 ### 移行のメリット
@@ -53,7 +54,7 @@ node scripts/unified-test-runner.js --category level
 
 ### 利用可能なカテゴリ
 - structure: 構造テスト
-- unit: ユニットテスト
+- http: HTTPサーバーテスト
 - integration: 統合テスト
 - automated: 自動ゲームテスト
 - level: レベル検証テスト（新規追加）

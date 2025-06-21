@@ -25,14 +25,17 @@ node scripts/unified-test-runner.js
 # 構造テスト（ファイル存在確認、JSON妥当性）
 node scripts/unified-test-runner.js --category structure
 
-# ユニットテスト（curl-test-validator）
-node scripts/unified-test-runner.js --category unit
+# HTTPサーバーテスト（サーバー起動確認）
+node scripts/unified-test-runner.js --category http
 
 # 統合テスト（comprehensive-test-results）
 node scripts/unified-test-runner.js --category integration
 
 # 自動ゲームテスト（run-automated-tests）
 node scripts/unified-test-runner.js --category automated
+
+# レベル検証テスト（level-validation-test）
+node scripts/unified-test-runner.js --category level
 ```
 
 ## テストカテゴリ
@@ -42,19 +45,25 @@ node scripts/unified-test-runner.js --category automated
 - JSONファイルの妥当性チェック
 - プロジェクト構造の検証
 
-### 2. ユニットテスト (unit)
-- HTTPリクエストベースの検証
-- テストページの構造確認
-- スクリプトの読み込み確認
+### 2. HTTPサーバーテスト (http)
+- HTTPサーバーの起動確認
+- CORS制限の回避確認
+- 開発環境の前提条件チェック
 
 ### 3. 統合テスト (integration)
 - 包括的なテスト結果の生成
-- 複数のテストツールの統合実行
+- インフラストラクチャ検証
+- JavaScript実行環境の確認
 
 ### 4. 自動ゲームテスト (automated)
 - ゲーム状態管理のテスト
 - プレイヤー動作の検証
 - 物理エンジンと衝突検出のテスト
+
+### 5. レベル検証テスト (level)
+- レベルデータの妥当性確認
+- プラットフォーム配置の検証
+- ゴール到達可能性のチェック
 
 ## 出力形式
 
@@ -67,7 +76,7 @@ node scripts/unified-test-runner.js --category automated
 
 2. **テストカテゴリの表示**
    - 形式: `[カテゴリ番号/総カテゴリ数] カテゴリ名を実行中...`
-   - 例: `[1/6] 構造テストを実行中...`
+   - 例: `[1/5] 構造テストを実行中...`
 
 3. **個別テスト結果の表示**
    - 形式: `[カテゴリ番号.テスト番号] ✅/❌ テスト名 : エラー理由（失敗時のみ）`
@@ -111,11 +120,16 @@ node scripts/unified-test-runner.js --category automated
       "failed": 0,
       "tests": [...]
     },
-    "unit": {
-      "passed": 10,
-      "failed": 1,
+    "http": {
+      "passed": 1,
+      "failed": 0,
+      "serverRunning": true
+    },
+    "integration": {
+      "passed": 5,
+      "failed": 0,
       "output": "...",
-      "exitCode": 1
+      "exitCode": 0
     }
   },
   "summary": {
