@@ -205,8 +205,13 @@ class UnifiedTestRunner {
      * ユニットテストの実行
      */
     async runUnitTests() {
-        // curl-test-validatorを実行
-        return this.runScript('scripts/curl-test-validator.js', 'ユニットテスト');
+        // curl-test-validatorは削除されたため、スキップ
+        return {
+            passed: 0,
+            failed: 0,
+            skipped: 1,
+            message: 'curl-test-validatorは統合テストランナーに置き換えられました'
+        };
     }
 
     /**
@@ -333,7 +338,9 @@ class UnifiedTestRunner {
         else if (results.output || results.error) {
             // ユニットテストの場合はシンプルに表示
             if (categoryName === 'ユニットテスト') {
-                if (results.success) {
+                if (results.skipped) {
+                    console.log(`[${categoryNumber}.1] ⏭️  ${results.message || 'テストがスキップされました'}`);
+                } else if (results.success) {
                     console.log(`[${categoryNumber}.1] ✅ cURLベーステスト検証`);
                 } else {
                     console.log(`[${categoryNumber}.1] ❌ cURLベーステスト検証 : テスト実行エラー`);

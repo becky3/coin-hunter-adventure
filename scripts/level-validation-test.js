@@ -54,7 +54,7 @@ class LevelValidationTest {
         }
         
         // ゴールの到達可能性チェック
-        if (!levelData.flag || typeof levelData.flag.x !== 'number') {
+        if (!levelData.goal || typeof levelData.goal.x !== 'number') {
             issues.push({
                 type: 'missing_goal',
                 severity: 'critical',
@@ -63,7 +63,7 @@ class LevelValidationTest {
             });
         } else {
             const startX = 100;
-            const goalX = levelData.flag.x;
+            const goalX = levelData.goal.x;
             const totalDistance = goalX - startX;
             
             if (totalDistance > 4000) {
@@ -151,7 +151,7 @@ class LevelValidationTest {
                     enemies: levelData.enemies ? levelData.enemies.length : 0,
                     coins: levelData.coins ? levelData.coins.length : 0,
                     springs: levelData.springs ? levelData.springs.length : 0,
-                    goalPosition: levelData.flag ? levelData.flag.x : 0
+                    goalPosition: levelData.goal ? levelData.goal.x : 0
                 }
             };
             
