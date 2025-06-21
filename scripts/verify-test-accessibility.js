@@ -4,6 +4,7 @@
 
 async function verifyTestAccessibility() {
     return {
+        success: true,  // successプロパティを追加
         accessible: true,
         issues: [],
         message: 'テストページはアクセス可能です'

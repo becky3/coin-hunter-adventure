@@ -82,6 +82,10 @@ class AutomatedTestPlayer {
                     resolve();
                 } else {
                     this.game.keys[direction] = true;
+                    // ゲームループを手動で実行
+                    if (this.game.update) {
+                        this.game.update();
+                    }
                 }
             }, 16); // 60 FPS
         });
@@ -90,18 +94,41 @@ class AutomatedTestPlayer {
     // ジャンプアクション
     async jump(duration) {
         this.game.keys.up = true;
+        const startTime = Date.now();
         
         return new Promise(resolve => {
-            setTimeout(() => {
-                this.game.keys.up = false;
-                resolve();
-            }, duration);
+            const jumpInterval = setInterval(() => {
+                if (Date.now() - startTime >= duration) {
+                    this.game.keys.up = false;
+                    clearInterval(jumpInterval);
+                    resolve();
+                } else {
+                    // ゲームループを手動で実行
+                    if (this.game.update) {
+                        this.game.update();
+                    }
+                }
+            }, 16); // 60 FPS
         });
     }
 
     // 待機
     async wait(duration) {
-        return new Promise(resolve => setTimeout(resolve, duration));
+        const startTime = Date.now();
+        
+        return new Promise(resolve => {
+            const waitInterval = setInterval(() => {
+                if (Date.now() - startTime >= duration) {
+                    clearInterval(waitInterval);
+                    resolve();
+                } else {
+                    // ゲームループを手動で実行
+                    if (this.game.update) {
+                        this.game.update();
+                    }
+                }
+            }, 16); // 60 FPS
+        });
     }
 
     // 条件を満たすまで待機
