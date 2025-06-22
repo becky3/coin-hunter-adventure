@@ -317,7 +317,7 @@ class CoverageAnalyzer {
             'game.js', 'config.js', 'player.js', 'music.js'
         ];
         
-        structureTestedFiles.forEach(file => {
+        for (const file of structureTestedFiles) {
             if (this.coverage.files[file] && this.coverage.files[file].coveredFunctions === 0) {
                 // 少なくともファイルが参照されていることを記録
                 this.coverage.summary.coveredFiles = Math.min(
@@ -325,7 +325,7 @@ class CoverageAnalyzer {
                     this.coverage.summary.totalFiles
                 );
             }
-        });
+        }
     }
 
     /**
@@ -347,13 +347,14 @@ class CoverageAnalyzer {
             
             // クラスメソッドも検索（関数として既にマークされていない場合のみ）
             if (!marked) {
-                file.classes.forEach(cls => {
+                for (const cls of file.classes) {
                     if (cls.name === functionName && !cls.tested) {
                         // クラス自体をテスト済みとしてマーク
                         cls.tested = true;
                         file.coveredFunctions++;
                         this.coverage.summary.coveredFunctions++;
                         marked = true;
+                        break;
                     } else {
                         const method = cls.methods.find(m => m.name === functionName);
                         if (method && !method.tested) {
@@ -361,9 +362,10 @@ class CoverageAnalyzer {
                             file.coveredFunctions++;
                             this.coverage.summary.coveredFunctions++;
                             marked = true;
+                            break;
                         }
                     }
-                });
+                }
             }
             
             // ファイルのカバレッジ率を更新
@@ -612,6 +614,8 @@ class CoverageAnalyzer {
 
     /**
      * テスト実行結果からカバレッジを更新
+     * @description 統一テストランナーの実行結果を読み込み、カバレッジ情報を更新します
+     * @returns {void}
      */
     updateCoverageFromTestResults() {
         // 統一テストランナーの実行結果から追加のカバレッジ情報を取得
@@ -632,12 +636,15 @@ class CoverageAnalyzer {
     
     /**
      * テスト出力からカバレッジ情報を検出
+     * @param {string} output - テスト実行の出力文字列
+     * @description テスト出力から成功したテストを検出し、関連する関数をテスト済みとしてマークします
+     * @returns {void}
      */
     detectTestedItemsFromOutput(output) {
         // テスト出力の各行をチェック
         const lines = output.split('\n');
         
-        lines.forEach(line => {
+        for (const line of lines) {
             // 成功したテストを検出
             if (line.includes('✅')) {
                 const testName = line.replace('✅', '').trim();
@@ -697,7 +704,7 @@ class CoverageAnalyzer {
                         break;
                 }
             }
-        });
+        }
     }
 
     /**
@@ -711,9 +718,9 @@ class CoverageAnalyzer {
         const srcFiles = fs.readdirSync(srcDir).filter(f => f.endsWith('.js'));
         
         console.log(`📁 ${srcFiles.length}個のソースファイルを解析中...`);
-        srcFiles.forEach(file => {
+        for (const file of srcFiles) {
             this.analyzeSourceFile(path.join(srcDir, file));
-        });
+        }
         
         // テストファイルを解析
         const testFiles = [
@@ -724,11 +731,11 @@ class CoverageAnalyzer {
         ];
         
         console.log(`\n🧪 テストファイルを解析中...`);
-        testFiles.forEach(file => {
+        for (const file of testFiles) {
             if (fs.existsSync(file)) {
                 this.analyzeTestFile(file);
             }
-        });
+        }
         
         // テスト実行結果からの追加カバレッジ情報を取得
         this.updateCoverageFromTestResults();
