@@ -16,26 +16,26 @@
 ### すべてのテストを実行
 
 ```bash
-node scripts/unified-test-runner.js
+node scripts/runners/unified-test-runner.js
 ```
 
 ### 特定のカテゴリのみ実行
 
 ```bash
 # 構造テスト（ファイル存在確認、JSON妥当性）
-node scripts/unified-test-runner.js --category structure
+node scripts/runners/unified-test-runner.js --category structure
 
 # HTTPサーバーテスト（サーバー起動確認）
-node scripts/unified-test-runner.js --category http
+node scripts/runners/unified-test-runner.js --category http
 
 # 統合テスト（comprehensive-test-results）
-node scripts/unified-test-runner.js --category integration
+node scripts/runners/unified-test-runner.js --category integration
 
 # 自動ゲームテスト（run-automated-tests）
-node scripts/unified-test-runner.js --category automated
+node scripts/runners/unified-test-runner.js --category automated
 
 # レベル検証テスト（level-validation-test）
-node scripts/unified-test-runner.js --category level
+node scripts/runners/unified-test-runner.js --category level
 ```
 
 ## テストカテゴリ
@@ -157,7 +157,7 @@ node scripts/unified-test-runner.js --category level
   run: |
     python3 -m http.server 8080 &
     sleep 3
-    node scripts/unified-test-runner.js
+    node scripts/runners/unified-test-runner.js
 ```
 
 exit codeは以下の通り：

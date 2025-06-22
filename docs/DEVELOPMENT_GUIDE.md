@@ -59,14 +59,14 @@ http://localhost:8080/debug/debug-game.html
 #### 統合テストランナー
 ```bash
 # すべてのテストを実行
-node scripts/unified-test-runner.js
+node scripts/runners/unified-test-runner.js
 
 # 特定のカテゴリのみ実行
-node scripts/unified-test-runner.js --category structure    # 構造テスト
-node scripts/unified-test-runner.js --category http        # HTTPサーバーテスト
-node scripts/unified-test-runner.js --category integration # 統合テスト
-node scripts/unified-test-runner.js --category automated   # 自動ゲームテスト
-node scripts/unified-test-runner.js --category level       # レベル検証テスト
+node scripts/runners/unified-test-runner.js --category structure    # 構造テスト
+node scripts/runners/unified-test-runner.js --category http        # HTTPサーバーテスト
+node scripts/runners/unified-test-runner.js --category integration # 統合テスト
+node scripts/runners/unified-test-runner.js --category automated   # 自動ゲームテスト
+node scripts/runners/unified-test-runner.js --category level       # レベル検証テスト
 ```
 
 ### 4. コミット
@@ -90,7 +90,7 @@ gh pr create --title "新機能の追加" --body "詳細な説明"
 ## テスト戦略
 
 ### 統合テストランナー
-`scripts/unified-test-runner.js`を使用して、すべてのテストを一元管理：
+`scripts/runners/unified-test-runner.js`を使用して、すべてのテストを一元管理：
 - 構造テスト：ファイル存在確認、JSON妥当性チェック
 - HTTPサーバーテスト：サーバー起動確認、アセット読み込み
 - 統合テスト：包括的検証
