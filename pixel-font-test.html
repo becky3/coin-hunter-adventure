@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピクセルフォントテスト</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2C3E50;
+            color: #ECF0F1;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        h1 {
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .canvas-container {
+            background: #34495E;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px auto;
+            max-width: 800px;
+        }
+        
+        canvas {
+            display: block;
+            margin: 10px auto;
+            background: #000;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+            border: 2px solid #7F8C8D;
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        input[type="text"] {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            margin-right: 10px;
+            width: 300px;
+        }
+        
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #3498DB;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #2980B9;
+        }
+        
+        .demo-section {
+            margin: 20px 0;
+        }
+        
+        .demo-section h2 {
+            color: #F39C12;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 ピクセルフォントテスト</h1>
+    
+    <div class="controls">
+        <input type="text" id="customText" placeholder="テキストを入力（英数字・記号）" value="HELLO WORLD!">
+        <button onclick="updateCustomText()">更新</button>
+    </div>
+    
+    <div class="canvas-container">
+        <div class="demo-section">
+            <h2>アルファベット</h2>
+            <canvas id="alphabetCanvas" width="600" height="100"></canvas>
+        </div>
+        
+        <div class="demo-section">
+            <h2>数字と記号</h2>
+            <canvas id="numbersCanvas" width="600" height="100"></canvas>
+        </div>
+        
+        <div class="demo-section">
+            <h2>カスタムテキスト</h2>
+            <canvas id="customCanvas" width="600" height="100"></canvas>
+        </div>
+        
+        <div class="demo-section">
+            <h2>ゲーム画面サンプル</h2>
+            <canvas id="gameCanvas" width="600" height="200"></canvas>
+        </div>
+        
+        <div class="demo-section">
+            <h2>サイズと色のバリエーション</h2>
+            <canvas id="variationCanvas" width="600" height="150"></canvas>
+        </div>
+    </div>
+
+    <script type="module">
+        import { PixelFont } from './src/utils/pixelFont.js';
+        
+        const pixelFont = new PixelFont();
+        
+        // アルファベット表示
+        function drawAlphabet() {
+            const canvas = document.getElementById('alphabetCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // A-Z を2行で表示
+            pixelFont.drawText(ctx, 'ABCDEFGHIJKLM', 10, 10, 2);
+            pixelFont.drawText(ctx, 'NOPQRSTUVWXYZ', 10, 30, 2);
+        }
+        
+        // 数字と記号表示
+        function drawNumbers() {
+            const canvas = document.getElementById('numbersCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            pixelFont.drawText(ctx, '0123456789', 10, 10, 2);
+            pixelFont.drawText(ctx, '.,!?:-+=/  ', 10, 30, 2);
+        }
+        
+        // カスタムテキスト表示
+        function drawCustomText() {
+            const canvas = document.getElementById('customCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            const text = document.getElementById('customText').value;
+            pixelFont.drawTextCentered(ctx, text, canvas.width / 2, 30, 3, '#FFE7A3');
+        }
+        
+        // ゲーム画面サンプル
+        function drawGameSample() {
+            const canvas = document.getElementById('gameCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // スコア
+            pixelFont.drawText(ctx, 'SCORE: 12500', 10, 10, 2);
+            
+            // ライフ
+            pixelFont.drawText(ctx, 'LIFE: 3', 10, 30, 2);
+            
+            // タイム
+            pixelFont.drawTextRight(ctx, 'TIME: 150', canvas.width - 10, 10, 2);
+            
+            // ステージ
+            pixelFont.drawTextRight(ctx, 'STAGE 1-1', canvas.width - 10, 30, 2);
+            
+            // ゲームオーバー
+            pixelFont.drawTextCentered(ctx, 'GAME OVER', canvas.width / 2, 80, 4, '#E74C3C');
+            
+            // PRESS START
+            pixelFont.drawTextCentered(ctx, 'PRESS START!', canvas.width / 2, 120, 3, '#F39C12');
+        }
+        
+        // サイズと色のバリエーション
+        function drawVariations() {
+            const canvas = document.getElementById('variationCanvas');
+            const ctx = canvas.getContext('2d');
+            ctx.imageSmoothingEnabled = false;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // 異なるサイズ
+            pixelFont.drawText(ctx, 'SIZE 1X', 10, 10, 1);
+            pixelFont.drawText(ctx, 'SIZE 2X', 10, 25, 2);
+            pixelFont.drawText(ctx, 'SIZE 3X', 10, 50, 3);
+            
+            // 異なる色
+            pixelFont.drawText(ctx, 'RED', 200, 10, 2, '#E74C3C');
+            pixelFont.drawText(ctx, 'GREEN', 200, 30, 2, '#27AE60');
+            pixelFont.drawText(ctx, 'BLUE', 200, 50, 2, '#3498DB');
+            pixelFont.drawText(ctx, 'YELLOW', 200, 70, 2, '#F39C12');
+            
+            // パレット例
+            pixelFont.drawText(ctx, 'RETRO COLORS', 350, 10, 2, '#FF77B7');
+            pixelFont.drawText(ctx, 'COIN HUNTER', 350, 30, 2, '#F3BF3F');
+            pixelFont.drawText(ctx, 'ADVENTURE', 350, 50, 2, '#83D313');
+        }
+        
+        // カスタムテキスト更新
+        window.updateCustomText = function() {
+            drawCustomText();
+        };
+        
+        // 初期描画
+        drawAlphabet();
+        drawNumbers();
+        drawCustomText();
+        drawGameSample();
+        drawVariations();
+    </script>
+</body>
+</html>
