@@ -186,102 +186,125 @@ class CoverageAnalyzer {
         // 自動ゲームテストで実際にテストされている項目を詳細に分析
         
         // 1. automated-game-tests.jsのテスト項目
-        if (testContent.includes('自動ゲームテスト')) {
+        if (testContent.includes('AutomatedGameTests') || testContent.includes('getStateManagementTests')) {
             // ゲーム状態管理のテスト
-            if (testContent.includes('状態キャプチャの正確性')) {
+            if (testContent.includes('状態キャプチャの正確性') || testContent.includes('captureState')) {
                 this.markAsTested('game-state-manager.js', 'captureState');
                 this.markAsTested('game-state.js', 'GameState');
             }
             
-            if (testContent.includes('状態履歴の記録')) {
+            if (testContent.includes('状態履歴の記録') || testContent.includes('startRecording')) {
+                this.markAsTested('game-state-manager.js', 'startRecording');
+                this.markAsTested('game-state-manager.js', 'stopRecording');
+                this.markAsTested('game-state-manager.js', 'captureState');
                 this.markAsTested('game-state-manager.js', 'addState');
-                this.markAsTested('game-state-manager.js', 'getHistory');
             }
             
-            if (testContent.includes('状態検証機能')) {
-                this.markAsTested('game-state-manager.js', 'validateState');
+            if (testContent.includes('状態検証機能') || testContent.includes('validateGameState')) {
+                this.markAsTested('game-state-manager.js', 'validateGameState');
             }
             
             // プレイヤー動作のテスト
-            if (testContent.includes('右移動の検証')) {
-                this.markAsTested('player.js', 'moveRight');
+            if (testContent.includes('右移動の検証') || testContent.includes('direction: \'right\'')) {
                 this.markAsTested('player.js', 'update');
                 this.markAsTested('automated-test-player.js', 'move');
-            }
-            
-            if (testContent.includes('ジャンプ動作の検証')) {
-                this.markAsTested('player.js', 'jump');
-                this.markAsTested('player.js', 'handleJump');
-                this.markAsTested('player.js', 'update');
-                this.markAsTested('automated-test-player.js', 'jump');
-            }
-            
-            if (testContent.includes('複合動作の検証')) {
                 this.markAsTested('automated-test-player.js', 'executeSequence');
                 this.markAsTested('automated-test-player.js', 'executeAction');
             }
             
+            if (testContent.includes('ジャンプ動作の検証') || testContent.includes('type: \'jump\'')) {
+                this.markAsTested('player.js', 'jump');
+                this.markAsTested('player.js', 'handleJump');
+                this.markAsTested('player.js', 'update');
+                this.markAsTested('automated-test-player.js', 'jump');
+                this.markAsTested('automated-test-player.js', 'executeSequence');
+            }
+            
+            if (testContent.includes('複合動作の検証') || testContent.includes('executeSequence')) {
+                this.markAsTested('automated-test-player.js', 'executeSequence');
+                this.markAsTested('automated-test-player.js', 'executeAction');
+                this.markAsTested('automated-test-player.js', 'generateSummary');
+                this.markAsTested('automated-test-player.js', 'waitForCondition');
+                this.markAsTested('automated-test-player.js', 'assertCondition');
+            }
+            
             // ゲームメカニクスのテスト
-            if (testContent.includes('コイン収集メカニクス')) {
+            if (testContent.includes('コイン収集メカニクス') || testContent.includes('levelCoins')) {
                 this.markAsTested('game.js', 'updateCoins');
                 this.markAsTested('game.js', 'checkCollision');
                 this.markAsTested('game-state.js', 'collectCoin');
+                this.markAsTested('game-state.js', 'addScore');
             }
             
-            if (testContent.includes('ライフシステム')) {
+            if (testContent.includes('ライフシステム') || testContent.includes('player.lives')) {
                 this.markAsTested('player.js', 'takeDamage');
-                this.markAsTested('game-state.js', 'loseLife');
                 this.markAsTested('game.js', 'loseLife');
+                this.markAsTested('game-state.js', 'loseLife');
             }
             
             // 物理エンジンのテスト
-            if (testContent.includes('重力の適用')) {
+            if (testContent.includes('重力の適用') || testContent.includes('player.vy')) {
                 this.markAsTested('player.js', 'update');
                 this.markAsTested('player.js', 'Player');
             }
             
-            if (testContent.includes('速度制限の確認')) {
+            if (testContent.includes('速度制限の確認') || testContent.includes('MAX_SPEED')) {
                 this.markAsTested('player.js', 'update');
             }
             
             // 衝突検出のテスト
-            if (testContent.includes('プラットフォーム衝突')) {
+            if (testContent.includes('プラットフォーム衝突') || testContent.includes('onPlatform')) {
                 this.markAsTested('game.js', 'checkCollisions');
                 this.markAsTested('game.js', 'checkCollision');
             }
             
-            if (testContent.includes('境界チェック')) {
+            if (testContent.includes('境界チェック') || testContent.includes('levelWidth')) {
                 this.markAsTested('game.js', 'checkBoundaries');
                 this.markAsTested('player.js', 'getBounds');
             }
         }
         
         // 2. レベル検証テスト
-        if (testContent.includes('loadLevel') || testContent.includes('レベル検証')) {
+        if (testContent.includes('loadLevel') || testContent.includes('loadStage') || testContent.includes('level-validation-test')) {
             this.markAsTested('level-loader.js', 'loadStage');
             this.markAsTested('level-loader.js', 'validateLevel');
         }
         
         // 3. 統合テストランナーで確認される項目
-        if (testContent.includes('ファイル存在確認')) {
+        if (testContent.includes('ファイル存在確認') || testContent.includes('file existence')) {
             // ファイル構造のテスト（直接的な関数テストではない）
             this.markAsFileStructureTested();
         }
         
         // 4. Game初期化関連
-        if (testContent.includes('new Game()') || testContent.includes('game = new Game')) {
+        if (testContent.includes('new Game()') || testContent.includes('new Game(') || testContent.includes('Game(')) {
             this.markAsTested('game.js', 'Game');
             this.markAsTested('game.js', 'initialize');
             this.markAsTested('input-manager.js', 'InputManager');
         }
         
         // 5. SVGレンダリング関連（automated-test.htmlで使用）
-        if (testContent.includes('SVGRenderer') || testContent.includes('preloadSVGs')) {
+        if (testContent.includes('SVGRenderer') || testContent.includes('preloadAllSVGs')) {
             this.markAsTested('svg-renderer.js', 'SVGRenderer');
             this.markAsTested('svg-renderer.js', 'preloadAllSVGs');
             this.markAsTested('svg-player-renderer.js', 'SVGPlayerRenderer');
             this.markAsTested('svg-enemy-renderer.js', 'SVGEnemyRenderer');
             this.markAsTested('svg-item-renderer.js', 'SVGItemRenderer');
+        }
+        
+        // 6. GameStateManagerのクラス関連
+        if (testContent.includes('GameStateManager') || testContent.includes('new GameStateManager')) {
+            this.markAsTested('game-state-manager.js', 'GameStateManager');
+        }
+        
+        // 7. AutomatedTestPlayerのクラス関連
+        if (testContent.includes('AutomatedTestPlayer') || testContent.includes('new AutomatedTestPlayer')) {
+            this.markAsTested('automated-test-player.js', 'AutomatedTestPlayer');
+        }
+        
+        // 8. モックゲームの update メソッド関連
+        if (testContent.includes('game.update') || testContent.includes('.update()')) {
+            this.markAsTested('game.js', 'update');
         }
     }
     
@@ -294,7 +317,7 @@ class CoverageAnalyzer {
             'game.js', 'config.js', 'player.js', 'music.js'
         ];
         
-        structureTestedFiles.forEach(file => {
+        for (const file of structureTestedFiles) {
             if (this.coverage.files[file] && this.coverage.files[file].coveredFunctions === 0) {
                 // 少なくともファイルが参照されていることを記録
                 this.coverage.summary.coveredFiles = Math.min(
@@ -302,7 +325,7 @@ class CoverageAnalyzer {
                     this.coverage.summary.totalFiles
                 );
             }
-        });
+        }
     }
 
     /**
@@ -311,32 +334,48 @@ class CoverageAnalyzer {
     markAsTested(fileName, functionName) {
         if (this.coverage.files[fileName]) {
             const file = this.coverage.files[fileName];
+            let marked = false;
             
             // 関数を検索してマーク
             const func = file.functions.find(f => f.name === functionName);
-            if (func) {
+            if (func && !func.tested) {
                 func.tested = true;
                 file.coveredFunctions++;
                 this.coverage.summary.coveredFunctions++;
+                marked = true;
             }
             
-            // クラスメソッドも検索
-            file.classes.forEach(cls => {
-                const method = cls.methods.find(m => m.name === functionName);
-                if (method) {
-                    method.tested = true;
-                    cls.tested = true;
-                    file.coveredFunctions++;
-                    this.coverage.summary.coveredFunctions++;
+            // クラスメソッドも検索（関数として既にマークされていない場合のみ）
+            if (!marked) {
+                for (const cls of file.classes) {
+                    if (cls.name === functionName && !cls.tested) {
+                        // クラス自体をテスト済みとしてマーク
+                        cls.tested = true;
+                        file.coveredFunctions++;
+                        this.coverage.summary.coveredFunctions++;
+                        marked = true;
+                        break;
+                    } else {
+                        const method = cls.methods.find(m => m.name === functionName);
+                        if (method && !method.tested) {
+                            method.tested = true;
+                            file.coveredFunctions++;
+                            this.coverage.summary.coveredFunctions++;
+                            marked = true;
+                            break;
+                        }
+                    }
                 }
-            });
+            }
             
             // ファイルのカバレッジ率を更新
-            file.coverage = (file.coveredFunctions / file.totalFunctions) * 100;
-            
-            // ファイルがテストされている場合
-            if (file.coveredFunctions > 0 && this.coverage.summary.coveredFiles < this.coverage.summary.totalFiles) {
-                this.coverage.summary.coveredFiles++;
+            if (marked) {
+                file.coverage = (file.coveredFunctions / file.totalFunctions) * 100;
+                
+                // ファイルが初めてテストされた場合
+                if (file.coveredFunctions === 1) {
+                    this.coverage.summary.coveredFiles++;
+                }
             }
         }
     }
@@ -574,33 +613,132 @@ class CoverageAnalyzer {
     }
 
     /**
+     * テスト実行結果からカバレッジを更新
+     * @description 統一テストランナーの実行結果を読み込み、カバレッジ情報を更新します
+     * @returns {void}
+     */
+    updateCoverageFromTestResults() {
+        // 統一テストランナーの実行結果から追加のカバレッジ情報を取得
+        const testResultPath = path.join(__dirname, '..', '..', 'test-results', 'unified-test-results.json');
+        if (fs.existsSync(testResultPath)) {
+            try {
+                const results = JSON.parse(fs.readFileSync(testResultPath, 'utf8'));
+                
+                // 自動ゲームテストの出力を解析
+                if (results.tests && results.tests.automated && results.tests.automated.output) {
+                    this.detectTestedItemsFromOutput(results.tests.automated.output);
+                }
+            } catch (error) {
+                console.log('テスト結果の読み込みに失敗しました:', error.message);
+            }
+        }
+    }
+    
+    /**
+     * テスト出力からカバレッジ情報を検出
+     * @param {string} output - テスト実行の出力文字列
+     * @description テスト出力から成功したテストを検出し、関連する関数をテスト済みとしてマークします
+     * @returns {void}
+     */
+    detectTestedItemsFromOutput(output) {
+        // テスト出力の各行をチェック
+        const lines = output.split('\n');
+        
+        for (const line of lines) {
+            // 成功したテストを検出
+            if (line.includes('✅')) {
+                const testName = line.replace('✅', '').trim();
+                
+                // テスト名に基づいて関数をマーク
+                switch (testName) {
+                    case '状態キャプチャの正確性':
+                        this.markAsTested('game-state-manager.js', 'captureState');
+                        this.markAsTested('game-state.js', 'GameState');
+                        break;
+                    case '状態履歴の記録':
+                        this.markAsTested('game-state-manager.js', 'startRecording');
+                        this.markAsTested('game-state-manager.js', 'stopRecording');
+                        this.markAsTested('game-state-manager.js', 'addState');
+                        break;
+                    case '状態検証機能':
+                        this.markAsTested('game-state-manager.js', 'validateGameState');
+                        this.markAsTested('game-state-manager.js', 'compareStates');
+                        break;
+                    case '右移動の検証':
+                        this.markAsTested('player.js', 'update');
+                        this.markAsTested('automated-test-player.js', 'move');
+                        this.markAsTested('automated-test-player.js', 'executeAction');
+                        break;
+                    case 'ジャンプ動作の検証':
+                        this.markAsTested('player.js', 'jump');
+                        this.markAsTested('player.js', 'handleJump');
+                        this.markAsTested('automated-test-player.js', 'jump');
+                        break;
+                    case '複合動作の検証':
+                        this.markAsTested('automated-test-player.js', 'executeSequence');
+                        this.markAsTested('automated-test-player.js', 'waitForCondition');
+                        break;
+                    case 'コイン収集メカニクス':
+                        this.markAsTested('game.js', 'updateCoins');
+                        this.markAsTested('game-state.js', 'collectCoin');
+                        this.markAsTested('game-state.js', 'addScore');
+                        break;
+                    case 'ライフシステム':
+                        this.markAsTested('player.js', 'takeDamage');
+                        this.markAsTested('game-state.js', 'loseLife');
+                        this.markAsTested('game.js', 'loseLife');
+                        break;
+                    case '重力の適用':
+                        this.markAsTested('player.js', 'update');
+                        break;
+                    case '速度制限の確認':
+                        this.markAsTested('player.js', 'update');
+                        break;
+                    case 'プラットフォーム衝突':
+                        this.markAsTested('game.js', 'checkCollisions');
+                        this.markAsTested('game.js', 'checkCollision');
+                        break;
+                    case '境界チェック':
+                        this.markAsTested('game.js', 'checkBoundaries');
+                        this.markAsTested('player.js', 'getBounds');
+                        break;
+                }
+            }
+        }
+    }
+
+    /**
      * カバレッジ分析を実行
      */
     async run(showDetails = true) {
         console.log('🔍 カバレッジ分析を開始します...\n');
         
         // srcディレクトリのJavaScriptファイルを解析
-        const srcDir = path.join(__dirname, '..', 'src');
+        const srcDir = path.join(__dirname, '..', '..', 'src');
         const srcFiles = fs.readdirSync(srcDir).filter(f => f.endsWith('.js'));
         
         console.log(`📁 ${srcFiles.length}個のソースファイルを解析中...`);
-        srcFiles.forEach(file => {
+        for (const file of srcFiles) {
             this.analyzeSourceFile(path.join(srcDir, file));
-        });
+        }
         
         // テストファイルを解析
         const testFiles = [
-            path.join(__dirname, '..', 'tests', 'automated-game-tests.js'),
+            path.join(__dirname, '..', 'runners', 'run-automated-tests.js'),
             path.join(__dirname, 'level-validation-test.js'),
-            path.join(__dirname, 'comprehensive-test-results.js')
+            path.join(__dirname, '..', 'utils', 'comprehensive-test-results.js'),
+            path.join(__dirname, '..', '..', 'tests', 'automated-game-tests.js')
         ];
         
         console.log(`\n🧪 テストファイルを解析中...`);
-        testFiles.forEach(file => {
+        for (const file of testFiles) {
             if (fs.existsSync(file)) {
                 this.analyzeTestFile(file);
             }
-        });
+        }
+        
+        // テスト実行結果からの追加カバレッジ情報を取得
+        this.updateCoverageFromTestResults();
         
         // レポート生成
         this.generateReport(showDetails);

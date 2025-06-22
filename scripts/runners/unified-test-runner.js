@@ -241,10 +241,20 @@ class UnifiedTestRunner {
      */
     async runIntegrationTests() {
         // comprehensive-test-resultsを実行
-        if (fs.existsSync(path.join(process.cwd(), 'scripts/comprehensive-test-results.js'))) {
-            return this.runScript('scripts/comprehensive-test-results.js', '統合テスト');
+        const testPath = path.join(process.cwd(), 'scripts/utils/comprehensive-test-results.js');
+        if (!fs.existsSync(testPath)) {
+            return { 
+                passed: 0, 
+                failed: 1, 
+                error: `エラー: comprehensive-test-results.js が見つかりません (${testPath})`,
+                tests: [{
+                    name: '統合テストファイルの存在確認',
+                    passed: false,
+                    message: `❌ ファイルが見つかりません: ${testPath}`
+                }]
+            };
         }
-        return { passed: 0, failed: 0, skipped: 1, message: 'スキップ: comprehensive-test-results.js が見つかりません' };
+        return this.runScript('scripts/utils/comprehensive-test-results.js', '統合テスト');
     }
 
     /**
