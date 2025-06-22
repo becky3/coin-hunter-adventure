@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピクセルアートギャラリー - コインハンターアドベンチャー</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #2C3E50;
+            color: #ECF0F1;
+            padding: 20px;
+            margin: 0;
+        }
+        
+        h1, h2 {
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .stage-selector {
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .stage-selector button {
+            margin: 0 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            background: #3498DB;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .stage-selector button:hover {
+            background: #2980B9;
+        }
+        
+        .stage-selector button.active {
+            background: #E74C3C;
+        }
+        
+        .palette-display {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .palette-row {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .palette-label {
+            width: 60px;
+            font-size: 14px;
+            color: #BDC3C7;
+        }
+        
+        .color-box {
+            width: 30px;
+            height: 30px;
+            border: 1px solid #7F8C8D;
+            margin: 0 5px;
+            display: inline-block;
+        }
+        
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .sprite-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .sprite-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        
+        .sprite-card h3 {
+            color: #F39C12;
+            margin-top: 0;
+        }
+        
+        .sprite-display {
+            background: #34495E;
+            padding: 20px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+        
+        .sprite-display canvas {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        .info {
+            font-size: 14px;
+            color: #95A5A6;
+            margin-top: 10px;
+        }
+        
+        .animation-controls {
+            margin-top: 10px;
+        }
+        
+        .animation-controls button {
+            background: #27AE60;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            margin: 0 5px;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .animation-controls button:hover {
+            background: #229954;
+        }
+        
+        .flip-button {
+            background: #9B59B6 !important;
+        }
+        
+        .flip-button:hover {
+            background: #8E44AD !important;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            font-size: 20px;
+        }
+        
+        .error {
+            background: #E74C3C;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .palette-editor {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #2C3E50;
+            border: 2px solid #34495E;
+            border-radius: 10px;
+            padding: 20px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .palette-editor h3 {
+            margin-top: 0;
+            color: #F39C12;
+        }
+        
+        .color-picker {
+            display: grid;
+            grid-template-columns: repeat(13, 40px);
+            gap: 5px;
+            margin-top: 20px;
+        }
+        
+        .color-option {
+            width: 40px;
+            height: 40px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .color-option:hover {
+            transform: scale(1.1);
+            border-color: #F39C12;
+        }
+        
+        .close-editor {
+            background: #E74C3C;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            float: right;
+        }
+        
+        .close-editor:hover {
+            background: #C0392B;
+        }
+        
+        .clickable-palette {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clickable-palette:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 5px rgba(243, 156, 18, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <h1>🎮 ピクセルアートギャラリー</h1>
+    <p style="text-align: center;">コインハンターアドベンチャーの全ピクセルアート一覧</p>
+    
+    <div class="stage-selector">
+        <button class="active" onclick="selectStage('grassland')">草原ステージ</button>
+        <button onclick="selectStage('cave')">洞窟ステージ</button>
+        <button onclick="selectStage('snow')">雪原ステージ</button>
+    </div>
+    
+    <div class="palette-display" id="paletteDisplay">
+        <!-- パレットがここに表示されます -->
+    </div>
+    
+    <div id="loadingMessage" class="loading">スプライトデータを読み込み中...</div>
+    <div id="errorMessage" class="error" style="display: none;"></div>
+    
+    <div class="gallery" id="gallery" style="display: none;">
+        <!-- スプライトカードがここに表示されます -->
+    </div>
+    
+    <!-- パレットエディタ -->
+    <div class="palette-editor" id="paletteEditor">
+        <button class="close-editor" onclick="closePaletteEditor()">×</button>
+        <h3>パレット編集</h3>
+        <p id="paletteInfo"></p>
+        <div class="color-picker" id="colorPicker">
+            <!-- 色オプションがここに表示されます -->
+        </div>
+    </div>
+
+    <script type="module">
+        import { PixelArtRenderer, PixelArtSprite, PixelArtAnimation } from './src/utils/pixelArt.js';
+        import { PaletteSystem, STAGE_PALETTES, SPRITE_DEFINITIONS } from './src/utils/pixelArtPalette.js';
+        
+        // グローバル変数
+        let currentStage = 'grassland';
+        let paletteSystem = new PaletteSystem();
+        let spriteData = {};
+        let currentEditingPalette = null;
+        
+        // アニメーション定義
+        const ANIMATION_DEFINITIONS = {
+            player_walk: ['walk1', 'idle', 'walk1', 'idle'],
+            player_jump: ['jump'],
+            bird_fly: ['bird_fly1', 'bird_fly2'],
+            slime_idle: ['slime_idle1', 'slime_idle2'],
+            coin_spin: ['coin_spin1', 'coin_spin2', 'coin_spin3', 'coin_spin4', 'coin_spin3', 'coin_spin2']
+        };
+        
+        // 初期化
+        async function init() {
+            try {
+                // スプライトデータを読み込む
+                spriteData = await paletteSystem.loadAllSprites();
+                
+                // 読み込み完了
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('gallery').style.display = 'grid';
+                
+                // 初期ステージを選択
+                selectStage(currentStage);
+            } catch (error) {
+                console.error('Failed to load sprites:', error);
+                document.getElementById('loadingMessage').style.display = 'none';
+                const errorEl = document.getElementById('errorMessage');
+                errorEl.textContent = 'スプライトデータの読み込みに失敗しました: ' + error.message;
+                errorEl.style.display = 'block';
+            }
+        }
+        
+        // ステージ選択
+        function selectStage(stageName) {
+            currentStage = stageName;
+            
+            // ボタンの状態更新
+            document.querySelectorAll('.stage-selector button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.includes(stageName === 'grassland' ? '草原' : 
+                                           stageName === 'cave' ? '洞窟' : '雪原')) {
+                    btn.classList.add('active');
+                }
+            });
+            
+            // パレット設定
+            const stagePalette = paletteSystem.createStagePalette(STAGE_PALETTES[stageName]);
+            paletteSystem.setStagePalette(stagePalette);
+            
+            // パレット表示
+            displayPalette(stagePalette);
+            
+            // ギャラリー更新
+            updateGallery();
+        }
+        
+        // パレット表示
+        function displayPalette(palette) {
+            const container = document.getElementById('paletteDisplay');
+            container.innerHTML = `<h2>ステージパレット: ${currentStage}</h2>`;
+            
+            // 背景パレット
+            const bgDiv = document.createElement('div');
+            bgDiv.innerHTML = '<h3>背景パレット</h3>';
+            palette.background.forEach((pal, i) => {
+                const row = document.createElement('div');
+                row.className = 'palette-row';
+                row.innerHTML = `<span class="palette-label">BG ${i}:</span>`;
+                pal.forEach(color => {
+                    const box = document.createElement('span');
+                    box.className = 'color-box';
+                    box.style.backgroundColor = color;
+                    row.appendChild(box);
+                });
+                bgDiv.appendChild(row);
+            });
+            container.appendChild(bgDiv);
+            
+            // スプライトパレット
+            const sprDiv = document.createElement('div');
+            sprDiv.innerHTML = '<h3>スプライトパレット</h3>';
+            palette.sprite.forEach((pal, i) => {
+                const row = document.createElement('div');
+                row.className = 'palette-row';
+                row.innerHTML = `<span class="palette-label">SPR ${i}:</span>`;
+                pal.forEach((color, j) => {
+                    const box = document.createElement('span');
+                    box.className = 'color-box clickable-palette';
+                    box.style.backgroundColor = color || 'transparent';
+                    if (!color) box.style.backgroundImage = 'linear-gradient(45deg, #ccc 25%, transparent 25%)';
+                    box.onclick = () => openPaletteEditor('sprite', i, j);
+                    row.appendChild(box);
+                });
+                sprDiv.appendChild(row);
+            });
+            container.appendChild(sprDiv);
+        }
+        
+        // ギャラリー更新
+        function updateGallery() {
+            const gallery = document.getElementById('gallery');
+            gallery.innerHTML = '';
+            
+            // キャラクター
+            gallery.appendChild(createSpriteCard('プレイヤー（待機）', 'idle', 0, 'sprite'));
+            gallery.appendChild(createAnimationCard('プレイヤー（歩行）', 'player_walk', 0, 'sprite', 100));
+            gallery.appendChild(createAnimationCard('プレイヤー（ジャンプ）', 'player_jump', 0, 'sprite', 150));
+            gallery.appendChild(createAnimationCard('鳥（飛行）', 'bird_fly', 2, 'sprite', 200));
+            gallery.appendChild(createAnimationCard('スライム（待機）', 'slime_idle', 1, 'sprite', 500));
+            gallery.appendChild(createAnimationCard('コイン（回転）', 'coin_spin', 3, 'sprite', 100));
+            
+            // 地形
+            gallery.appendChild(createSpriteCard('地面タイル', 'ground_tile', 1, 'background'));
+            gallery.appendChild(createSpriteCard('雲（小）', 'cloud_small', 0, 'background'));
+            gallery.appendChild(createSpriteCard('雲（大）', 'cloud_large', 0, 'background'));
+            gallery.appendChild(createSpriteCard('スプリング', 'spring', 2, 'background'));
+            gallery.appendChild(createSpriteCard('ゴール旗', 'goal_flag', 0, 'sprite'));
+            
+            // UI
+            gallery.appendChild(createSpriteCard('ハート（満タン）', 'heart', 0, 'sprite'));
+            gallery.appendChild(createSpriteCard('ハート（空）', 'heart_empty', 0, 'sprite'));
+        }
+        
+        // スプライトカード作成
+        function createSpriteCard(name, dataKey, paletteIndex, paletteType) {
+            const card = document.createElement('div');
+            card.className = 'sprite-card';
+            
+            const title = document.createElement('h3');
+            title.textContent = name;
+            card.appendChild(title);
+            
+            const display = document.createElement('div');
+            display.className = 'sprite-display';
+            
+            const canvas = document.createElement('canvas');
+            const scale = 4;
+            
+            const pixelData = spriteData[dataKey];
+            
+            if (pixelData) {
+                canvas.width = pixelData[0].length * scale;
+                canvas.height = pixelData.length * scale;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = false;
+                
+                let flipped = false;
+                
+                function draw() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // 描画
+                    pixelData.forEach((row, y) => {
+                        row.forEach((pixel, x) => {
+                            if (pixel > 0) {
+                                const color = paletteSystem.getColor(paletteType, paletteIndex, pixel);
+                                if (color) {
+                                    ctx.fillStyle = color;
+                                    const drawX = flipped ? (pixelData[0].length - 1 - x) * scale : x * scale;
+                                    ctx.fillRect(drawX, y * scale, scale, scale);
+                                }
+                            }
+                        });
+                    });
+                }
+                
+                draw();
+                
+                // 反転ボタン追加
+                const controls = document.createElement('div');
+                controls.className = 'animation-controls';
+                
+                const flipBtn = document.createElement('button');
+                flipBtn.textContent = '反転';
+                flipBtn.className = 'flip-button';
+                flipBtn.onclick = () => {
+                    flipped = !flipped;
+                    draw();
+                };
+                
+                controls.appendChild(flipBtn);
+                display.appendChild(canvas);
+                card.appendChild(display);
+                card.appendChild(controls);
+                
+                const info = document.createElement('div');
+                info.className = 'info';
+                info.textContent = `サイズ: ${pixelData[0].length}x${pixelData.length}px | パレット: ${paletteType} ${paletteIndex}`;
+                card.appendChild(info);
+            }
+            
+            return card;
+        }
+        
+        // アニメーションカード作成
+        function createAnimationCard(name, animKey, paletteIndex, paletteType, frameDuration) {
+            const card = document.createElement('div');
+            card.className = 'sprite-card';
+            
+            const title = document.createElement('h3');
+            title.textContent = name;
+            card.appendChild(title);
+            
+            const display = document.createElement('div');
+            display.className = 'sprite-display';
+            
+            const canvas = document.createElement('canvas');
+            const scale = 4;
+            
+            const frameNames = ANIMATION_DEFINITIONS[animKey];
+            const frames = frameNames.map(name => spriteData[name]).filter(data => data);
+            
+            if (frames.length > 0) {
+                canvas.width = frames[0][0].length * scale;
+                canvas.height = frames[0].length * scale;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.imageSmoothingEnabled = false;
+                
+                let currentFrame = 0;
+                let animationId = null;
+                let flipped = false;
+                
+                function drawFrame() {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    const frameData = frames[currentFrame];
+                    frameData.forEach((row, y) => {
+                        row.forEach((pixel, x) => {
+                            if (pixel > 0) {
+                                const color = paletteSystem.getColor(paletteType, paletteIndex, pixel);
+                                if (color) {
+                                    ctx.fillStyle = color;
+                                    const drawX = flipped ? (frameData[0].length - 1 - x) * scale : x * scale;
+                                    ctx.fillRect(drawX, y * scale, scale, scale);
+                                }
+                            }
+                        });
+                    });
+                    
+                    currentFrame = (currentFrame + 1) % frames.length;
+                }
+                
+                // 初期描画
+                drawFrame();
+                currentFrame = 0;
+                
+                // アニメーション制御
+                const controls = document.createElement('div');
+                controls.className = 'animation-controls';
+                
+                const playBtn = document.createElement('button');
+                playBtn.textContent = '再生';
+                playBtn.onclick = () => {
+                    if (animationId) {
+                        clearInterval(animationId);
+                        animationId = null;
+                        playBtn.textContent = '再生';
+                    } else {
+                        animationId = setInterval(drawFrame, frameDuration);
+                        playBtn.textContent = '停止';
+                    }
+                };
+                
+                const flipBtn = document.createElement('button');
+                flipBtn.textContent = '反転';
+                flipBtn.className = 'flip-button';
+                flipBtn.onclick = () => {
+                    flipped = !flipped;
+                    currentFrame = 0;
+                    drawFrame();
+                };
+                
+                controls.appendChild(playBtn);
+                controls.appendChild(flipBtn);
+                
+                display.appendChild(canvas);
+                card.appendChild(display);
+                card.appendChild(controls);
+                
+                const info = document.createElement('div');
+                info.className = 'info';
+                info.textContent = `フレーム数: ${frames.length} | 速度: ${frameDuration}ms`;
+                card.appendChild(info);
+            }
+            
+            return card;
+        }
+        
+        // パレットエディタ関連
+        function openPaletteEditor(type, paletteIndex, colorIndex) {
+            currentEditingPalette = { type, paletteIndex, colorIndex };
+            
+            const editor = document.getElementById('paletteEditor');
+            const info = document.getElementById('paletteInfo');
+            const picker = document.getElementById('colorPicker');
+            
+            info.textContent = `${type === 'sprite' ? 'スプライト' : '背景'}パレット ${paletteIndex} - 色 ${colorIndex}`;
+            
+            // 色オプションを表示
+            picker.innerHTML = '';
+            Object.entries(paletteSystem.masterPalette).forEach(([key, color]) => {
+                const option = document.createElement('div');
+                option.className = 'color-option';
+                option.style.backgroundColor = color;
+                option.title = `0x${parseInt(key).toString(16).toUpperCase().padStart(2, '0')}`;
+                option.onclick = () => selectColor(parseInt(key));
+                picker.appendChild(option);
+            });
+            
+            editor.style.display = 'block';
+        }
+        
+        function closePaletteEditor() {
+            document.getElementById('paletteEditor').style.display = 'none';
+        }
+        
+        function selectColor(colorIndex) {
+            if (!currentEditingPalette) return;
+            
+            const { type, paletteIndex, colorIndex: idx } = currentEditingPalette;
+            
+            // 新しいパレット設定を作成
+            const newConfig = JSON.parse(JSON.stringify(STAGE_PALETTES[currentStage]));
+            newConfig[type][paletteIndex][idx] = colorIndex;
+            
+            // パレットを更新
+            const newPalette = paletteSystem.createStagePalette(newConfig);
+            paletteSystem.setStagePalette(newPalette);
+            
+            // 表示を更新
+            displayPalette(newPalette);
+            updateGallery();
+            closePaletteEditor();
+        }
+        
+        // グローバル関数として公開
+        window.selectStage = selectStage;
+        window.openPaletteEditor = openPaletteEditor;
+        window.closePaletteEditor = closePaletteEditor;
+        window.selectColor = selectColor;
+        
+        // 初期化実行
+        init();
+    </script>
+</body>
+</html>

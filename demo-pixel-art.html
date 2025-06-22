@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ピクセルアート表現比較</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .sample {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        canvas, svg {
+            border: 1px solid #ddd;
+            display: block;
+            margin: 10px 0;
+        }
+        .pixelated {
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+    </style>
+</head>
+<body>
+    <h1>ドット絵表現の比較サンプル</h1>
+    
+    <div class="container">
+        <!-- 1. Canvas APIでの真のドット絵 -->
+        <div class="sample">
+            <h2>1. Canvas API ドット絵</h2>
+            <canvas id="canvas-pixel" width="160" height="160"></canvas>
+            <p>メリット: 真のピクセルアート、軽量<br>
+            デメリット: プログラムで描画が必要</p>
+        </div>
+
+        <!-- 2. SVG rect要素でのドット絵 -->
+        <div class="sample">
+            <h2>2. SVG rectでドット絵</h2>
+            <svg id="svg-rect" width="160" height="160" viewBox="0 0 16 16">
+            </svg>
+            <p>メリット: ベクター形式、拡大可能<br>
+            デメリット: 要素数が多い、重い</p>
+        </div>
+
+        <!-- 3. 低解像度SVG + CSS -->
+        <div class="sample">
+            <h2>3. 低解像度SVG + CSS</h2>
+            <svg class="pixelated" width="160" height="160" viewBox="0 0 32 32">
+                <!-- シンプルなプレイヤー -->
+                <rect x="12" y="8" width="8" height="8" fill="#FF6B6B"/>
+                <rect x="8" y="16" width="16" height="8" fill="#4ECDC4"/>
+                <rect x="10" y="24" width="5" height="8" fill="#45B7D1"/>
+                <rect x="17" y="24" width="5" height="8" fill="#45B7D1"/>
+            </svg>
+            <p>メリット: 作成が簡単、軽量<br>
+            デメリット: 細かい表現は困難</p>
+        </div>
+
+        <!-- 4. レトロ風SVG（現実的） -->
+        <div class="sample">
+            <h2>4. レトロ風SVG（推奨）</h2>
+            <svg width="160" height="160" viewBox="0 0 160 160">
+                <!-- レトロ風プレイヤー -->
+                <rect x="60" y="40" width="40" height="40" fill="#FF0000" stroke="#8B0000" stroke-width="2"/>
+                <rect x="50" y="80" width="60" height="40" fill="#0000FF" stroke="#000080" stroke-width="2"/>
+                <rect x="55" y="120" width="20" height="30" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+                <rect x="85" y="120" width="20" height="30" fill="#8B4513" stroke="#654321" stroke-width="2"/>
+                <!-- 目 -->
+                <rect x="70" y="50" width="8" height="8" fill="#FFF"/>
+                <rect x="82" y="50" width="8" height="8" fill="#FFF"/>
+                <rect x="72" y="52" width="4" height="4" fill="#000"/>
+                <rect x="84" y="52" width="4" height="4" fill="#000"/>
+            </svg>
+            <p>メリット: バランスが良い、作成しやすい<br>
+            デメリット: 真のドット絵ではない</p>
+        </div>
+    </div>
+
+    <h2>背景の比較</h2>
+    <div class="container">
+        <!-- 現在の背景 -->
+        <div class="sample">
+            <h3>現在（グラデーション）</h3>
+            <svg width="300" height="150">
+                <defs>
+                    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" style="stop-color:#87CEEB"/>
+                        <stop offset="100%" style="stop-color:#98D8E8"/>
+                    </linearGradient>
+                </defs>
+                <rect width="300" height="150" fill="url(#skyGradient)"/>
+                <ellipse cx="50" cy="30" rx="30" ry="15" fill="rgba(255,255,255,0.8)"/>
+                <ellipse cx="120" cy="50" rx="40" ry="20" fill="rgba(255,255,255,0.7)"/>
+                <ellipse cx="220" cy="40" rx="35" ry="18" fill="rgba(255,255,255,0.75)"/>
+            </svg>
+        </div>
+
+        <!-- レトロ風背景 -->
+        <div class="sample">
+            <h3>レトロ風（単色）</h3>
+            <svg width="300" height="150">
+                <rect width="300" height="150" fill="#5C94FC"/>
+                <rect x="40" y="25" width="60" height="30" fill="#FFFFFF"/>
+                <rect x="120" y="45" width="80" height="40" fill="#FFFFFF"/>
+                <rect x="210" y="35" width="70" height="35" fill="#FFFFFF"/>
+            </svg>
+        </div>
+    </div>
+
+    <script>
+        // 1. Canvas APIでドット絵
+        const canvas = document.getElementById('canvas-pixel');
+        const ctx = canvas.getContext('2d');
+        ctx.imageSmoothingEnabled = false;
+        
+        // プレイヤーのピクセルデータ（16x16）
+        const playerPixels = [
+            [0,0,0,0,0,1,1,1,1,1,1,0,0,0,0,0],
+            [0,0,0,0,1,1,1,1,1,1,1,1,0,0,0,0],
+            [0,0,0,0,3,3,3,2,2,3,2,0,0,0,0,0],
+            [0,0,0,3,2,3,2,2,2,3,2,2,2,0,0,0],
+            [0,0,0,3,2,3,3,2,2,2,3,2,2,2,0,0],
+            [0,0,0,3,3,2,2,2,2,3,3,3,3,0,0,0],
+            [0,0,0,0,0,2,2,2,2,2,2,2,0,0,0,0],
+            [0,0,0,0,1,1,4,1,1,1,0,0,0,0,0,0],
+            [0,0,0,1,1,1,4,1,1,4,1,1,1,0,0,0],
+            [0,0,1,1,1,1,4,4,4,4,1,1,1,1,0,0],
+            [0,0,2,2,1,4,2,4,4,2,4,1,2,2,0,0],
+            [0,0,2,2,2,4,4,4,4,4,4,2,2,2,0,0],
+            [0,0,2,2,4,4,4,4,4,4,4,4,2,2,0,0],
+            [0,0,0,0,4,4,4,0,0,4,4,4,0,0,0,0],
+            [0,0,0,3,3,3,0,0,0,0,3,3,3,0,0,0],
+            [0,0,3,3,3,3,0,0,0,0,3,3,3,3,0,0]
+        ];
+        
+        const colors = [
+            null,          // 0: 透明
+            '#FF0000',     // 1: 赤（帽子）
+            '#FFDBAC',     // 2: 肌色
+            '#8B4513',     // 3: 茶色（髪・靴）
+            '#0000FF'      // 4: 青（服）
+        ];
+        
+        const pixelSize = 10;
+        playerPixels.forEach((row, y) => {
+            row.forEach((pixel, x) => {
+                if (pixel > 0) {
+                    ctx.fillStyle = colors[pixel];
+                    ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
+                }
+            });
+        });
+
+        // 2. SVG rectでドット絵
+        const svgRect = document.getElementById('svg-rect');
+        const scaledPixels = playerPixels.map(row => row.slice(0, 16));
+        
+        scaledPixels.forEach((row, y) => {
+            row.forEach((pixel, x) => {
+                if (pixel > 0) {
+                    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+                    rect.setAttribute('x', x);
+                    rect.setAttribute('y', y);
+                    rect.setAttribute('width', 1);
+                    rect.setAttribute('height', 1);
+                    rect.setAttribute('fill', colors[pixel]);
+                    svgRect.appendChild(rect);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
